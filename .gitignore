@@ -43,3 +43,9 @@ Thumbs.db
 .temp/
 
 !.vscode/settings.json
+
+# SSL 인증서 및 보안 키
+*.pem
+*.key
+*.crt
+*.cert
