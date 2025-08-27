@@ -38,3 +38,8 @@ dist-ssr/
 
 # System files
 Thumbs.db
+
+.cache/
+.temp/
+
+!.vscode/settings.json
