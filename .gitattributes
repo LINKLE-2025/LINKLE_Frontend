@@ -1,0 +1,31 @@
+# 모든 텍스트 파일은 LF로 통일
+* text=auto eol=lf
+
+# TypeScript, JavaScript, JSON, Markdown 등은 텍스트로 간주
+*.js     text
+*.jsx    text
+*.ts     text
+*.tsx    text
+*.json   text
+*.css    text
+*.scss   text
+*.md     text
+*.html   text
+*.yml    text
+*.yaml   text
+
+# 바이너리 파일 - Git이 diff/merge 시 건드리지 않음
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.svg    binary
+*.ico    binary
+*.ttf    binary
+*.woff   binary
+*.woff2  binary
+*.eot    binary
+*.pem    binary
+
+# Git에서 자동 병합하지 않도록 명시 (예: 인증서, 키)
+*.pem    merge=ours
