@@ -33,6 +33,6 @@
 
 
 
-- [버전 관리 정책](./docs/VERSIONING.md)
-- [폴더 구조 가이드](./docs/DIRECTORY_REACT.md)
-- [스타일 가이드](./docs/STYLE_GUIDE_REACT.md)
+- [버전 관리 정책](./VERSIONING.md)
+- [폴더 구조 가이드](./DIRECTORY_REACT.md)
+- [스타일 가이드](./STYLE_GUIDE_REACT.md)
