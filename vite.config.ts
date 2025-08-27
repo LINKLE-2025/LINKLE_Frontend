@@ -15,7 +15,7 @@ export default defineConfig({
       key: fs.readFileSync("./localhost+2-key.pem"),
       cert: fs.readFileSync("./localhost+2.pem"),
     },
-    port: 3000,
+    port: 3000, // 포트는 원하시는 대로 설정 가능
     host: "localhost",
   },
 });

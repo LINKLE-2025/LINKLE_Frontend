@@ -7,10 +7,6 @@ import prettier from "./prettier.js";
 export default [
   {
     ignores: ["dist", "node_modules"],
-    base,
-    index,
-    reactConfig,
-    prettier,
     settings: {
       "import/resolver": {
         alias: {
@@ -20,4 +16,8 @@ export default [
       },
     },
   },
+  base,
+  index,
+  reactConfig,
+  prettier,
 ];
