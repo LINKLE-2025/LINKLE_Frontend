@@ -1,6 +1,6 @@
 # LINKLE_Contribute
 
-## 코드 스타일 가이드(변경예정)
+## 코드 스타일 가이드
 - Java: Google Java Style Guide 준수
 - 클래스명은 UpperCamelCase, 변수/메서드는 lowerCamelCase
 - 컨트롤러는 `@RestController` 또는 `@Controller`로 명확히 구분
@@ -32,4 +32,7 @@
 - 리뷰어 지정, 라벨 붙이기 (optional)
 
 
-- [🗂 버전 관리 정책](./docs/VERSIONING.md)
+
+- [버전 관리 정책](./docs/VERSIONING.md)
+- [폴더 구조 가이드](./docs/DIRECTORY_REACT.md)
+- [스타일 가이드](./docs/STYLE_GUIDE_REACT.md)
