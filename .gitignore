@@ -13,6 +13,7 @@ node_modules/
 # Build output
 dist/
 dist-ssr/
+dev-dist/
 
 # Local env files (보안 파일)
 .env*
@@ -49,3 +50,13 @@ Thumbs.db
 *.key
 *.crt
 *.cert
+
+# TypeScript
+*.tsbuildinfo
+
+# TailwindCSS
+tailwind.config.js.timestamp-*
+postcss.config.js.timestamp-*
+
+# VSCode Workspace history
+.history/
