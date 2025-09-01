@@ -2,7 +2,14 @@
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ["SF Pro", "ui-sans-serif", "system-ui", "sans-serif"],
+      },
+      colors: {
+        linkleGray: "#414141",
+      },
+    },
   },
   plugins: [],
 };
