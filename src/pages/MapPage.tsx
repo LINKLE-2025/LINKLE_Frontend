@@ -110,39 +110,48 @@ export default function MapPage(): React.ReactElement {
     12: "/icons/travel.png",
   };
 
+  type LinkerItem = {
+    name: string;
+    locationX?: number;
+    locationY?: number;
+    lat?: number;
+    lng?: number;
+    categoryId?: number;
+    linkerId?: number; // ← 서버가 내려주는 PK
+  };
+
   // 기존 링커 불러오기
-  const loadExistingLinkers = async (map: kakao.maps.Map) => {
+  const loadExistingLinkers = async (
+    map: kakao.maps.Map,
+    onOpenDetailById: (linkerId: number) => void,
+  ) => {
     try {
       const res = await fetch("/api/linker");
       if (!res.ok) throw new Error("GET /api/linker 실패");
-      const items: Array<{
-        name: string;
-        locationX?: number;
-        locationY?: number;
-        lat?: number;
-        lng?: number;
-        categoryId?: number;
-      }> = await res.json();
+      const items: LinkerItem[] = await res.json();
 
       // 기존 마커 제거
       linkerMarkersRef.current.forEach((m) => m.setMap(null));
       linkerMarkersRef.current = [];
 
-      const kakao = window.kakao;
+      const kakao = (window as any).kakao;
 
       items.forEach((m) => {
         const lat = m.locationX ?? m.lat;
         const lng = m.locationY ?? m.lng;
+        const linkerId = m.linkerId; // ✅ 올바른 값 사용
         if (typeof lat !== "number" || typeof lng !== "number") return;
 
-        // 카테고리별 이미지 적용
         const linkerIcon = CATEGORY_ICONS[m.categoryId ?? 0] ?? "/icons/default.png";
 
-        // 마커 이미지 생성
+        // 표시 크기(핀): 45 × 64.29이면 offset y는 height와 동일하게
+        const W = 45;
+        const H = 64.29;
+
         const markerImage = new kakao.maps.MarkerImage(
           linkerIcon,
-          new kakao.maps.Size(32, 32), // 아이콘 크기
-          { offset: new kakao.maps.Point(16, 32) },
+          new kakao.maps.Size(W, H),
+          { offset: new kakao.maps.Point(W / 2, H) }, // 하단 중앙
         );
 
         const marker = new kakao.maps.Marker({
@@ -150,7 +159,17 @@ export default function MapPage(): React.ReactElement {
           title: m.name,
           position: new kakao.maps.LatLng(lat, lng),
           image: markerImage,
+          zIndex: 3,
+          //클릭/hover 이벤트 활성화
+          clickable: true,
         });
+
+        // 마커 클릭 시 상세보기 (ID 기반)
+        if (typeof linkerId === "number") {
+          kakao.maps.event.addListener(marker, "click", () => {
+            onOpenDetailById(linkerId);
+          });
+        }
 
         linkerMarkersRef.current.push(marker);
       });
@@ -265,6 +284,17 @@ export default function MapPage(): React.ReactElement {
   }, []);
 
   // spot markers 렌더링
+  const markers = useMemo(
+    () =>
+      Object.entries(spots).map(([spotId, s]) => ({
+        spotId,
+        lat: s.lat,
+        lng: s.lng,
+        alias: s.alias,
+        category: s.category,
+      })),
+    [spots],
+  );
 
   useEffect(() => {
     if (!kakaoMapRef.current || !window.kakao?.maps) return;
