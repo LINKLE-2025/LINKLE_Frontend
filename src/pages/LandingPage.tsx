@@ -1,3 +1,5 @@
+import JoinFooter from "@/components/footer/JoinFooter";
+import MainHeader from "@/components/header/MainHeader";
 import React, { useEffect } from "react";
 
 const LandingPage: React.FC = () => {
@@ -12,32 +14,35 @@ const LandingPage: React.FC = () => {
   }, []);
 
   return (
-    <div className='flex flex-col min-h-screen font-sans text-black'>
-      {/* 시멘틱 Header */}
-      <header className='flex items-center border-b border-gray-200 px-5 py-3'>
-        <img src='/linkle-icon.svg' alt='LINKLE 로고' className='h-6 mr-2' />
-        <h1 className='text-lg font-medium'>LINKLE</h1>
-      </header>
+    <div className='flex flex-col min-h-screen text-black'>
+      {/* Header */}
+      <MainHeader />
 
-      {/* 시멘틱 Main */}
-      <main className='flex flex-1 flex-col items-center justify-center px-6 text-center'>
+      {/* Main */}
+      <main className='flex flex-1 flex-col items-center justify-center px-6 text-center mb-10'>
         <figure className='flex flex-col items-center'>
           <img
-            src='/linkle-icon.svg'
+            src='/logos/linkle-icon.svg'
             alt='LINKLE 심볼'
-            className='w-2/5 max-w-[400px] h-auto my-6 mt-[-40px]'
+            className='w-1/2 max-w-[400px] h-auto'
           />
           <figcaption className='sr-only'>서비스 대표 로고</figcaption>
         </figure>
-
-        <h2 className='text-4xl md:text-5xl font-bold mb-4'>LINKLE</h2>
-        <p className='text-gray-600 text-base md:text-lg leading-relaxed mb-6'>
+        <figure className='flex flex-col items-center'>
+          <img
+            src='/logos/logo_text.svg'
+            alt='LINKLE 텍스트 로고'
+            className='w-[45vw] max-w-[200px] h-auto my-5'
+          />
+          <figcaption className='sr-only'>서비스 텍스트 로고</figcaption>
+        </figure>
+        <p className='text-gray-600 text-base md:text-lg leading-relaxed mt-1 mb-5'>
           링커에 참여하고 친구들을 만나
           <br />
           다양한 추억을 남겨보세요.
         </p>
 
-        <button className='bg-linkleGray hover:bg-black text-white font-bold py-3 px-8 rounded-full w-4/5 max-w-xs mb-6'>
+        <button className='bg-linkleGray hover:bg-black text-white font-bold py-2.5 px-8 rounded-full w-full max-w-xs mb-5'>
           LINKLE 앱 열기
         </button>
 
@@ -52,8 +57,8 @@ const LandingPage: React.FC = () => {
         </p>
       </main>
 
-      {/* 시멘틱 Footer */}
-      <footer className='text-gray-400 text-xs py-4 text-center'>© TEAM CARDGARDEN</footer>
+      {/* Footer */}
+      <JoinFooter />
     </div>
   );
 };

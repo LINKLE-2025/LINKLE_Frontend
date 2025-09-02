@@ -12,7 +12,10 @@
     "paths": {
       "@/*": ["src/*"]
     },
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "outDir": "./dist", // 빌드된 js 파일이 모일 위치
+    "rootDir": "./src", // 소스 루트 경로
+    "noEmit": true // 보통 Vite/CRA 쓰면 이 옵션 켜서 js 아예 안 만들게 함
   },
   "include": ["src", "src/types/**/*.d.ts"]
 }
