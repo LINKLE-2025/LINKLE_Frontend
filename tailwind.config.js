@@ -4,7 +4,13 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["SF Pro", "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: [
+          "SF Pro", // iOS/macOS 기기에서만 적용
+          "Inter", // 다른 환경에서는 Inter
+          "ui-sans-serif",
+          "system-ui",
+          "sans-serif",
+        ],
       },
       colors: {
         linkleGray: "#414141",

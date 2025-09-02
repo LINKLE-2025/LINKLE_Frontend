@@ -1,15 +1,18 @@
+/* Others : Inter */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap");
+
+/* iOS/macOS : SF Pro = */
+@font-face {
+  font-family: "SF Pro";
+  font-style: normal;
+  font-weight: 400;
+  src: local("SF Pro Display Regular"), local("SF Pro Text Regular");
+}
+
 /* Tailwind CSS */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Custom Font : SF Pro */
-@font-face {
-  font-family: "SF Pro";
-  src: url("/fonts/SF-Pro-Display-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-}
 
 body {
   @apply font-sans;
