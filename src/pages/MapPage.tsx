@@ -92,6 +92,22 @@ export default function MapPage(): React.ReactElement {
     }
   };
 
+  // categoryId에 따른 아이콘 매핑
+  const CATEGORY_ICONS: Record<number, string> = {
+    1: "/icons/meal.png",
+    2: "/icons/cafe.png",
+    3: "/icons/shopping.png",
+    4: "/icons/movie.png",
+    5: "/icons/learning.png",
+    6: "/icons/exercise.png",
+    7: "/icons/reading.png",
+    8: "/icons/music.png",
+    9: "/icons/drinking.png",
+    10: "/icons/hospital.png",
+    11: "/icons/game.png",
+    12: "/icons/travel.png",
+  };
+
   // 기존 링커 불러오기
   const loadExistingLinkers = async (map: kakao.maps.Map) => {
     try {
@@ -103,40 +119,43 @@ export default function MapPage(): React.ReactElement {
         locationY?: number;
         lat?: number;
         lng?: number;
+        categoryId?: number;
       }> = await res.json();
 
+      // 기존 마커 제거
       linkerMarkersRef.current.forEach((m) => m.setMap(null));
       linkerMarkersRef.current = [];
 
       const kakao = window.kakao;
+
       items.forEach((m) => {
         const lat = m.locationX ?? m.lat;
         const lng = m.locationY ?? m.lng;
         if (typeof lat !== "number" || typeof lng !== "number") return;
+
+        // 카테고리별 이미지 적용
+        const linkerIcon = CATEGORY_ICONS[m.categoryId ?? 0] ?? "/icons/default.png";
+
+        // 마커 이미지 생성
+        const markerImage = new kakao.maps.MarkerImage(
+          linkerIcon,
+          new kakao.maps.Size(32, 32), // 아이콘 크기
+          { offset: new kakao.maps.Point(16, 32) },
+        );
+
         const marker = new kakao.maps.Marker({
           map,
           title: m.name,
           position: new kakao.maps.LatLng(lat, lng),
+          image: markerImage,
         });
+
         linkerMarkersRef.current.push(marker);
       });
     } catch (e) {
       console.error(e);
     }
   };
-
-  // spots → markers 변환
-  const markers = useMemo(
-    () =>
-      Object.entries(spots).map(([spotId, s]) => ({
-        spotId,
-        lat: s.lat,
-        lng: s.lng,
-        alias: s.alias,
-        category: s.category,
-      })),
-    [spots],
-  );
 
   // Kakao Map 로드
   useEffect(() => {
