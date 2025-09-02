@@ -12,6 +12,8 @@
   "dependencies": {
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-kakao-maps-sdk": "^1.2.0",
+    "react-modal-sheet": "^4.4.0",
     "react-router-dom": "^7.8.2"
   },
   "devDependencies": {
