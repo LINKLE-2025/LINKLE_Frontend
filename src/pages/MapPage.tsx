@@ -73,6 +73,7 @@ export default function MapPage(): React.ReactElement {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
+        credentials: "include",
       });
       if (!res.ok) throw new Error("POST /api/linker 실패");
       if (kakaoMapRef.current) {
@@ -362,6 +363,7 @@ export default function MapPage(): React.ReactElement {
     setActiveId(id);
   };
 
+  //얘넨 아직 구현안됨
   const addPhoto = ({ url, caption }: { url: string; caption?: string }) => {
     if (!activeId) return;
     setSpots((prev) => {
@@ -377,7 +379,7 @@ export default function MapPage(): React.ReactElement {
       return next;
     });
   };
-
+  //구현안됨
   const addMessage = ({ text }: { text: string }) => {
     if (!activeId) return;
     setSpots((prev) => {
@@ -483,6 +485,7 @@ export default function MapPage(): React.ReactElement {
                 inputRef={inputRef}
                 hasNextPage={hasNextPage}
                 currentPage={currentPage}
+                onOpenModal={handleResultClick}
               />
             </Sheet.Content>
           </Sheet.Container>
