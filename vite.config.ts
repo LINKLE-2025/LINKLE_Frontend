@@ -50,8 +50,15 @@ export default defineConfig(({ mode }) => {
         key: fs.readFileSync(env.VITE_SSL_KEY),
         cert: fs.readFileSync(env.VITE_SSL_CERT),
       },
-      host: "0.0.0.0", // 외부에서도 접속 가능
-      port: 3000, // 포트는 원하는 대로 설정 가능
+      host: "0.0.0.0",
+      port: 3000,
+      proxy: {
+        "/api": {
+          target: "https://192.168.0.156:7777",
+          changeOrigin: true,
+          secure: false, // self-signed 백엔드
+        },
+      },
     },
   };
 });
