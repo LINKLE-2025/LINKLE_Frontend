@@ -1,6 +1,16 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 const LandingPage: React.FC = () => {
+  useEffect(() => {
+    fetch("/api/test")
+      .then((res) => {
+        if (!res.ok) throw new Error("API 실패");
+        return res.json();
+      })
+      .then((data) => console.log("API 응답:", data))
+      .catch((err) => console.error(err));
+  }, []);
+
   return (
     <div className='flex flex-col min-h-screen font-sans text-black'>
       {/* 시멘틱 Header */}
