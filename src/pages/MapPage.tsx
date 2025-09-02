@@ -73,6 +73,7 @@ export default function MapPage(): React.ReactElement {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
+        credentials: "include",
       });
       if (!res.ok) throw new Error("POST /api/linker 실패");
       if (kakaoMapRef.current) {
