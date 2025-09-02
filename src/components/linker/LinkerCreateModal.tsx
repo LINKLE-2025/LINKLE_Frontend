@@ -20,13 +20,13 @@ interface LinkerCreateModalProps {
   onClose: () => void;
   initial?: {
     address?: string;
-    name?: string; // 지도에서 가져온 상호명
+    addressName?: string;
     lat?: number;
     lng?: number;
   };
   onSubmit: (data: {
-    name: string; // 별칭
-    shopName: string; // 상호명
+    name: string;
+    addressName: string;
     memo: string;
     address: string;
     locationX?: number;
@@ -47,20 +47,19 @@ export default function LinkerCreateModal({
   const [title, setTitle] = useState("");
   const [tags, setTags] = useState("");
   const [address, setAddress] = useState("");
-  const [shopName, setShopName] = useState("");
+  const [addressName, setAddressName] = useState("");
   const [activityId, setActivityId] = useState<number | null>(null);
 
-  // 초기 값 세팅
   useEffect(() => {
     if (!initial) return;
+    console.log("Initial values:", initial); // 🔹 디버깅 로그
     setAddress(initial.address ?? "");
-    setShopName(initial.name ?? "");
+    setAddressName(initial.addressName ?? "알 수 없는 상호명");
     setTitle("");
     setTags("");
     setActivityId(null);
   }, [initial]);
 
-  // 모달 show/hide
   useEffect(() => {
     if (!dialogRef.current) return;
     if (open) dialogRef.current.showModal();
@@ -77,7 +76,7 @@ export default function LinkerCreateModal({
 
     onSubmit({
       name: title,
-      shopName: shopName,
+      addressName,
       memo: tags,
       address,
       locationX: initial?.lat,
@@ -90,7 +89,6 @@ export default function LinkerCreateModal({
   return (
     <dialog ref={dialogRef} className='max-w-[420px] w-[90%] rounded-xl border-0 p-0'>
       <form onSubmit={handleSubmit} className='flex flex-col'>
-        {/* 헤더 */}
         <div className='flex items-center justify-between border-b border-gray-200 px-4 py-3'>
           <strong>링커 생성</strong>
           <button
@@ -102,9 +100,7 @@ export default function LinkerCreateModal({
           </button>
         </div>
 
-        {/* 바디 */}
         <div className='grid gap-3 p-4'>
-          {/* 별칭 */}
           <div>
             <div className='mb-1.5 text-xs text-gray-500'>별칭을 지정해 주세요</div>
             <input
@@ -115,7 +111,6 @@ export default function LinkerCreateModal({
             />
           </div>
 
-          {/* 태그 */}
           <div>
             <div className='mb-1.5 text-xs text-gray-500'>태그를 입력해 주세요</div>
             <input
@@ -126,7 +121,6 @@ export default function LinkerCreateModal({
             />
           </div>
 
-          {/* 주소 */}
           <div>
             <div className='mb-1.5 text-xs text-gray-500'>도로명 주소</div>
             <input
@@ -136,18 +130,11 @@ export default function LinkerCreateModal({
             />
           </div>
 
-          {/* 상호명 */}
           <div>
             <div className='mb-1.5 text-xs text-gray-500'>상호명</div>
-            <input
-              value={shopName}
-              readOnly
-              className='w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2.5'
-              placeholder='지도에서 가져온 상호명이 표시됩니다'
-            />
+            <input className='w-full rounded-lg border border-red-300 bg-gray-100 px-3 py-2.5' />
           </div>
 
-          {/* 활동 선택 */}
           <div>
             <div className='mb-2 text-xs text-gray-500'>활동을 선택해 주세요</div>
             <div className='grid grid-cols-4 gap-2'>
@@ -173,7 +160,6 @@ export default function LinkerCreateModal({
           </div>
         </div>
 
-        {/* 푸터 */}
         <div className='flex gap-2 border-t border-gray-200 p-4'>
           <button
             type='button'

@@ -2,10 +2,10 @@
 import type { RefObject, KeyboardEvent } from "react";
 
 export interface SearchResult {
-  name: string;
+  name: string; // 상호명
   address: string;
-  lat?: number;
-  lng?: number;
+  lat: number;
+  lng: number;
 }
 
 export interface SearchPanelProps {
@@ -70,7 +70,10 @@ export default function SearchPanel({
             </div>
             <button
               type='button'
-              onClick={() => onOpenModal(item)} // 🔹 링커 추가 버튼
+              onClick={() => {
+                console.log("검색 클릭 item:", item);
+                onOpenModal(item);
+              }} // 🔹 링커 추가 버튼
               className='ml-2 px-3 py-1 rounded-lg bg-green-500 text-white text-sm'
             >
               링커 추가

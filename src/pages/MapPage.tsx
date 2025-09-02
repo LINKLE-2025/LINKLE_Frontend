@@ -53,6 +53,7 @@ export default function MapPage(): React.ReactElement {
     lat?: number;
     lng?: number;
     address?: string;
+    addressName?: string; // 🔹 추가
   } | null>(null);
 
   // 검색 input ref
@@ -67,6 +68,7 @@ export default function MapPage(): React.ReactElement {
     locationY?: number;
     categoryId: number;
     addressDetail: string;
+    addressName: string; // 🔹 추가
   }) => {
     try {
       const res = await fetch("/api/linker", {
@@ -341,9 +343,22 @@ export default function MapPage(): React.ReactElement {
     );
   };
 
-  const handleResultClick = (item: SearchItem) => {
+  const handleResultClick = (item: SearchResult) => {
     if (!kakaoMapRef.current) return;
+
+    // 지도 중심 이동
     kakaoMapRef.current.panTo(new window.kakao.maps.LatLng(item.lat, item.lng));
+    // 모달 초기값 세팅
+    setLinkerInitial({
+      lat: item.lat,
+      lng: item.lng,
+      address: item.address,
+      addressName: item.name, // 🔹 상호명
+    });
+    // 모달 열기
+    setLinkerOpen(true);
+
+    // 검색창 닫기
     setSearchOpen(false);
   };
 
@@ -397,6 +412,17 @@ export default function MapPage(): React.ReactElement {
   };
 
   const spot = activeId ? spots[activeId] : null;
+
+  const handleOpenModal = (item: SearchResult) => {
+    console.log("검색 클릭 item:", item);
+    setLinkerInitial({
+      lat: item.lat,
+      lng: item.lng,
+      address: item.address,
+      addressName: item.name,
+    });
+    setLinkerOpen(true);
+  };
 
   return (
     <>
@@ -481,11 +507,10 @@ export default function MapPage(): React.ReactElement {
                 setSearchQuery={setSearchQuery}
                 searchResults={searchResults}
                 handleSearch={handleSearch}
-                handleResultClick={handleResultClick}
                 inputRef={inputRef}
                 hasNextPage={hasNextPage}
                 currentPage={currentPage}
-                onOpenModal={handleResultClick}
+                onOpenModal={handleOpenModal}
               />
             </Sheet.Content>
           </Sheet.Container>
