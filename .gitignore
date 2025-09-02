@@ -14,6 +14,7 @@ node_modules/
 dist/
 dist-ssr/
 dev-dist/
+sw.js
 
 # Local env files (보안 파일)
 .env*
