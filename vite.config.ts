@@ -12,7 +12,12 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: "autoUpdate",
-        includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg"],
+        includeAssets: [
+          "icons/favicon/favicon.svg",
+          "icons/favicon/favicon.ico",
+          "icons/pwa/apple-touch-icon.png",
+          "icons/logos/linkle-icon.svg",
+        ],
         devOptions: {
           enabled: true,
         },
@@ -27,12 +32,12 @@ export default defineConfig(({ mode }) => {
           background_color: "#ffffff",
           icons: [
             {
-              src: "linkle-icon-192x192.png",
+              src: "icons/pwa/linkle-icon-192x192.png",
               sizes: "192x192",
               type: "image/png",
             },
             {
-              src: "linkle-icon-512x512.png",
+              src: "icons/pwa/linkle-icon-512x512.png",
               sizes: "512x512",
               type: "image/png",
             },

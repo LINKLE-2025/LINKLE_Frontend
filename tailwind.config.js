@@ -5,8 +5,8 @@ export default {
     extend: {
       fontFamily: {
         sans: [
-          "SF Pro", // iOS/macOS 기기에서만 적용
           "Inter", // 다른 환경에서는 Inter
+          "SF Pro", // iOS/macOS 기기에서만 적용
           "ui-sans-serif",
           "system-ui",
           "sans-serif",
