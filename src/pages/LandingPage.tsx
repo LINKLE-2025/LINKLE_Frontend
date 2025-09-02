@@ -1,3 +1,5 @@
+import JoinFooter from "@/components/footer/JoinFooter";
+import MainHeader from "@/components/header/MainHeader";
 import React, { useEffect } from "react";
 
 const LandingPage: React.FC = () => {
@@ -12,14 +14,11 @@ const LandingPage: React.FC = () => {
   }, []);
 
   return (
-    <div className='flex flex-col min-h-screen font-sans text-black'>
-      {/* 시멘틱 Header */}
-      <header className='flex items-center border-b border-gray-200 px-5 py-3'>
-        <img src='/logos/linkle-icon.svg' alt='LINKLE 로고' className='h-7 mr-1.5' />
-        <img src='/logos/logo_text.svg' alt='LINKLE 로고' className='h-6' />
-      </header>
+    <div className='flex flex-col min-h-screen text-black'>
+      {/* Header */}
+      <MainHeader />
 
-      {/* 시멘틱 Main */}
+      {/* Main */}
       <main className='flex flex-1 flex-col items-center justify-center px-6 text-center mb-10'>
         <figure className='flex flex-col items-center'>
           <img
@@ -58,8 +57,8 @@ const LandingPage: React.FC = () => {
         </p>
       </main>
 
-      {/* 시멘틱 Footer */}
-      <footer className='text-gray-400 text-xs py-4 text-center m-1'>© TEAM CARDGARDEN</footer>
+      {/* Footer */}
+      <JoinFooter />
     </div>
   );
 };
