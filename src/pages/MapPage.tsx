@@ -493,25 +493,30 @@ export default function MapPage(): React.ReactElement {
         <Sheet
           isOpen={searchOpen}
           onClose={() => setSearchOpen(false)}
-          snapPoints={[1, 0.5, 0.3]} // <- 화면 비율 (30%, 50%, 100%)
-          initialSnap={2} // <- 처음 열릴 때 0=30%, 1=50%, 2=100%
+          snapPoints={[1, 0.5, 0.3]}
+          initialSnap={1}
         >
           <Sheet.Container>
             <Sheet.Header>
               <div className='mx-auto my-2 h-1.5 w-12 rounded-full bg-gray-300' />
             </Sheet.Header>
             <Sheet.Content>
-              <div className='text-center py-2 border-b'>🔍 검색</div>
-              <SearchPanel
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                searchResults={searchResults}
-                handleSearch={handleSearch}
-                inputRef={inputRef}
-                hasNextPage={hasNextPage}
-                currentPage={currentPage}
-                onOpenModal={handleOpenModal}
-              />
+              <div className='flex flex-col h-full'>
+                <div className='text-center py-2 border-b'>🔍 검색</div>
+                <div className='flex-1 min-h-0 overflow-y-auto'>
+                  <SearchPanel
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
+                    searchResults={searchResults}
+                    handleSearch={handleSearch}
+                    handleResultClick={handleResultClick}
+                    inputRef={inputRef}
+                    hasNextPage={hasNextPage}
+                    currentPage={currentPage}
+                    onOpenModal={handleOpenModal}
+                  />
+                </div>
+              </div>
             </Sheet.Content>
           </Sheet.Container>
         </Sheet>

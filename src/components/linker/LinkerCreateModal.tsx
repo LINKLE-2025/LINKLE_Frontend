@@ -54,7 +54,7 @@ export default function LinkerCreateModal({
     if (!initial) return;
     console.log("Initial values:", initial); // 🔹 디버깅 로그
     setAddress(initial.address ?? "");
-    setAddressName(initial.addressName ?? "알 수 없는 상호명");
+    setAddressName(initial.addressName ?? "");
     setTitle("");
     setTags("");
     setActivityId(null);
@@ -132,7 +132,11 @@ export default function LinkerCreateModal({
 
           <div>
             <div className='mb-1.5 text-xs text-gray-500'>상호명</div>
-            <input className='w-full rounded-lg border border-red-300 bg-gray-100 px-3 py-2.5' />
+            <input
+              className='w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2.5'
+              value={addressName}
+              readOnly
+            />
           </div>
 
           <div>
