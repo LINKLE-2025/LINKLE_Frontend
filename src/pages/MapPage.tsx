@@ -53,6 +53,7 @@ export default function MapPage(): React.ReactElement {
     lat?: number;
     lng?: number;
     address?: string;
+    addressName?: string; // 🔹 추가
   } | null>(null);
 
   // 검색 input ref
@@ -67,6 +68,7 @@ export default function MapPage(): React.ReactElement {
     locationY?: number;
     categoryId: number;
     addressDetail: string;
+    addressName: string; // 🔹 추가
   }) => {
     try {
       const res = await fetch("/api/linker", {
@@ -341,9 +343,22 @@ export default function MapPage(): React.ReactElement {
     );
   };
 
-  const handleResultClick = (item: SearchItem) => {
+  const handleResultClick = (item: SearchResult) => {
     if (!kakaoMapRef.current) return;
+
+    // 지도 중심 이동
     kakaoMapRef.current.panTo(new window.kakao.maps.LatLng(item.lat, item.lng));
+    // 모달 초기값 세팅
+    setLinkerInitial({
+      lat: item.lat,
+      lng: item.lng,
+      address: item.address,
+      addressName: item.name, // 🔹 상호명
+    });
+    // 모달 열기
+    setLinkerOpen(true);
+
+    // 검색창 닫기
     setSearchOpen(false);
   };
 
@@ -397,6 +412,17 @@ export default function MapPage(): React.ReactElement {
   };
 
   const spot = activeId ? spots[activeId] : null;
+
+  const handleOpenModal = (item: SearchResult) => {
+    console.log("검색 클릭 item:", item);
+    setLinkerInitial({
+      lat: item.lat,
+      lng: item.lng,
+      address: item.address,
+      addressName: item.name,
+    });
+    setLinkerOpen(true);
+  };
 
   return (
     <>
@@ -467,26 +493,30 @@ export default function MapPage(): React.ReactElement {
         <Sheet
           isOpen={searchOpen}
           onClose={() => setSearchOpen(false)}
-          snapPoints={[1, 0.5, 0.3]} // <- 화면 비율 (30%, 50%, 100%)
-          initialSnap={2} // <- 처음 열릴 때 0=30%, 1=50%, 2=100%
+          snapPoints={[1, 0.5, 0.3]}
+          initialSnap={1}
         >
           <Sheet.Container>
             <Sheet.Header>
               <div className='mx-auto my-2 h-1.5 w-12 rounded-full bg-gray-300' />
             </Sheet.Header>
             <Sheet.Content>
-              <div className='text-center py-2 border-b'>🔍 검색</div>
-              <SearchPanel
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                searchResults={searchResults}
-                handleSearch={handleSearch}
-                handleResultClick={handleResultClick}
-                inputRef={inputRef}
-                hasNextPage={hasNextPage}
-                currentPage={currentPage}
-                onOpenModal={handleResultClick}
-              />
+              <div className='flex flex-col h-full'>
+                <div className='text-center py-2 border-b'>🔍 검색</div>
+                <div className='flex-1 min-h-0 overflow-y-auto'>
+                  <SearchPanel
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
+                    searchResults={searchResults}
+                    handleSearch={handleSearch}
+                    handleResultClick={handleResultClick}
+                    inputRef={inputRef}
+                    hasNextPage={hasNextPage}
+                    currentPage={currentPage}
+                    onOpenModal={handleOpenModal}
+                  />
+                </div>
+              </div>
             </Sheet.Content>
           </Sheet.Container>
         </Sheet>
