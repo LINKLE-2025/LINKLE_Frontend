@@ -69,17 +69,15 @@ export default function SearchPanel({
               <div className='font-medium'>{item.name}</div>
               <div className='text-sm text-gray-500'>{item.address}</div>
             </div>
-            <button
-              type='button'
+            <img
+              src='/icons/linker.png'
+              alt='링커 추가'
+              className='ml-2 w-12 h-12 cursor-pointer'
               onClick={(e) => {
-                console.log("검색 클릭 item:", item);
                 e.stopPropagation(); // div 클릭 이벤트 전파 방지
                 onOpenModal(item);
-              }} // 🔹 링커 추가 버튼
-              className='ml-2 px-3 py-1 rounded-lg bg-green-500 text-white text-sm'
-            >
-              링커 추가
-            </button>
+              }}
+            />
           </div>
         ))}
 
