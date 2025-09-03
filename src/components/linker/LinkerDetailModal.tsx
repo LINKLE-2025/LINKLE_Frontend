@@ -70,13 +70,13 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
                       title='포스트작성'
                       onClick={CreatePost}
                     >
-                      <img src='public/icons/photo.png' />
+                      <img src='public/icons/mapicon/photo.png' />
                     </button>
                     <button
                       className='h-10 w-10 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center'
                       title='채팅방생성'
                     >
-                      <img src='public/icons/chat.png' />
+                      <img src='public/icons/mapicon/chat.png' />
                     </button>
                   </div>
                 </div>
@@ -97,14 +97,14 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
           <div className='mt-2 border-b'>
             <div className='flex items-center justify-around text-sm'>
               <button className='relative py-2 font-semibold'>
-                <img src='public/icons/Vector.png' />
+                <img src='public/icons/mapicon/Vector.png' />
                 <span className='absolute -bottom-[1px] left-0 right-0 h-[2px] bg-black' />
               </button>
               <button className='py-2 text-gray-400'>
-                <img src='public/icons/User Account.png' />
+                <img src='public/icons/mapicon/User Account.png' />
               </button>
               <button className='py-2 text-gray-400'>
-                <img src='public/icons/lucide_crown.png' />
+                <img src='public/icons/mapicon/lucide_crown.png' />
               </button>
             </div>
           </div>

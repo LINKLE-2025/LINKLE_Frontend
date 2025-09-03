@@ -108,18 +108,18 @@ export default function MapPage(): React.ReactElement {
 
   // categoryId에 따른 아이콘 매핑
   const CATEGORY_ICONS: Record<number, string> = {
-    1: "/icons/meal.png",
-    2: "/icons/cafe.png",
-    3: "/icons/music.png",
-    4: "/icons/movie.png",
-    5: "/icons/readng.png",
-    6: "/icons/exercise.png",
-    7: "/icons/drinking.png",
-    8: "/icons/learning.png",
-    9: "/icons/shopping.png",
-    10: "/icons/hospital.png",
-    11: "/icons/game.png",
-    12: "/icons/travel.png",
+    1: "/icons/category/meal.png",
+    2: "/icons/category/cafe.png",
+    3: "/icons/category/music.png",
+    4: "/icons/category/movie.png",
+    5: "/icons/category/readng.png",
+    6: "/icons/category/exercise.png",
+    7: "/icons/category/drinking.png",
+    8: "/icons/category/learning.png",
+    9: "/icons/category/shopping.png",
+    10: "/icons/category/hospital.png",
+    11: "/icons/category/game.png",
+    12: "/icons/category/travel.png",
   };
 
   // 링커 지도에서 전체보기
@@ -315,7 +315,7 @@ export default function MapPage(): React.ReactElement {
               const myLat = pos.coords.latitude;
               const myLng = pos.coords.longitude;
               const myLocationImage = new window.kakao.maps.MarkerImage(
-                "/icons/user_location2.png",
+                "/icons/mapicon/user_location2.png",
                 new window.kakao.maps.Size(20, 20),
                 { offset: new window.kakao.maps.Point(10, 10) },
               );
@@ -589,17 +589,17 @@ export default function MapPage(): React.ReactElement {
           {!searchOpen && (
             <div className='absolute bottom-[70px] right-5 flex flex-col gap-3 z-10'>
               <CircleButton
-                imgSrc='/icons/search.png'
+                imgSrc='/icons/mapicon/search.png'
                 alt='검색'
                 onClick={() => setSearchOpen(true)}
               />
               <CircleButton
-                imgSrc='/icons/refresh.png'
+                imgSrc='/icons/mapicon/refresh.png'
                 alt='새로고침'
                 onClick={() => window.location.reload()}
               />
               <CircleButton
-                imgSrc='/icons/location.png'
+                imgSrc='/icons/mapicon/location.png'
                 alt='내 위치'
                 onClick={() => {
                   if (navigator.geolocation && kakaoMapRef.current) {
