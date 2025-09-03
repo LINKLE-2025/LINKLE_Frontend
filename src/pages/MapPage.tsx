@@ -469,6 +469,10 @@ export default function MapPage(): React.ReactElement {
 
     // 지도 중심 이동
     kakaoMapRef.current.panTo(new window.kakao.maps.LatLng(item.lat - 0.001, item.lng)); // 약간 위로
+    setTimeout(() => {
+      kakaoMapRef.current?.setLevel(2);
+    }, 400);
+
     // 모달 초기값 세팅
     setLinkerInitial({
       lat: item.lat,
@@ -543,6 +547,7 @@ export default function MapPage(): React.ReactElement {
       addressName: item.name,
     });
     setLinkerOpen(true);
+    setSearchOpen(false);
   };
 
   return (
@@ -617,8 +622,8 @@ export default function MapPage(): React.ReactElement {
         <Sheet
           isOpen={searchOpen}
           onClose={() => setSearchOpen(false)}
-          snapPoints={[0.55, 0.3]}
-          initialSnap={1}
+          snapPoints={[0.6, 0.3]}
+          initialSnap={0}
         >
           <Sheet.Container>
             <Sheet.Header>
@@ -626,7 +631,6 @@ export default function MapPage(): React.ReactElement {
             </Sheet.Header>
             <Sheet.Content>
               <div className='flex flex-col h-[400px]'>
-                <div className='text-center py-2 border-b'>🔍 검색</div>
                 <div className='flex-1 min-h-0 overflow-y-auto'>
                   <SearchPanel
                     searchQuery={searchQuery}

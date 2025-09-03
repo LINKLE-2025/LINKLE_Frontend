@@ -1,0 +1,28 @@
+import React from "react";
+
+type Props = {
+  children: React.ReactNode;
+  onClick?: () => void;
+  type?: "button" | "submit" | "reset";
+  disabled?: boolean;
+  className?: string;
+};
+
+export default function AuthOutlinedButton({
+  children,
+  onClick,
+  type = "button",
+  disabled = false,
+  className = "",
+}: Props) {
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      className={`border border-gray-400 text-black hover:bg-gray-100 font-bold py-2 rounded-full w-full max-w-sm disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+    >
+      {children}
+    </button>
+  );
+}

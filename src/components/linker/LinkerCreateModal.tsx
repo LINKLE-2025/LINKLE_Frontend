@@ -115,7 +115,7 @@ export default function LinkerCreateModal({
 
   if (!open) return null;
 
-  return (
+  return ReactDOM.createPortal(
     <>
       {/* LinkerCreateModal */}
       <div className='fixed inset-0 z-[9998] flex items-center justify-center bg-black/30'>
@@ -212,6 +212,7 @@ export default function LinkerCreateModal({
         onConfirm={handleConfirm}
         onCancel={() => setConfirmOpen(false)}
       />
-    </>
+    </>,
+    document.body,
   );
 }
