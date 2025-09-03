@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
+import ConfirmModal from "./ConfirmModal"; // ConfirmModal import
 
 interface LinkerCreateModalProps {
   open: boolean;
@@ -13,7 +14,7 @@ interface LinkerCreateModalProps {
   onSubmit: (data: {
     name: string;
     addressName?: string;
-    memo?: string; // ✅ optional로 수정
+    memo?: string;
     address?: string;
     locationX?: number;
     locationY?: number;
@@ -21,34 +22,6 @@ interface LinkerCreateModalProps {
     addressDetail: string;
   }) => void;
 }
-
-// ConfirmModal Portal 기반
-interface ConfirmModalProps {
-  open: boolean;
-  message: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-}
-const ConfirmModal: React.FC<ConfirmModalProps> = ({ open, message, onConfirm, onCancel }) => {
-  if (!open) return null;
-
-  return ReactDOM.createPortal(
-    <div className='fixed inset-0 z-[9999] flex items-center justify-center bg-black/50'>
-      <div className='bg-white rounded-lg p-6 w-[300px]'>
-        <p className='mb-4 text-center'>{message}</p>
-        <div className='flex justify-between'>
-          <button onClick={onCancel} className='px-4 py-2 border rounded'>
-            취소
-          </button>
-          <button onClick={onConfirm} className='px-4 py-2 bg-blue-500 text-white rounded'>
-            확인
-          </button>
-        </div>
-      </div>
-    </div>,
-    document.body,
-  );
-};
 
 const ACTIVITIES = [
   "식사",
@@ -117,7 +90,7 @@ export default function LinkerCreateModal({
 
   return ReactDOM.createPortal(
     <>
-      {/* LinkerCreateModal */}
+      {/* LinkerCreateModal UI */}
       <div className='fixed inset-0 z-[9998] flex items-center justify-center bg-black/30'>
         <div className='bg-white rounded-xl w-[90%] max-w-[420px] p-4'>
           <form onSubmit={handleSubmit} className='flex flex-col'>
@@ -205,8 +178,9 @@ export default function LinkerCreateModal({
         </div>
       </div>
 
-      {/* ConfirmModal Portal */}
+      {/* ConfirmModal 사용 */}
       <ConfirmModal
+        key={confirmOpen ? "open" : "closed"}
         open={confirmOpen}
         message='정말 링커를 생성하시겠습니까?'
         onConfirm={handleConfirm}
