@@ -33,12 +33,12 @@ export default function SearchPanel({
 }: SearchPanelProps) {
   return (
     <div className='flex flex-col h-full bg-white'>
-      <div className='flex p-2'>
+      <div className='flex items-center p-2 border-b border-gray-200 gap-x-2'>
         <input
           ref={inputRef}
           type='text'
-          placeholder='검색어를 입력하세요'
-          className='flex-1 px-3 py-3 border border-gray-300 rounded-l-lg text-base outline-none'
+          placeholder='장소 검색'
+          className='flex-1 px-3 py-3 rounded-lg bg-gray-100 text-base outline-none'
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
@@ -52,9 +52,13 @@ export default function SearchPanel({
         <button
           type='button'
           onClick={() => handleSearch(1)}
-          className='px-3 border border-blue-500 bg-blue-500 text-white rounded-r-lg flex items-center justify-center cursor-pointer'
+          className='w-14 h-12 flex items-center justify-center bg-white  cursor-pointer'
         >
-          🔍
+          <img
+            src='/icons/search.png' // 🔍 돋보기 이미지 경로
+            alt='검색'
+            className='w-7 h-7'
+          />
         </button>
       </div>
 

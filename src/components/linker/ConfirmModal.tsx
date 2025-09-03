@@ -12,7 +12,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({ open, message, onConfirm, o
   if (!open) return null;
 
   return createPortal(
-    <div className='fixed inset-0 z-[9999] flex items-center justify-center bg-black/50'>
+    <div className='fixed inset-0 z-[10000] flex items-center justify-center bg-black/50'>
       <div className='bg-white rounded-lg p-6 w-[300px]'>
         <p className='mb-4 text-center'>{message}</p>
         <div className='flex justify-between'>
