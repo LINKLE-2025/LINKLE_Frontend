@@ -14,7 +14,7 @@ export interface SearchPanelProps {
   searchResults: SearchResult[];
   handleSearch: (page?: number) => void;
   handleResultClick: (item: SearchResult) => void;
-  inputRef: RefObject<HTMLInputElement>;
+  inputRef: RefObject<HTMLInputElement | null>;
   hasNextPage: boolean;
   currentPage: number;
   onOpenModal: (item: SearchResult) => void; // 🔹 추가

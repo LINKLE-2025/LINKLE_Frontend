@@ -60,23 +60,32 @@ export default function MapPage(): React.ReactElement {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   // 서버 저장
+  // 서버 저장
   const handleSaveLinker = async (payload: {
     name: string;
-    memo: string;
-    address: string;
+    memo?: string;
+    address?: string;
     locationX?: number;
     locationY?: number;
     categoryId: number;
     addressDetail: string;
-    addressName: string; // 🔹 추가
+    addressName?: string; // 상호명은 optional
   }) => {
     try {
+      const safePayload = {
+        ...payload,
+        memo: payload.memo ?? "",
+        address: payload.address ?? "",
+        addressName: payload.addressName ?? "",
+      };
+
       const res = await fetch("/api/linker", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(safePayload),
         credentials: "include",
       });
+
       if (!res.ok) throw new Error("POST /api/linker 실패");
       if (kakaoMapRef.current) {
         await loadExistingLinkers(kakaoMapRef.current);
@@ -139,19 +148,15 @@ export default function MapPage(): React.ReactElement {
       items.forEach((m) => {
         const lat = m.locationX ?? m.lat;
         const lng = m.locationY ?? m.lng;
-        const linkerId = m.linkerId; // ✅ 올바른 값 사용
+        const linkerId = m.linkerId;
         if (typeof lat !== "number" || typeof lng !== "number") return;
 
         const linkerIcon = CATEGORY_ICONS[m.categoryId ?? 0] ?? "/icons/default.png";
 
-        // 표시 크기(핀): 45 × 64.29이면 offset y는 height와 동일하게
-        const W = 45;
-        const H = 64.29;
-
         const markerImage = new kakao.maps.MarkerImage(
           linkerIcon,
-          new kakao.maps.Size(W, H),
-          { offset: new kakao.maps.Point(W / 2, H) }, // 하단 중앙
+          new kakao.maps.Size(45, 64.29), // 아이콘 크기
+          { offset: new kakao.maps.Point(22.5, 64.29) },
         );
 
         const marker = new kakao.maps.Marker({
@@ -234,7 +239,7 @@ export default function MapPage(): React.ReactElement {
             setCreateDraft({ lat: latlng.getLat(), lng: latlng.getLng() });
           };
 
-          window.kakao.maps.event.addListener(map, "click", handleMapClick);
+          window.kakao.maps.event.addListener(map, "click", handleMapClick as any);
 
           // 내 위치 마커
 
@@ -529,8 +534,11 @@ export default function MapPage(): React.ReactElement {
                     navigator.geolocation.getCurrentPosition((position) => {
                       const lat = position.coords.latitude;
                       const lng = position.coords.longitude;
-                      kakaoMapRef.current.panTo(new (window as any).kakao.maps.LatLng(lat, lng));
-                      kakaoMapRef.current.setLevel(2);
+                      if (kakaoMapRef.current) {
+                        //null 체크 추가
+                        kakaoMapRef.current.panTo(new (window as any).kakao.maps.LatLng(lat, lng));
+                        kakaoMapRef.current.setLevel(2);
+                      }
                     });
                   }
                 }}
