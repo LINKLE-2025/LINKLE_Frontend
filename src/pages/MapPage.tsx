@@ -8,6 +8,8 @@ import MapWrapper from "../components/map/MapWrapper";
 import LinkerCreateModal from "../components/linker/LinkerCreateModal";
 import type { SearchResult } from "../components/search/SearchPanel";
 import { Sheet } from "react-modal-sheet";
+import { saveLinker, fetchLinkers } from "@/services/linkerService";
+import type { LinkerPayload } from "@/services/linkerService";
 
 interface StoredSpot {
   lat: number;
@@ -59,50 +61,6 @@ export default function MapPage(): React.ReactElement {
   // 검색 input ref
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  // 서버 저장
-  // 서버 저장
-  const handleSaveLinker = async (payload: {
-    name: string;
-    memo?: string;
-    address?: string;
-    locationX?: number;
-    locationY?: number;
-    categoryId: number;
-    addressDetail: string;
-    addressName?: string; // 상호명은 optional
-  }) => {
-    try {
-      const safePayload = {
-        ...payload,
-        memo: payload.memo ?? "",
-        address: payload.address ?? "",
-        addressName: payload.addressName ?? "",
-      };
-
-      const res = await fetch("/api/linker", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(safePayload),
-        credentials: "include",
-      });
-
-      if (!res.ok) throw new Error("POST /api/linker 실패");
-      if (kakaoMapRef.current) {
-        await loadExistingLinkers(kakaoMapRef.current);
-      }
-    } catch (e) {
-      console.error(e);
-      alert("저장에 실패했습니다.");
-    } finally {
-      setLinkerOpen(false);
-      setLinkerInitial(null);
-      if (draftMarkerRef.current) {
-        draftMarkerRef.current.setMap(null);
-        draftMarkerRef.current = null;
-      }
-    }
-  };
-
   // categoryId에 따른 아이콘 매핑
   const CATEGORY_ICONS: Record<number, string> = {
     1: "/icons/meal.png",
@@ -119,19 +77,31 @@ export default function MapPage(): React.ReactElement {
     12: "/icons/travel.png",
   };
 
+  // 서버 저장
+  const handleSaveLinker = async (payload: LinkerPayload) => {
+    try {
+      await saveLinker(payload);
+
+      if (kakaoMapRef.current) {
+        await loadExistingLinkers(kakaoMapRef.current);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("저장에 실패했습니다.");
+    } finally {
+      setLinkerOpen(false);
+      setLinkerInitial(null);
+      if (draftMarkerRef.current) {
+        draftMarkerRef.current.setMap(null);
+        draftMarkerRef.current = null;
+      }
+    }
+  };
+
   // 기존 링커 불러오기
   const loadExistingLinkers = async (map: kakao.maps.Map) => {
     try {
-      const res = await fetch("/api/linker");
-      if (!res.ok) throw new Error("GET /api/linker 실패");
-      const items: Array<{
-        name: string;
-        locationX?: number;
-        locationY?: number;
-        lat?: number;
-        lng?: number;
-        categoryId?: number;
-      }> = await res.json();
+      const items = await fetchLinkers();
 
       // 기존 마커 제거
       linkerMarkersRef.current.forEach((m) => m.setMap(null));
@@ -144,15 +114,11 @@ export default function MapPage(): React.ReactElement {
         const lng = m.locationY ?? m.lng;
         if (typeof lat !== "number" || typeof lng !== "number") return;
 
-        // 카테고리별 이미지 적용
         const linkerIcon = CATEGORY_ICONS[m.categoryId ?? 0] ?? "/icons/default.png";
 
-        // 마커 이미지 생성
-        const markerImage = new kakao.maps.MarkerImage(
-          linkerIcon,
-          new kakao.maps.Size(45, 64.29), // 아이콘 크기
-          { offset: new kakao.maps.Point(22.5, 64.29) },
-        );
+        const markerImage = new kakao.maps.MarkerImage(linkerIcon, new kakao.maps.Size(45, 64.29), {
+          offset: new kakao.maps.Point(22.5, 64.29),
+        });
 
         const marker = new kakao.maps.Marker({
           map,
