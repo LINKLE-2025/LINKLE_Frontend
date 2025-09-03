@@ -7,6 +7,7 @@ import SearchPanel from "../components/search/SearchPanel";
 import MapWrapper from "../components/map/MapWrapper";
 import LinkerCreateModal from "../components/linker/LinkerCreateModal";
 import type { SearchResult } from "../components/search/SearchPanel";
+import LinkerDetailModal from "../components/linker/LinkerDetailModal";
 import { Sheet } from "react-modal-sheet";
 
 interface StoredSpot {
@@ -53,7 +54,7 @@ export default function MapPage(): React.ReactElement {
     lat?: number;
     lng?: number;
     address?: string;
-    addressName?: string; // 🔹 추가
+    addressName?: string; // 상호명
   } | null>(null);
 
   // 검색 input ref
@@ -69,7 +70,7 @@ export default function MapPage(): React.ReactElement {
     locationY?: number;
     categoryId: number;
     addressDetail: string;
-    addressName?: string; // 상호명은 optional
+    addressName?: string; // 상호명은 null 허용
   }) => {
     try {
       const safePayload = {
@@ -88,7 +89,7 @@ export default function MapPage(): React.ReactElement {
 
       if (!res.ok) throw new Error("POST /api/linker 실패");
       if (kakaoMapRef.current) {
-        await loadExistingLinkers(kakaoMapRef.current);
+        await loadExistingLinkers(kakaoMapRef.current, onOpenDetailById);
       }
     } catch (e) {
       console.error(e);
@@ -119,17 +120,81 @@ export default function MapPage(): React.ReactElement {
     12: "/icons/travel.png",
   };
 
-  type LinkerItem = {
+  // 링커 지도에서 전체보기
+  type LinkerListItem = {
+    linkerId: number;
     name: string;
-    locationX?: number;
-    locationY?: number;
-    lat?: number;
-    lng?: number;
-    categoryId?: number;
-    linkerId?: number; // ← 서버가 내려주는 PK
+    categoryId?: number | null;
+    locationX: number | null; // lng
+    locationY: number | null; // lat
+    // 백워드 호환
+    lat?: number | null;
+    lng?: number | null;
   };
 
-  // 기존 링커 불러오기
+  //링커 상세보기 (구현중)
+  type LinkerDetail = {
+    linkerId: number;
+    name: string;
+    address?: string;
+    adresssName?: string; // 백엔드 오타 호환
+    categoryId?: number | null;
+    locationX?: number | null; // lng
+    locationY?: number | null; // lat
+    memo?: string | null;
+    createdAt?: string;
+    phone?: string | null;
+  };
+
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
+  const [detailData, setDetailData] = useState<LinkerDetail | null>(null);
+
+  //링커 상세보기 함수
+  function onOpenDetailById(linkerId: number) {
+    setDetailOpen(true);
+    setDetailLoading(true);
+    setDetailError(null);
+    setDetailData(null);
+    (async () => {
+      try {
+        const res = await fetch(`/api/linker/${linkerId}`, { credentials: "include" });
+        if (!res.ok) {
+          let serverMsg = "";
+          try {
+            const errJson = await res.json();
+            serverMsg = errJson?.message || "";
+          } catch {
+            /* ignore */
+          }
+
+          if (res.status === 404) {
+            throw new Error(serverMsg || "해당 링커를 찾을 수 없어요. (404)");
+          }
+          throw new Error(serverMsg || `상세 조회 실패 (${res.status})`);
+        }
+
+        const json = (await res.json()) as LinkerDetail;
+        setDetailData(json);
+        console.log("name:", json.name);
+        console.log("address:", json.address ?? json.adresssName ?? "(none)");
+        console.log("categoryId:", json.categoryId);
+        console.log("phone:", json.phone);
+        console.log("memo:", json.memo);
+        console.log("createdAt:", json.createdAt);
+        console.log("lat (from locationY):", json.locationY);
+        console.log("lng (from locationX):", json.locationX);
+      } catch (e: any) {
+        setDetailError(e?.message ?? String(e));
+      } finally {
+        setDetailLoading(false);
+      }
+    })();
+  }
+
+  //DB에서 기존 링커 불러와서 마커로 표시
+  //onOpenDetailById 함수도 같이 넘겨서 마커 클릭 시 상세보기 가능하게 함
   const loadExistingLinkers = async (
     map: kakao.maps.Map,
     onOpenDetailById: (linkerId: number) => void,
@@ -137,7 +202,7 @@ export default function MapPage(): React.ReactElement {
     try {
       const res = await fetch("/api/linker");
       if (!res.ok) throw new Error("GET /api/linker 실패");
-      const items: LinkerItem[] = await res.json();
+      const items: LinkerListItem[] = await res.json();
 
       // 기존 마커 제거
       linkerMarkersRef.current.forEach((m) => m.setMap(null));
@@ -207,7 +272,7 @@ export default function MapPage(): React.ReactElement {
           };
           const map = new window.kakao.maps.Map(container, options);
           kakaoMapRef.current = map;
-          loadExistingLinkers(map);
+          loadExistingLinkers(map, onOpenDetailById);
 
           // 지도 클릭 이벤트(모달 띄우기)
           const handleMapClick = (mouseEvent: kakao.maps.event.MouseEvent) => {
@@ -590,6 +655,13 @@ export default function MapPage(): React.ReactElement {
             }
           }}
           onSubmit={handleSaveLinker}
+        />
+        <LinkerDetailModal
+          open={detailOpen}
+          onClose={() => setDetailOpen(false)}
+          detail={detailData}
+          loading={detailLoading}
+          error={detailError}
         />
       </MapWrapper>
     </>
