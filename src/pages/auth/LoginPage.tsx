@@ -64,9 +64,9 @@ export default function LoginPage() {
         </AuthFilledButton>
       </form>
 
-      {/* 부가 링크 */}
+      {/* 비밀번호 찾기 링크 */}
       <div className='text-base mb-7'>
-        <a href='/forgot' className='font-semibold text-gray-700 hover:text-black'>
+        <a href='/forgot' className='font-semibold text-linkleGray hover:text-black'>
           비밀번호를 잊으셨나요?
         </a>
       </div>

@@ -4,15 +4,19 @@ import MapPage from "./pages/MapPage";
 import LoginPage from "./pages/auth/LoginPage";
 import SignUpPage from "./pages/auth/SignupPage";
 import AuthLayout from "./layouts/AuthLayout";
-import AppLayout from "./layouts/AppLayout";
+import SignupLayout from "./layouts/SignupLayout";
 
 const App = () => {
   return (
     <Routes>
-      {/* 로그인 전 레이아웃 */}
+      {/* 로그인 및 기본화면 레이아웃 */}
       <Route element={<AuthLayout />}>
         <Route path='/' element={<LandingPage />} />
         <Route path='/login' element={<LoginPage />} />
+      </Route>
+
+      {/* 회원가입 레이아웃 */}
+      <Route element={<SignupLayout />}>
         <Route path='/signup' element={<SignUpPage />} />
       </Route>
 
