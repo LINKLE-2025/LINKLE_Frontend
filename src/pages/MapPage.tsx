@@ -9,6 +9,8 @@ import LinkerCreateModal from "../components/linker/LinkerCreateModal";
 import type { SearchResult } from "../components/search/SearchPanel";
 import LinkerDetailModal from "../components/linker/LinkerDetailModal";
 import { Sheet } from "react-modal-sheet";
+import { saveLinker, fetchLinkers } from "@/services/linkerService";
+import type { LinkerPayload } from "@/services/linkerService";
 
 interface StoredSpot {
   lat: number;
@@ -466,7 +468,7 @@ export default function MapPage(): React.ReactElement {
     if (!kakaoMapRef.current) return;
 
     // 지도 중심 이동
-    kakaoMapRef.current.panTo(new window.kakao.maps.LatLng(item.lat, item.lng));
+    kakaoMapRef.current.panTo(new window.kakao.maps.LatLng(item.lat - 0.001, item.lng)); // 약간 위로
     // 모달 초기값 세팅
     setLinkerInitial({
       lat: item.lat,
@@ -475,10 +477,10 @@ export default function MapPage(): React.ReactElement {
       addressName: item.name, // 🔹 상호명
     });
     // 모달 열기
-    setLinkerOpen(true);
+    // setLinkerOpen(true);
 
     // 검색창 닫기
-    setSearchOpen(false);
+    // setSearchOpen(false);
   };
 
   const saveNewSpot = ({ alias, category }: { alias: string; category: string }) => {
@@ -615,7 +617,7 @@ export default function MapPage(): React.ReactElement {
         <Sheet
           isOpen={searchOpen}
           onClose={() => setSearchOpen(false)}
-          snapPoints={[1, 0.5, 0.3]}
+          snapPoints={[0.55, 0.3]}
           initialSnap={1}
         >
           <Sheet.Container>
@@ -623,7 +625,7 @@ export default function MapPage(): React.ReactElement {
               <div className='mx-auto my-2 h-1.5 w-12 rounded-full bg-gray-300' />
             </Sheet.Header>
             <Sheet.Content>
-              <div className='flex flex-col h-full'>
+              <div className='flex flex-col h-[400px]'>
                 <div className='text-center py-2 border-b'>🔍 검색</div>
                 <div className='flex-1 min-h-0 overflow-y-auto'>
                   <SearchPanel

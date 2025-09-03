@@ -62,22 +62,22 @@ export default function SearchPanel({
         {searchResults.map((item, idx) => (
           <div
             key={idx}
-            className='flex justify-between items-center py-2 border-b border-gray-200'
+            className='flex justify-between items-center py-2 border-b border-gray-200 px-2 gap-x-4'
+            onClick={() => handleResultClick(item)}
           >
             <div className='text-left'>
-              <div className='font-medium'>{item.name}</div>
+              <div className='font-medium text-lg'>{item.name}</div>
               <div className='text-sm text-gray-500'>{item.address}</div>
             </div>
-            <button
-              type='button'
-              onClick={() => {
-                console.log("검색 클릭 item:", item);
+            <img
+              src='/icons/linker.png'
+              alt='링커 추가'
+              className='w-12 h-12 cursor-pointer'
+              onClick={(e) => {
+                e.stopPropagation();
                 onOpenModal(item);
-              }} // 🔹 링커 추가 버튼
-              className='ml-2 px-3 py-1 rounded-lg bg-green-500 text-white text-sm'
-            >
-              링커 추가
-            </button>
+              }}
+            />
           </div>
         ))}
 
