@@ -60,23 +60,32 @@ export default function MapPage(): React.ReactElement {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   // 서버 저장
+  // 서버 저장
   const handleSaveLinker = async (payload: {
     name: string;
-    memo: string;
-    address: string;
+    memo?: string;
+    address?: string;
     locationX?: number;
     locationY?: number;
     categoryId: number;
     addressDetail: string;
-    addressName: string; // 🔹 추가
+    addressName?: string; // 상호명은 optional
   }) => {
     try {
+      const safePayload = {
+        ...payload,
+        memo: payload.memo ?? "",
+        address: payload.address ?? "",
+        addressName: payload.addressName ?? "",
+      };
+
       const res = await fetch("/api/linker", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(safePayload),
         credentials: "include",
       });
+
       if (!res.ok) throw new Error("POST /api/linker 실패");
       if (kakaoMapRef.current) {
         await loadExistingLinkers(kakaoMapRef.current);
@@ -215,7 +224,7 @@ export default function MapPage(): React.ReactElement {
             setCreateDraft({ lat: latlng.getLat(), lng: latlng.getLng() });
           };
 
-          window.kakao.maps.event.addListener(map, "click", handleMapClick);
+          window.kakao.maps.event.addListener(map, "click", handleMapClick as any);
 
           // 내 위치 마커
 
@@ -509,8 +518,11 @@ export default function MapPage(): React.ReactElement {
                     navigator.geolocation.getCurrentPosition((position) => {
                       const lat = position.coords.latitude;
                       const lng = position.coords.longitude;
-                      kakaoMapRef.current.panTo(new (window as any).kakao.maps.LatLng(lat, lng));
-                      kakaoMapRef.current.setLevel(2);
+                      if (kakaoMapRef.current) {
+                        //null 체크 추가
+                        kakaoMapRef.current.panTo(new (window as any).kakao.maps.LatLng(lat, lng));
+                        kakaoMapRef.current.setLevel(2);
+                      }
                     });
                   }
                 }}

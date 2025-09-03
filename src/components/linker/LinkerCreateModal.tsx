@@ -12,8 +12,8 @@ interface LinkerCreateModalProps {
   };
   onSubmit: (data: {
     name: string;
-    addressName: string;
-    memo?: string;
+    addressName?: string;
+    memo?: string; // ✅ optional로 수정
     address?: string;
     locationX?: number;
     locationY?: number;
