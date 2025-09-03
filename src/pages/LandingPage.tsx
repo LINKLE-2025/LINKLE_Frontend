@@ -19,7 +19,7 @@ export default function LandingPage() {
         <img
           src='/logos/linkle-icon.svg'
           alt='LINKLE 심볼'
-          className='w-1/2 max-w-[600px] h-auto'
+          className='w-1/2 max-w-[500px] h-auto'
         />
         <img
           src='/logos/logo_text.svg'

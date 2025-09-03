@@ -3,13 +3,16 @@ import { useNavigate } from "react-router-dom";
 type Props = {
   title: string;
   backTo?: string; // 기본은 뒤로가기, 특정 주소 지정 가능
+  className?: string;
 };
 
-export default function SectionHeader({ title, backTo }: Props) {
+export default function SectionHeader({ title, backTo, className }: Props) {
   const navigate = useNavigate();
 
   return (
-    <header className='fixed top-0 w-full flex items-center justify-center bg-white border-b border-gray-200 px-5 py-3 z-50'>
+    <header
+      className={`fixed top-0 w-full flex items-center justify-center bg-white border-b border-gray-200 px-5 py-3 z-50 ${className}`}
+    >
       {/* 뒤로가기 버튼 */}
       <button
         onClick={() => (backTo ? navigate(backTo) : navigate(-1))}
