@@ -63,6 +63,7 @@ export default function SearchPanel({
           <div
             key={idx}
             className='flex justify-between items-center py-2 border-b border-gray-200'
+            onClick={() => handleResultClick(item)} // 🔹 여기
           >
             <div className='text-left'>
               <div className='font-medium'>{item.name}</div>
@@ -70,8 +71,9 @@ export default function SearchPanel({
             </div>
             <button
               type='button'
-              onClick={() => {
+              onClick={(e) => {
                 console.log("검색 클릭 item:", item);
+                e.stopPropagation(); // div 클릭 이벤트 전파 방지
                 onOpenModal(item);
               }} // 🔹 링커 추가 버튼
               className='ml-2 px-3 py-1 rounded-lg bg-green-500 text-white text-sm'

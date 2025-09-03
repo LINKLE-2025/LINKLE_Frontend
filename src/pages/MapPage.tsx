@@ -360,10 +360,10 @@ export default function MapPage(): React.ReactElement {
       addressName: item.name, // 🔹 상호명
     });
     // 모달 열기
-    setLinkerOpen(true);
+    // setLinkerOpen(true);
 
     // 검색창 닫기
-    setSearchOpen(false);
+    // setSearchOpen(false);
   };
 
   const saveNewSpot = ({ alias, category }: { alias: string; category: string }) => {
@@ -500,7 +500,7 @@ export default function MapPage(): React.ReactElement {
         <Sheet
           isOpen={searchOpen}
           onClose={() => setSearchOpen(false)}
-          snapPoints={[1, 0.5, 0.3]}
+          snapPoints={[0.55, 0.3]}
           initialSnap={1}
         >
           <Sheet.Container>
@@ -508,7 +508,7 @@ export default function MapPage(): React.ReactElement {
               <div className='mx-auto my-2 h-1.5 w-12 rounded-full bg-gray-300' />
             </Sheet.Header>
             <Sheet.Content>
-              <div className='flex flex-col h-full'>
+              <div className='flex flex-col h-[400px]'>
                 <div className='text-center py-2 border-b'>🔍 검색</div>
                 <div className='flex-1 min-h-0 overflow-y-auto'>
                   <SearchPanel
