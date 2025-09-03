@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { Sheet } from "react-modal-sheet";
+import { useNavigate } from "react-router-dom";
 
 export type LinkerDetail = {
   linkerId: number;
@@ -25,6 +26,13 @@ type Props = {
 const prettyDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString() : "-");
 
 export default function LinkerDetailSheet({ open, onClose, detail, loading, error }: Props) {
+  const navigate = useNavigate();
+
+  const CreatePost = () => {
+    if (!detail) return;
+    // state로 상세 전달 + 필요하면 쿼리도 함께
+    navigate(`/post?linkerId=${detail.linkerId}`, { state: { linker: detail } });
+  };
   return (
     <Sheet
       isOpen={open}
@@ -59,15 +67,16 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
                   <div className='ml-3 flex shrink-0 gap-2'>
                     <button
                       className='h-10 w-10 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center'
-                      title='사진'
+                      title='포스트작성'
+                      onClick={CreatePost}
                     >
-                      📷
+                      <img src='public/icons/photo.png' />
                     </button>
                     <button
                       className='h-10 w-10 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center'
                       title='채팅방생성'
                     >
-                      🔍
+                      <img src='public/icons/chat.png' />
                     </button>
                   </div>
                 </div>
