@@ -62,19 +62,19 @@ export default function SearchPanel({
         {searchResults.map((item, idx) => (
           <div
             key={idx}
-            className='flex justify-between items-center py-2 border-b border-gray-200'
-            onClick={() => handleResultClick(item)} // 🔹 여기
+            className='flex justify-between items-center py-2 border-b border-gray-200 px-2 gap-x-4'
+            onClick={() => handleResultClick(item)}
           >
             <div className='text-left'>
-              <div className='font-medium'>{item.name}</div>
+              <div className='font-medium text-lg'>{item.name}</div>
               <div className='text-sm text-gray-500'>{item.address}</div>
             </div>
             <img
               src='/icons/linker.png'
               alt='링커 추가'
-              className='ml-2 w-12 h-12 cursor-pointer'
+              className='w-12 h-12 cursor-pointer'
               onClick={(e) => {
-                e.stopPropagation(); // div 클릭 이벤트 전파 방지
+                e.stopPropagation();
                 onOpenModal(item);
               }}
             />

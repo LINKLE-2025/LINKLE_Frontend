@@ -351,7 +351,7 @@ export default function MapPage(): React.ReactElement {
     if (!kakaoMapRef.current) return;
 
     // 지도 중심 이동
-    kakaoMapRef.current.panTo(new window.kakao.maps.LatLng(item.lat, item.lng));
+    kakaoMapRef.current.panTo(new window.kakao.maps.LatLng(item.lat - 0.001, item.lng)); // 약간 위로
     // 모달 초기값 세팅
     setLinkerInitial({
       lat: item.lat,
