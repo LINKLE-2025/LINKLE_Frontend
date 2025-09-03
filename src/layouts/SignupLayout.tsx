@@ -1,12 +1,11 @@
 import TeamNameFooter from "@/components/footer/TeamNameFooter";
-import MainHeader from "@/components/header/MainHeader";
+import SectionHeader from "@/components/header/SectionHeader";
 import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 
-export default function AuthLayout() {
+export default function SignupLayout() {
   const [headerHeight, setHeaderHeight] = useState(0);
 
-  // Header 뒤쪽 paddingTop 높이 동적으로 조정
   useEffect(() => {
     const header = document.querySelector("header");
     if (header) {
@@ -16,9 +15,9 @@ export default function AuthLayout() {
 
   return (
     <div className='flex flex-col min-h-screen text-black'>
-      <MainHeader />
+      <SectionHeader title='회원가입' />
       <main
-        className='flex-grow flex flex-col items-center justify-center text-center'
+        className='flex-grow flex flex-col items-center justify-start text-center'
         style={{ paddingTop: headerHeight }}
       >
         <Outlet />
