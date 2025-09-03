@@ -60,23 +60,32 @@ export default function MapPage(): React.ReactElement {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   // 서버 저장
+  // 서버 저장
   const handleSaveLinker = async (payload: {
     name: string;
-    memo: string;
-    address: string;
+    memo?: string;
+    address?: string;
     locationX?: number;
     locationY?: number;
     categoryId: number;
     addressDetail: string;
-    addressName: string; // 🔹 추가
+    addressName?: string; // 상호명은 optional
   }) => {
     try {
+      const safePayload = {
+        ...payload,
+        memo: payload.memo ?? "",
+        address: payload.address ?? "",
+        addressName: payload.addressName ?? "",
+      };
+
       const res = await fetch("/api/linker", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(safePayload),
         credentials: "include",
       });
+
       if (!res.ok) throw new Error("POST /api/linker 실패");
       if (kakaoMapRef.current) {
         await loadExistingLinkers(kakaoMapRef.current);
@@ -141,8 +150,8 @@ export default function MapPage(): React.ReactElement {
         // 마커 이미지 생성
         const markerImage = new kakao.maps.MarkerImage(
           linkerIcon,
-          new kakao.maps.Size(32, 32), // 아이콘 크기
-          { offset: new kakao.maps.Point(16, 32) },
+          new kakao.maps.Size(45, 64.29), // 아이콘 크기
+          { offset: new kakao.maps.Point(22.5, 64.29) },
         );
 
         const marker = new kakao.maps.Marker({
@@ -215,7 +224,7 @@ export default function MapPage(): React.ReactElement {
             setCreateDraft({ lat: latlng.getLat(), lng: latlng.getLng() });
           };
 
-          window.kakao.maps.event.addListener(map, "click", handleMapClick);
+          window.kakao.maps.event.addListener(map, "click", handleMapClick as any);
 
           // 내 위치 마커
 
@@ -265,7 +274,17 @@ export default function MapPage(): React.ReactElement {
   }, []);
 
   // spot markers 렌더링
-
+  const markers = useMemo(
+    () =>
+      Object.entries(spots).map(([spotId, s]) => ({
+        spotId,
+        lat: s.lat,
+        lng: s.lng,
+        alias: s.alias,
+        category: s.category,
+      })),
+    [spots],
+  );
   useEffect(() => {
     if (!kakaoMapRef.current || !window.kakao?.maps) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -499,8 +518,11 @@ export default function MapPage(): React.ReactElement {
                     navigator.geolocation.getCurrentPosition((position) => {
                       const lat = position.coords.latitude;
                       const lng = position.coords.longitude;
-                      kakaoMapRef.current.panTo(new (window as any).kakao.maps.LatLng(lat, lng));
-                      kakaoMapRef.current.setLevel(2);
+                      if (kakaoMapRef.current) {
+                        //null 체크 추가
+                        kakaoMapRef.current.panTo(new (window as any).kakao.maps.LatLng(lat, lng));
+                        kakaoMapRef.current.setLevel(2);
+                      }
                     });
                   }
                 }}
