@@ -31,7 +31,6 @@ export default function PostCreatePage(): React.ReactElement {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const submitting = false; // API 붙이면 관리
 
   // 필요 시 백엔드에서 상세 다시 조회
   useEffect(() => {
@@ -53,19 +52,59 @@ export default function PostCreatePage(): React.ReactElement {
 
   const openPicker = () => fileInputRef.current?.click();
   const onChangeFiles: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-    const list = Array.from(e.target.files ?? []);
-    if (!list.length) return;
-    setFiles((prev) => [...prev, ...list]);
-    setPreviews((prev) => [...prev, ...list.map((f) => URL.createObjectURL(f))]);
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 기존 미리보기 URL 해제
+    previews.forEach((u) => URL.revokeObjectURL(u));
+
+    // 항상 1장만 유지
+    setFiles([file]);
+    setPreviews([URL.createObjectURL(file)]);
+
+    // 같은 사진 다시 선택 가능하게 초기화
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   useEffect(() => () => previews.forEach((u) => URL.revokeObjectURL(u)), [previews]);
 
+  const [submitting, setSubmitting] = useState(false);
+
   const onSubmit = async () => {
-    if (!canSubmit || !linkerId) return;
-    // TODO: FormData로 /api/posts 붙이면 됨
-    alert("작성하기 눌림! (API 연결만 해주면 완료)");
+    if (!canSubmit || !linkerId || submitting) return;
+
+    try {
+      setSubmitting(true);
+
+      const form = new FormData();
+      form.append("linkerId", linkerId); // 숫자면 String()으로
+      form.append("content", text); // 본문
+      if (files[0]) form.append("image", files[0]); // 이미지 1장
+
+      const res = await fetch("/api/post", {
+        method: "POST",
+        body: form,
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        let msg = "";
+        try {
+          const j = await res.json();
+          msg = j?.message || "";
+        } catch {}
+        throw new Error(msg || `게시글 생성 실패 (${res.status})`);
+      }
+
+      // 작성 완료 후: 맵으로 이동 + 해당 링커 상세 자동 열기 로 구현 예정
+      // navigate("/map", { replace: true });
+      // → 상세 열기까지 처리
+      navigate("/map", { replace: true, state: { openLinkerId: Number(linkerId) } });
+    } catch (err: any) {
+      alert(err?.message ?? "업로드 실패");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const onReset = () => {
@@ -77,7 +116,7 @@ export default function PostCreatePage(): React.ReactElement {
 
   return (
     <div className='flex h-dvh w-full flex-col bg-[#f6f6f6]'>
-      {/* ===================== 헤더 (UPDATED UI) ===================== */}
+      {/*  헤더 */}
       <div className='h-12 flex items-center justify-center relative bg-white border-b'>
         <button
           className='absolute left-3 text-[22px] leading-none'
@@ -89,26 +128,27 @@ export default function PostCreatePage(): React.ReactElement {
         <div className='text-[15px] font-semibold'>새 포스트 만들기</div>
       </div>
 
-      {/* ===================== 업로드 영역 (UPDATED UI) ===================== */}
+      {/* 업로드 영역  */}
       <div className='relative bg-[#efefef]'>
         {previews.length === 0 ? (
           <div className='h-[42vh] flex items-center justify-center'>
-            {/* 워터마크 스타일 – 아이콘 파일이 있으면 /icons/watermark.svg 로 교체 */}
             <div className='text-gray-300 text-7xl font-black select-none'>
               <img src='/icons/favicon/favicon.svg'></img>
             </div>
           </div>
         ) : (
-          <div className='p-2 grid grid-cols-3 gap-2 min-h-[42vh]'>
-            {previews.map((src, i) => (
-              <div key={i} className='aspect-square overflow-hidden rounded-md bg-white'>
-                <img src={src} alt='' className='h-full w-full object-cover' />
-              </div>
-            ))}
+          // 한 장만 전체 영역 꽉 채우기
+          <div className='p-2 h-[42vh]'>
+            <div className='h-full w-full flex items-center justify-center rounded-md bg-white overflow-hidden'>
+              <img
+                src={previews[0]}
+                alt=''
+                className='max-h-full max-w-full object-contain' // 핵심
+              />
+            </div>
           </div>
         )}
 
-        {/* 카메라 버튼 */}
         <button
           onClick={openPicker}
           className='absolute right-3 bottom-3 h-11 w-11 rounded-full bg-white shadow border flex items-center justify-center'
@@ -120,13 +160,13 @@ export default function PostCreatePage(): React.ReactElement {
           ref={fileInputRef}
           type='file'
           accept='image/*'
-          multiple
           className='hidden'
           onChange={onChangeFiles}
         />
       </div>
 
-      {/* ===================== 작성자 카드 (UPDATED UI) ===================== */}
+      {/* 작성자 */}
+
       <div className='bg-white px-4 py-3 border-b'>
         <div className='flex items-center justify-between'>
           <div className='flex items-center gap-3'>
@@ -149,7 +189,7 @@ export default function PostCreatePage(): React.ReactElement {
         </div>
       </div>
 
-      {/* ===================== 텍스트 입력 박스 (UPDATED UI) ===================== */}
+      {/*  텍스트 입력 박스 (UPDATED UI)  */}
       <div className='bg-white px-4 py-3'>
         {/* 링크 정보 한 줄 (선택) */}
         {linker && (
@@ -167,15 +207,16 @@ export default function PostCreatePage(): React.ReactElement {
         />
       </div>
 
-      {/* ===================== 하단 액션 (UPDATED UI) ===================== */}
+      {/*  버튼 */}
       <div className='mt-auto bg-white border-t'>
         <div className='flex'>
           <button
             onClick={onSubmit}
             disabled={!canSubmit || submitting}
+            aria-busy={submitting}
             className='flex-1 py-4 text-center font-semibold text-[14px] disabled:opacity-50'
           >
-            작성하기
+            {submitting ? "업로드 중…" : "작성하기"}
           </button>
           <button
             onClick={onReset}
