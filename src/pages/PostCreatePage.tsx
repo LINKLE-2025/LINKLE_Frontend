@@ -94,7 +94,9 @@ export default function PostCreatePage(): React.ReactElement {
         {previews.length === 0 ? (
           <div className='h-[42vh] flex items-center justify-center'>
             {/* 워터마크 스타일 – 아이콘 파일이 있으면 /icons/watermark.svg 로 교체 */}
-            <div className='text-gray-300 text-7xl font-black select-none'>⌁</div>
+            <div className='text-gray-300 text-7xl font-black select-none'>
+              <img src='/icons/favicon/favicon.svg'></img>
+            </div>
           </div>
         ) : (
           <div className='p-2 grid grid-cols-3 gap-2 min-h-[42vh]'>
