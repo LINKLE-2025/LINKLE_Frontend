@@ -22,7 +22,7 @@ export default function LoginPage() {
         <img
           src='/logos/linkle-icon.svg'
           alt='LINKLE 심볼'
-          className='w-5/12 sm:w-3/4 max-w-[300px] h-auto'
+          className='w-5/12 sm:w-7/12 max-w-[300px] h-auto'
         />
         <img
           src='/logos/logo_text.svg'
@@ -35,7 +35,7 @@ export default function LoginPage() {
       {/* 로그인 폼 */}
       <form
         onSubmit={handleSubmit}
-        className='w-full max-w-sm flex flex-col items-center justify-center text-center gap-4'
+        className='w-full max-w-sm flex flex-col items-center justify-center text-center gap-3'
       >
         <AuthInput
           type='email'
