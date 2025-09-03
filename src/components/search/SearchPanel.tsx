@@ -76,7 +76,7 @@ export default function SearchPanel({
                 <div className='text-sm text-gray-500'>{item.address}</div>
               </div>
               <img
-                src='/icons/linker.png'
+                src='/icons/mapicon/linker.png'
                 alt='링커 추가'
                 className='w-12 h-12 cursor-pointer'
                 onClick={(e) => {
