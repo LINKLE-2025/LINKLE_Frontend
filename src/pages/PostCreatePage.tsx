@@ -73,11 +73,13 @@ export default function PostCreatePage(): React.ReactElement {
   const onSubmit = async () => {
     if (!canSubmit || !linkerId || submitting) return;
 
+    console.log("시도하는 linkerId:", linkerId, { text, files });
+
     try {
       setSubmitting(true);
 
       const form = new FormData();
-      form.append("linkerId", linkerId); // 숫자면 String()으로
+      form.append("linkerId", linkerId);
       form.append("content", text); // 본문
       if (files[0]) form.append("image", files[0]); // 이미지 1장
 
@@ -96,10 +98,9 @@ export default function PostCreatePage(): React.ReactElement {
         throw new Error(msg || `게시글 생성 실패 (${res.status})`);
       }
 
-      // 작성 완료 후: 맵으로 이동 + 해당 링커 상세 자동 열기 로 구현 예정
-      // navigate("/map", { replace: true });
-      // → 상세 열기까지 처리
-      navigate("/map", { replace: true, state: { openLinkerId: Number(linkerId) } });
+      // 처음부터 있던 linkerId로 MapPage에 전달 → 상세 자동 오픈
+      const openId = Number(linker?.linkerId ?? linkerId);
+      navigate("/map", { replace: true, state: { openLinkerId: openId } });
     } catch (err: any) {
       alert(err?.message ?? "업로드 실패");
     } finally {
@@ -115,7 +116,7 @@ export default function PostCreatePage(): React.ReactElement {
   };
 
   return (
-    <div className='flex h-dvh w-full flex-col bg-[#f6f6f6]'>
+    <div className='flex w-full flex-col bg-[#f6f6f6]'>
       {/*  헤더 */}
       <div className='h-12 flex items-center justify-center relative bg-white border-b'>
         <button
@@ -137,14 +138,9 @@ export default function PostCreatePage(): React.ReactElement {
             </div>
           </div>
         ) : (
-          // 한 장만 전체 영역 꽉 채우기
           <div className='p-2 h-[42vh]'>
             <div className='h-full w-full flex items-center justify-center rounded-md bg-white overflow-hidden'>
-              <img
-                src={previews[0]}
-                alt=''
-                className='max-h-full max-w-full object-contain' // 핵심
-              />
+              <img src={previews[0]} alt='' className='max-h-full max-w-full object-contain' />
             </div>
           </div>
         )}
@@ -171,7 +167,7 @@ export default function PostCreatePage(): React.ReactElement {
         <div className='flex items-center justify-between'>
           <div className='flex items-center gap-3'>
             <div className='h-8 w-8 rounded-full bg-gray-300 overflow-hidden'>
-              {/* 프로필 이미지가 있으면 여기에 */}
+              {/* 프로필 이미지 여기에 구현예정*/}
               {/* <img src="/path" className="h-full w-full object-cover" /> */}
             </div>
             <div className='leading-tight'>
@@ -189,9 +185,8 @@ export default function PostCreatePage(): React.ReactElement {
         </div>
       </div>
 
-      {/*  텍스트 입력 박스 (UPDATED UI)  */}
+      {/*  텍스트 입력  */}
       <div className='bg-white px-4 py-3'>
-        {/* 링크 정보 한 줄 (선택) */}
         {linker && (
           <div className='mb-2 text-[12px] text-gray-500'>
             {linker.name}
@@ -207,8 +202,8 @@ export default function PostCreatePage(): React.ReactElement {
         />
       </div>
 
-      {/*  버튼 */}
-      <div className='mt-auto bg-white border-t'>
+      {/* 버튼 */}
+      <div className='fixed bottom-0 left-0 right-0 bg-white border-t'>
         <div className='flex'>
           <button
             onClick={onSubmit}
