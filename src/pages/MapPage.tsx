@@ -403,10 +403,137 @@ export default function MapPage(): React.ReactElement {
 
   const handleSearch = (page: number = 1) => {
     // 검색 로직 (기존과 동일)
+    if (!kakaoMapRef.current || !searchQuery || !window.kakao?.maps?.services) return;
+
+    const ps = new window.kakao.maps.services.Places();
+    const center = kakaoMapRef.current.getCenter();
+    const options = { location: center, radius: 2000, page };
+
+    ps.keywordSearch(
+      searchQuery,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (data: any[], status: string, pagination: any) => {
+        if (status === window.kakao.maps.services.Status.OK) {
+          setSearchResults((prev) =>
+            page === 1
+              ? data.map((d) => ({
+                  name: d.place_name,
+                  address: d.address_name,
+                  // 🔹 카카오 API에서는 y가 위도, x가 경도
+                  lat: parseFloat(d.y), // y = 위도(latitude)
+                  lng: parseFloat(d.x), // x = 경도(longitude)
+                }))
+              : [
+                  ...prev,
+                  ...data.map((d) => ({
+                    name: d.place_name,
+                    address: d.address_name,
+                    lat: parseFloat(d.y), // y = 위도(latitude)
+                    lng: parseFloat(d.x), // x = 경도(longitude)
+                  })),
+                ],
+          );
+
+          if (page === 1) {
+            searchMarkers.current.forEach((m) => m.setMap(null));
+            searchMarkers.current = [];
+          }
+
+          const newMarkers = data.map((d) => {
+            const marker = new window.kakao.maps.Marker({
+              map: kakaoMapRef.current!,
+              // 🔹 카카오 API에서는 y가 위도, x가 경도
+              position: new window.kakao.maps.LatLng(d.y, d.x),
+            });
+            window.kakao.maps.event.addListener(marker, "click", () => {
+              handleResultClick({
+                name: d.place_name,
+                address: d.address_name,
+                lat: parseFloat(d.y), // y = 위도(latitude)
+                lng: parseFloat(d.x), // x = 경도(longitude)
+              });
+            });
+            return marker;
+          });
+
+          searchMarkers.current.push(...newMarkers);
+          setCurrentPage(page);
+          setHasNextPage(pagination.last > page);
+        } else {
+          if (page === 1) setSearchResults([]);
+          setHasNextPage(false);
+        }
+      },
+      options,
+    );
   };
 
   const handleResultClick = (item: SearchResult) => {
     // 검색 결과 클릭 로직 (기존과 동일)
+    if (!kakaoMapRef.current) return;
+
+    // 지도 중심 이동
+    kakaoMapRef.current.panTo(new window.kakao.maps.LatLng(item.lat - 0.001, item.lng)); // 약간 위로
+    setTimeout(() => {
+      kakaoMapRef.current?.setLevel(2);
+    }, 400);
+
+    // 모달 초기값 세팅
+    setLinkerInitial({
+      lat: item.lat,
+      lng: item.lng,
+      address: item.address,
+      addressName: item.name, // 🔹 상호명
+    });
+  };
+
+  const saveNewSpot = ({ alias, category }: { alias: string; category: string }) => {
+    if (!createDraft) return;
+    const { lat, lng } = createDraft;
+    const id = spotIdFromLatLng(lat, lng, 4);
+    setSpots((prev) => {
+      const next: StoredSpots = {
+        ...prev,
+        [id]: { lat, lng, alias, category, photos: [], messages: [] },
+      };
+      save(STORAGE_KEY, next);
+      return next;
+    });
+    setCreateDraft(null);
+    setActiveId(id);
+  };
+
+  //얘넨 아직 구현안됨
+  const addPhoto = ({ url, caption }: { url: string; caption?: string }) => {
+    if (!activeId) return;
+    setSpots((prev) => {
+      const s = prev[activeId];
+      const next: StoredSpots = {
+        ...prev,
+        [activeId]: {
+          ...s,
+          photos: [...(s.photos || []), { url, caption, ts: nowIso() }],
+        },
+      };
+      save(STORAGE_KEY, next);
+      return next;
+    });
+  };
+  //구현안됨
+  const addMessage = ({ text }: { text: string }) => {
+    if (!activeId) return;
+    setSpots((prev) => {
+      const s = prev[activeId];
+      const next: StoredSpots = {
+        ...prev,
+        [activeId]: {
+          ...s,
+          messages: [...(s.messages || []), { text, ts: nowIso() }],
+        },
+      };
+      save(STORAGE_KEY, next);
+      return next;
+    });
   };
 
   const handleOpenModal = (item: SearchResult) => {
@@ -540,7 +667,7 @@ export default function MapPage(): React.ReactElement {
               <div className='flex-1 min-h-0 overflow-y-auto'>
                 <SearchPanel
                   searchQuery={searchQuery}
-                  setSearchQuery={() => {}}
+                  setSearchQuery={setSearchQuery}
                   searchResults={searchResults}
                   handleSearch={handleSearch}
                   handleResultClick={handleResultClick}

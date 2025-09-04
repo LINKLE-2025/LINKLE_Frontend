@@ -35,6 +35,7 @@ export default function SearchPanel({
     <div className='flex flex-col h-full bg-white'>
       <div className='flex items-center p-2 border-b border-gray-200 gap-x-2'>
         <input
+          id='search-input'
           ref={inputRef}
           type='text'
           placeholder='장소 검색'
