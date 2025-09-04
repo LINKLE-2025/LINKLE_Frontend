@@ -9,9 +9,14 @@ import LinkerCreateModal from "../components/linker/LinkerCreateModal";
 import type { SearchResult } from "../components/search/SearchPanel";
 import LinkerDetailModal from "../components/linker/LinkerDetailModal";
 import { Sheet } from "react-modal-sheet";
-import { saveLinker, fetchLinkers } from "@/services/linkerService";
-import type { LinkerPayload } from "@/services/linkerService";
-
+import {
+  saveLinker,
+  fetchLinkers,
+  fetchLinkerDetail,
+  type LinkerPayload,
+  type LinkerListItem,
+  type LinkerDetail,
+} from "@/services/linkerService";
 interface StoredSpot {
   lat: number;
   lng: number;
@@ -63,33 +68,10 @@ export default function MapPage(): React.ReactElement {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   // 서버 저장
-  // 서버 저장
-  const handleSaveLinker = async (payload: {
-    name: string;
-    memo?: string;
-    address?: string;
-    locationX?: number;
-    locationY?: number;
-    categoryId: number;
-    addressDetail: string;
-    addressName?: string; // 상호명은 null 허용
-  }) => {
+  const handleSaveLinker = async (payload: LinkerPayload) => {
     try {
-      const safePayload = {
-        ...payload,
-        memo: payload.memo ?? "",
-        address: payload.address ?? "",
-        addressName: payload.addressName ?? "",
-      };
+      await saveLinker(payload);
 
-      const res = await fetch("/api/linker", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(safePayload),
-        credentials: "include",
-      });
-
-      if (!res.ok) throw new Error("POST /api/linker 실패");
       if (kakaoMapRef.current) {
         await loadExistingLinkers(kakaoMapRef.current, onOpenDetailById);
       }
@@ -122,32 +104,6 @@ export default function MapPage(): React.ReactElement {
     12: "/icons/category/travel.png",
   };
 
-  // 링커 지도에서 전체보기
-  type LinkerListItem = {
-    linkerId: number;
-    name: string;
-    categoryId?: number | null;
-    locationX: number | null; // lng
-    locationY: number | null; // lat
-    // 백워드 호환
-    lat?: number | null;
-    lng?: number | null;
-  };
-
-  //링커 상세보기 (구현중)
-  type LinkerDetail = {
-    linkerId: number;
-    name: string;
-    address?: string;
-    adresssName?: string; // 백엔드 오타 호환
-    categoryId?: number | null;
-    locationX?: number | null; // lng
-    locationY?: number | null; // lat
-    memo?: string | null;
-    createdAt?: string;
-    phone?: string | null;
-  };
-
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
@@ -159,26 +115,12 @@ export default function MapPage(): React.ReactElement {
     setDetailLoading(true);
     setDetailError(null);
     setDetailData(null);
+
     (async () => {
       try {
-        const res = await fetch(`/api/linker/${linkerId}`, { credentials: "include" });
-        if (!res.ok) {
-          let serverMsg = "";
-          try {
-            const errJson = await res.json();
-            serverMsg = errJson?.message || "";
-          } catch {
-            /* ignore */
-          }
-
-          if (res.status === 404) {
-            throw new Error(serverMsg || "해당 링커를 찾을 수 없어요. (404)");
-          }
-          throw new Error(serverMsg || `상세 조회 실패 (${res.status})`);
-        }
-
-        const json = (await res.json()) as LinkerDetail;
+        const json = await fetchLinkerDetail(linkerId);
         setDetailData(json);
+
         console.log("name:", json.name);
         console.log("address:", json.address ?? json.adresssName ?? "(none)");
         console.log("categoryId:", json.categoryId);
@@ -202,9 +144,8 @@ export default function MapPage(): React.ReactElement {
     onOpenDetailById: (linkerId: number) => void,
   ) => {
     try {
-      const res = await fetch("/api/linker");
-      if (!res.ok) throw new Error("GET /api/linker 실패");
-      const items: LinkerListItem[] = await res.json();
+      const items = await fetchLinkers();
+      console.log("불러온 링커 목록:", items);
 
       // 기존 마커 제거
       linkerMarkersRef.current.forEach((m) => m.setMap(null));
@@ -213,18 +154,20 @@ export default function MapPage(): React.ReactElement {
       const kakao = (window as any).kakao;
 
       items.forEach((m) => {
-        const lat = m.locationX ?? m.lat;
-        const lng = m.locationY ?? m.lng;
+        // 좌표 매핑 수정
+        const lat = m.locationY ?? m.lat;
+        const lng = m.locationX ?? m.lng;
         const linkerId = m.linkerId;
+
+        console.log(`${m.name}: lat=${lat}, lng=${lng}`); // 디버깅용
+
         if (typeof lat !== "number" || typeof lng !== "number") return;
 
         const linkerIcon = CATEGORY_ICONS[m.categoryId ?? 0] ?? "/icons/default.png";
 
-        const markerImage = new kakao.maps.MarkerImage(
-          linkerIcon,
-          new kakao.maps.Size(45, 64.29), // 아이콘 크기
-          { offset: new kakao.maps.Point(22.5, 64.29) },
-        );
+        const markerImage = new kakao.maps.MarkerImage(linkerIcon, new kakao.maps.Size(45, 64.29), {
+          offset: new kakao.maps.Point(22.5, 64.29),
+        });
 
         const marker = new kakao.maps.Marker({
           map,
@@ -232,11 +175,9 @@ export default function MapPage(): React.ReactElement {
           position: new kakao.maps.LatLng(lat, lng),
           image: markerImage,
           zIndex: 3,
-          //클릭/hover 이벤트 활성화
           clickable: true,
         });
 
-        // 마커 클릭 시 상세보기 (ID 기반)
         if (typeof linkerId === "number") {
           kakao.maps.event.addListener(marker, "click", () => {
             onOpenDetailById(linkerId);
