@@ -28,6 +28,10 @@ const ProfilePage: React.FC = () => {
     ? Number(profileUserIdParam)
     : loggedInUserId;
   // 유저 정보, 링커 참여 내역, 친구 목록 불러오기
+
+  const getFriendUserId = (friend: FriendResponse, loggedInUserId: number): number => {
+    return friend.userId1 === loggedInUserId ? friend.userId2 : friend.userId1;
+  };
   useEffect(() => {
     console.log("현재 프로필:", profileUserId);
     console.log("로그인 유저:", loggedInUserId);
@@ -47,12 +51,26 @@ const ProfilePage: React.FC = () => {
     fetch("/api/user/linker/list", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      // Body에 정보 전달
-      body: JSON.stringify({ userId: profileUserId, name: "", username: "", description: "" }),
+      body: JSON.stringify({ userId: profileUserId }),
     })
-      .then((res) => res.json())
-      .then((data: UserParticipateLinkerDTO[]) => setParticipations(data))
-      .catch((err) => console.error(err));
+      .then(async (res) => {
+        if (!res.ok) {
+          const errorText = await res.text(); // 또는 res.json()
+          console.error("링커 API 오류:", errorText);
+          throw new Error("링커 참여 내역 불러오기 실패");
+        }
+        return res.json();
+      })
+      .then((data: UserParticipateLinkerDTO[]) => {
+        if (!Array.isArray(data)) {
+          throw new Error("링커 참여 내역 응답 형식 오류");
+        }
+        setParticipations(data);
+      })
+      .catch((err) => {
+        console.error("참여 내역 요청 실패:", err);
+        setParticipations([]); // 안전하게 빈 배열로 fallback
+      });
     // 친구 목록 불러오기
     // 현재 보고 있는 프로필 기준 아이디값
     const targetUserId = profileUserId;
