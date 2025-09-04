@@ -17,6 +17,7 @@ import {
   type LinkerListItem,
   type LinkerDetail,
 } from "@/services/linkerService";
+import { useLocation } from "react-router-dom";
 
 interface StoredSpot {
   lat: number;
