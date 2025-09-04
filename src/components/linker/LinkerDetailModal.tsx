@@ -6,10 +6,10 @@ export type LinkerDetail = {
   linkerId: number;
   name: string;
   address?: string;
-  adresssName?: string; // 호환
+  adresssName?: string;
   categoryId?: number | null;
-  locationX?: number | null; // lng
-  locationY?: number | null; // lat
+  locationX?: number | null;
+  locationY?: number | null;
   memo?: string | null;
   createdAt?: string;
   phone?: string | null;
@@ -30,16 +30,14 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
 
   const CreatePost = () => {
     if (!detail) return;
-    // state로 상세 전달 + 필요하면 쿼리도 함께
     navigate(`/post?linkerId=${detail.linkerId}`, { state: { linker: detail } });
   };
   return (
     <Sheet
       isOpen={open}
       onClose={onClose}
-      /** 화면 상단이 비도록 바텀시트 높이(비율) 설정 */
       snapPoints={[0.92, 0.78, 0.6]}
-      initialSnap={1} // 0.78에서 시작 -> 위쪽에 지도 약간 보임
+      initialSnap={1}
       detent='content-height'
     >
       <Sheet.Container>
@@ -81,7 +79,6 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
                   </div>
                 </div>
 
-                {/* 메타 정보 라인 */}
                 <div className='mt-3 flex items-center justify-between text-xs text-gray-500'>
                   <div className='flex gap-4'>
                     <span>3 채팅방</span>
