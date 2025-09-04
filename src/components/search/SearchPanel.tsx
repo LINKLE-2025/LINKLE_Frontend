@@ -55,7 +55,7 @@ export default function SearchPanel({
           className='w-14 h-12 flex items-center justify-center bg-white  cursor-pointer'
         >
           <img
-            src='/icons/search.png' // 🔍 돋보기 이미지 경로
+            src='/icons/mapicon/search.png' // 🔍 돋보기 이미지 경로
             alt='검색'
             className='w-7 h-7'
           />

@@ -76,8 +76,8 @@ export default function LinkerCreateModal({
       addressName,
       memo: tags || undefined,
       address: address || undefined,
-      locationX: initial?.lat,
-      locationY: initial?.lng,
+      locationX: initial?.lng,
+      locationY: initial?.lat,
       categoryId: activityId!,
       addressDetail,
     });
