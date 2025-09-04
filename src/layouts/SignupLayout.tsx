@@ -1,11 +1,11 @@
-import PastelBackground from "@/components/background/PastelBackground";
 import RandomPastelBackground from "@/components/background/RandomPastelBackground";
 import TeamNameFooter from "@/components/footer/TeamNameFooter";
-import SectionHeader from "@/components/header/SectionHeader";
+import BackTitleHeader from "@/components/header/BackTitleHeader";
 import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 
 export default function SignupLayout() {
+  const [step, setStep] = useState(1);
   const [headerHeight, setHeaderHeight] = useState(0);
 
   useEffect(() => {
@@ -22,18 +22,17 @@ export default function SignupLayout() {
     text-black'
     >
       {/* 배경 */}
-      {/* <PastelBackground /> */}
       <RandomPastelBackground />
 
       {/* header */}
-      <SectionHeader title='회원가입' className='bg-white/90' />
+      <BackTitleHeader title='회원가입' className='bg-white/60' />
 
       {/* Outlet */}
       <main
         className='flex-grow flex flex-col items-center justify-start sm:justify-center text-center'
         style={{ paddingTop: headerHeight }}
       >
-        <Outlet />
+        <Outlet context={{ step, setStep }} />
       </main>
 
       {/* footer */}

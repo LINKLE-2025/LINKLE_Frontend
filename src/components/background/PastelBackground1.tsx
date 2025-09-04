@@ -1,4 +1,4 @@
-export default function PastelBackground() {
+export default function PastelBackground1() {
   return (
     // Pink, Yellow, Blue Pastel Blobs Background
     <div className='absolute inset-0 -z-10 bg-gradient-to-tr from-pink-50/50 via-yellow-50/50 to-blue-50/50 overflow-hidden'>
