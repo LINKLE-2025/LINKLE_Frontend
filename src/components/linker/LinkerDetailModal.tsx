@@ -136,7 +136,6 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
                       title='포스트작성'
                       onClick={CreatePost}
                     >
-                      {/* public/ 접두사는 빼고 /icons/... 로 */}
                       <img src='/icons/mapicon/photo.png' alt='' />
                     </button>
                     <button

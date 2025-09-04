@@ -9,7 +9,6 @@ import LinkerCreateModal from "../components/linker/LinkerCreateModal";
 import type { SearchResult } from "../components/search/SearchPanel";
 import LinkerDetailModal from "../components/linker/LinkerDetailModal";
 import { Sheet } from "react-modal-sheet";
-import { useLocation } from "react-router-dom";
 import {
   saveLinker,
   fetchLinkers,
@@ -18,6 +17,7 @@ import {
   type LinkerListItem,
   type LinkerDetail,
 } from "@/services/linkerService";
+
 interface StoredSpot {
   lat: number;
   lng: number;
@@ -35,9 +35,11 @@ interface SearchItem {
   lat: number;
   lng: number;
 }
+
 const STORAGE_KEY = "linkle_spots_v2";
 
 export default function MapPage(): React.ReactElement {
+  // ===== 1. 기존 상태들 =====
   // spots 저장
   const [spots, setSpots] = useState<StoredSpots>(() =>
     load<StoredSpots>(STORAGE_KEY, {} as StoredSpots),
@@ -56,6 +58,7 @@ export default function MapPage(): React.ReactElement {
   const searchMarkers = useRef<InstanceType<typeof window.kakao.maps.Marker>[]>([]);
   const draftMarkerRef = useRef<InstanceType<typeof window.kakao.maps.Marker> | null>(null);
   const linkerMarkersRef = useRef<InstanceType<typeof window.kakao.maps.Marker>[]>([]);
+
   // 모달 관련
   const [linkerOpen, setLinkerOpen] = useState(false);
   const [linkerInitial, setLinkerInitial] = useState<{
@@ -68,27 +71,16 @@ export default function MapPage(): React.ReactElement {
   // 검색 input ref
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  // 서버 저장
-  const handleSaveLinker = async (payload: LinkerPayload) => {
-    try {
-      await saveLinker(payload);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
+  const [detailData, setDetailData] = useState<LinkerDetail | null>(null);
 
-      if (kakaoMapRef.current) {
-        await loadExistingLinkers(kakaoMapRef.current, onOpenDetailById);
-      }
-    } catch (e) {
-      console.error(e);
-      alert("저장에 실패했습니다.");
-    } finally {
-      setLinkerOpen(false);
-      setLinkerInitial(null);
-      if (draftMarkerRef.current) {
-        draftMarkerRef.current.setMap(null);
-        draftMarkerRef.current = null;
-      }
-    }
-  };
+  // ===== 2. 🔥 새로 추가: 카테고리 필터링 상태들 =====
+  const [categoryFilterOpen, setCategoryFilterOpen] = useState(false); // 카테고리 선택 패널 열림/닫힘
+  const [selectedCategories, setSelectedCategories] = useState<Set<number>>(new Set()); // 선택된 카테고리들 (Set 사용)
 
+  // ===== 3. 카테고리 관련 상수들 =====
   // categoryId에 따른 아이콘 매핑
   const CATEGORY_ICONS: Record<number, string> = {
     1: "/icons/category/meal.png",
@@ -105,10 +97,74 @@ export default function MapPage(): React.ReactElement {
     12: "/icons/category/travel.png",
   };
 
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [detailError, setDetailError] = useState<string | null>(null);
-  const [detailData, setDetailData] = useState<LinkerDetail | null>(null);
+  // categoryId에 따른 아이콘 매핑 (카테고리선택용)
+  const CATEGORY_ICONS2: Record<number, string> = {
+    1: "/icons/category/mealicon.png",
+    2: "/icons/category/cafeicon.png",
+    3: "/icons/category/musicicon.png",
+    4: "/icons/category/movieicon.png",
+    5: "/icons/category/readingicon.png",
+    6: "/icons/category/exerciseicon.png",
+    7: "/icons/category/drinkingicon.png",
+    8: "/icons/category/learningicon.png",
+    9: "/icons/category/shoppingicon.png",
+    10: "/icons/category/hospitalicon.png",
+    11: "/icons/category/gameicon.png",
+    12: "/icons/category/travelicon.png",
+  };
+
+  // 🔥 새로 추가: 카테고리 이름 매핑
+  const CATEGORY_NAMES: Record<number, string> = {
+    1: "식사",
+    2: "카페",
+    3: "음악",
+    4: "영화",
+    5: "독서",
+    6: "운동",
+    7: "음주",
+    8: "학습",
+    9: "쇼핑",
+    10: "병원",
+    11: "게임",
+    12: "여행",
+  };
+
+  // ===== 4. 🔥 새로 추가: 카테고리 필터링 함수들 =====
+
+  // 카테고리 하나를 선택/해제하는 함수
+  const toggleCategoryFilter = (categoryId: number) => {
+    console.log(`카테고리 ${categoryId}(${CATEGORY_NAMES[categoryId]}) 토글`);
+
+    setSelectedCategories((prev) => {
+      const newSet = new Set(prev); // 기존 Set을 복사
+      if (newSet.has(categoryId)) {
+        // 이미 선택되어 있으면 제거
+        newSet.delete(categoryId);
+        console.log(`카테고리 ${categoryId} 제거됨`);
+      } else {
+        // 선택되어 있지 않으면 추가
+        newSet.add(categoryId);
+        console.log(`카테고리 ${categoryId} 추가됨`);
+      }
+      console.log("현재 선택된 카테고리들:", Array.from(newSet));
+      return newSet;
+    });
+  };
+
+  // 모든 카테고리 필터 해제
+  const clearAllFilters = () => {
+    console.log("모든 카테고리 필터 해제");
+    setSelectedCategories(new Set());
+  };
+
+  // 모든 카테고리 선택
+  const selectAllCategories = () => {
+    console.log("모든 카테고리 선택");
+    const allCategoryIds = Object.keys(CATEGORY_NAMES).map(Number);
+    setSelectedCategories(new Set(allCategoryIds));
+  };
+
+  // ===== 5. 🔥 수정된 loadExistingLinkers 함수 (카테고리 필터링 적용) =====
 
   //링커 상세보기 함수
   function onOpenDetailById(linkerId: number) {
@@ -128,6 +184,7 @@ export default function MapPage(): React.ReactElement {
         console.log("phone:", json.phone);
         console.log("memo:", json.memo);
         console.log("createdAt:", json.createdAt);
+        // 🔹 수정: X는 경도(lng), Y는 위도(lat)로 올바르게 매핑
         console.log("lat (from locationY):", json.locationY);
         console.log("lng (from locationX):", json.locationX);
       } catch (e: any) {
@@ -145,50 +202,105 @@ export default function MapPage(): React.ReactElement {
     onOpenDetailById: (linkerId: number) => void,
   ) => {
     try {
+      console.log("🔄 링커 데이터 불러오는 중...");
       const items = await fetchLinkers();
       console.log("불러온 링커 목록:", items);
 
       // 기존 마커 제거
+      console.log("🗑️ 기존 마커들 제거 중...");
       linkerMarkersRef.current.forEach((m) => m.setMap(null));
       linkerMarkersRef.current = [];
 
       const kakao = (window as any).kakao;
 
-      items.forEach((m) => {
-        // 좌표 매핑 수정
-        const lat = m.locationY ?? m.lat;
-        const lng = m.locationX ?? m.lng;
+      console.log(`🔍 현재 선택된 카테고리:`, Array.from(selectedCategories));
+      console.log(`📊 총 ${items.length}개 링커 처리 시작`);
+
+      let createdMarkerCount = 0; // 실제로 생성된 마커 수 카운트
+
+      items.forEach((m, index) => {
+        // 🔹 수정: X는 경도(lng), Y는 위도(lat)로 올바르게 매핑
+        const lat = m.locationY ?? m.lat; // Y가 위도(latitude)
+        const lng = m.locationX ?? m.lng; // X가 경도(longitude)
         const linkerId = m.linkerId;
+        const categoryId = m.categoryId;
 
-        console.log(`${m.name}: lat=${lat}, lng=${lng}`); // 디버깅용
+        console.log(
+          `처리 중 [${index + 1}/${items.length}]: ${m.name} (카테고리: ${categoryId}, 좌표: ${lat},${lng})`,
+        );
 
-        if (typeof lat !== "number" || typeof lng !== "number") return;
-
-        const linkerIcon = CATEGORY_ICONS[m.categoryId ?? 0] ?? "/icons/default.png";
-
-        const markerImage = new kakao.maps.MarkerImage(linkerIcon, new kakao.maps.Size(45, 64.29), {
-          offset: new kakao.maps.Point(22.5, 64.29),
-        });
-
-        const marker = new kakao.maps.Marker({
-          map,
-          title: m.name,
-          position: new kakao.maps.LatLng(lat, lng),
-          image: markerImage,
-          zIndex: 3,
-          clickable: true,
-        });
-
-        if (typeof linkerId === "number") {
-          kakao.maps.event.addListener(marker, "click", () => {
-            onOpenDetailById(linkerId);
-          });
+        // 좌표 유효성 검증
+        if (
+          typeof lat !== "number" ||
+          typeof lng !== "number" ||
+          isNaN(lat) ||
+          isNaN(lng) ||
+          lat < -90 ||
+          lat > 90 ||
+          lng < -180 ||
+          lng > 180
+        ) {
+          console.warn(`❌ 잘못된 좌표 데이터: ${m.name}, lat=${lat}, lng=${lng}`);
+          return;
         }
 
-        linkerMarkersRef.current.push(marker);
+        // 🔥 카테고리 필터링 적용
+        if (selectedCategories.size > 0) {
+          // categoryId가 유효한 숫자가 아니면 제외
+          if (typeof categoryId !== "number" || categoryId === null) {
+            console.log(
+              `🚫 유효하지 않은 카테고리로 인해 제외됨: ${m.name} (카테고리 ${categoryId})`,
+            );
+            return;
+          }
+
+          // 선택된 카테고리에 포함되지 않으면 제외
+          if (!selectedCategories.has(categoryId)) {
+            console.log(`🚫 카테고리 필터로 인해 제외됨: ${m.name} (카테고리 ${categoryId})`);
+            return; // 선택된 카테고리가 아니면 마커 생성하지 않음
+          }
+        }
+
+        console.log(`✅ 마커 생성 대상: ${m.name} (카테고리 ${categoryId})`);
+
+        const linkerIcon = CATEGORY_ICONS[categoryId ?? 0] ?? "/icons/default.png";
+
+        try {
+          const markerImage = new kakao.maps.MarkerImage(
+            linkerIcon,
+            new kakao.maps.Size(45, 64.29),
+            {
+              offset: new kakao.maps.Point(22.5, 64.29),
+            },
+          );
+
+          const marker = new kakao.maps.Marker({
+            map,
+            title: m.name,
+            position: new kakao.maps.LatLng(lat, lng),
+            image: markerImage,
+            zIndex: 3,
+            clickable: true,
+          });
+
+          if (typeof linkerId === "number") {
+            kakao.maps.event.addListener(marker, "click", () => {
+              console.log(`🎯 마커 클릭됨: ${m.name} (링커 ID: ${linkerId})`);
+              onOpenDetailById(linkerId);
+            });
+          }
+
+          linkerMarkersRef.current.push(marker);
+          createdMarkerCount++;
+          console.log(`🎉 마커 생성 성공: ${m.name}`);
+        } catch (markerError) {
+          console.error(`❌ 마커 생성 실패 (${m.name}):`, markerError);
+        }
       });
+
+      console.log(`🎯 최종 결과: ${createdMarkerCount}개 마커가 지도에 표시되었습니다.`);
     } catch (e) {
-      console.error(e);
+      console.error("❌ 링커 로드 중 오류:", e);
     }
   };
 
@@ -210,6 +322,34 @@ export default function MapPage(): React.ReactElement {
       } catch {}
     }, 400);
   }, [location.state]);
+  // ===== 6. 🔥 카테고리 필터 변경시 마커 다시 로드 =====
+  useEffect(() => {
+    console.log("🔄 카테고리 필터가 변경됨, 마커 다시 로드");
+    if (kakaoMapRef.current) {
+      loadExistingLinkers(kakaoMapRef.current, onOpenDetailById);
+    }
+  }, [selectedCategories]); // selectedCategories가 변경될 때마다 실행
+
+  // 서버 저장
+  const handleSaveLinker = async (payload: LinkerPayload) => {
+    try {
+      await saveLinker(payload);
+
+      if (kakaoMapRef.current) {
+        await loadExistingLinkers(kakaoMapRef.current, onOpenDetailById);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("저장에 실패했습니다.");
+    } finally {
+      setLinkerOpen(false);
+      setLinkerInitial(null);
+      if (draftMarkerRef.current) {
+        draftMarkerRef.current.setMap(null);
+        draftMarkerRef.current = null;
+      }
+    }
+  };
 
   // Kakao Map 로드
   useEffect(() => {
@@ -234,7 +374,12 @@ export default function MapPage(): React.ReactElement {
           };
           const map = new window.kakao.maps.Map(container, options);
           kakaoMapRef.current = map;
-          loadExistingLinkers(map, onOpenDetailById);
+
+          // 지도 로드 완료 후 약간의 지연을 두고 링커 로드
+          setTimeout(() => {
+            console.log("지도 로드 완료, 링커 로드 시작");
+            loadExistingLinkers(map, onOpenDetailById);
+          }, 100);
 
           // 지도 클릭 이벤트(모달 띄우기)
           const handleMapClick = (mouseEvent: kakao.maps.event.MouseEvent) => {
@@ -269,7 +414,6 @@ export default function MapPage(): React.ReactElement {
           window.kakao.maps.event.addListener(map, "click", handleMapClick as any);
 
           // 내 위치 마커
-
           if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((pos) => {
               const myLat = pos.coords.latitude;
@@ -341,7 +485,6 @@ export default function MapPage(): React.ReactElement {
     const newMarkers = markers.map((m) => {
       const marker = new window.kakao.maps.Marker({
         map: kakaoMapRef.current!,
-
         position: new window.kakao.maps.LatLng(m.lat, m.lng),
       });
       window.kakao.maps.event.addListener(marker, "click", () => setActiveId(m.spotId));
@@ -353,7 +496,6 @@ export default function MapPage(): React.ReactElement {
   }, [markers]);
 
   // 검색 상태
-
   const [currentPage, setCurrentPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(false);
 
@@ -361,14 +503,12 @@ export default function MapPage(): React.ReactElement {
     if (!kakaoMapRef.current || !searchQuery || !window.kakao?.maps?.services) return;
 
     const ps = new window.kakao.maps.services.Places();
-
     const center = kakaoMapRef.current.getCenter();
-
     const options = { location: center, radius: 2000, page };
+
     ps.keywordSearch(
       searchQuery,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-
       (data: any[], status: string, pagination: any) => {
         if (status === window.kakao.maps.services.Status.OK) {
           setSearchResults((prev) =>
@@ -376,16 +516,17 @@ export default function MapPage(): React.ReactElement {
               ? data.map((d) => ({
                   name: d.place_name,
                   address: d.address_name,
-                  lat: parseFloat(d.y),
-                  lng: parseFloat(d.x),
+                  // 🔹 카카오 API에서는 y가 위도, x가 경도
+                  lat: parseFloat(d.y), // y = 위도(latitude)
+                  lng: parseFloat(d.x), // x = 경도(longitude)
                 }))
               : [
                   ...prev,
                   ...data.map((d) => ({
                     name: d.place_name,
                     address: d.address_name,
-                    lat: parseFloat(d.y),
-                    lng: parseFloat(d.x),
+                    lat: parseFloat(d.y), // y = 위도(latitude)
+                    lng: parseFloat(d.x), // x = 경도(longitude)
                   })),
                 ],
           );
@@ -398,15 +539,15 @@ export default function MapPage(): React.ReactElement {
           const newMarkers = data.map((d) => {
             const marker = new window.kakao.maps.Marker({
               map: kakaoMapRef.current!,
-
+              // 🔹 카카오 API에서는 y가 위도, x가 경도
               position: new window.kakao.maps.LatLng(d.y, d.x),
             });
             window.kakao.maps.event.addListener(marker, "click", () => {
               handleResultClick({
                 name: d.place_name,
                 address: d.address_name,
-                lat: parseFloat(d.y),
-                lng: parseFloat(d.x),
+                lat: parseFloat(d.y), // y = 위도(latitude)
+                lng: parseFloat(d.x), // x = 경도(longitude)
               });
             });
             return marker;
@@ -440,11 +581,6 @@ export default function MapPage(): React.ReactElement {
       address: item.address,
       addressName: item.name, // 🔹 상호명
     });
-    // 모달 열기
-    // setLinkerOpen(true);
-
-    // 검색창 닫기
-    // setSearchOpen(false);
   };
 
   const saveNewSpot = ({ alias, category }: { alias: string; category: string }) => {
@@ -513,11 +649,14 @@ export default function MapPage(): React.ReactElement {
   return (
     <>
       <MapWrapper>
-        <div className='h-[50px] flex justify-between items-center px-4 bg-white shadow-md z-20'>
+        {/* ===== 1. 헤더 ===== */}
+        <div className='h-12 flex justify-between items-center px-4 bg-white shadow-md z-20'>
+          {/* 왼쪽: 뒤로가기 버튼 or 로고 */}
           {searchOpen ? (
             <button
               className='w-9 h-9 text-lg bg-white border border-gray-300 rounded-full flex items-center justify-center'
               onClick={() => {
+                console.log("🔙 검색창 닫기");
                 setSearchOpen(false);
                 setSearchQuery("");
                 setSearchResults([]);
@@ -530,11 +669,16 @@ export default function MapPage(): React.ReactElement {
           ) : (
             <span>📍LINKLE</span>
           )}
-          <span>🔔</span>
+
+          {/* 오른쪽: 알림 버튼 */}
+          <div className='flex items-center gap-2'>
+            <span>🔔</span>
+          </div>
         </div>
 
+        {/* ===== 3. 검색창 열렸을 때 상단 버튼 ===== */}
         {searchOpen && (
-          <div className='absolute top-[60px] left-0 w-full flex justify-center z-20'>
+          <div className='absolute top-14 left-0 w-full flex justify-center z-20'>
             <button
               className='px-3 py-1.5 text-sm rounded-lg bg-blue-500 text-white shadow'
               onClick={() => handleSearch(1)}
@@ -544,10 +688,92 @@ export default function MapPage(): React.ReactElement {
           </div>
         )}
 
-        <div className='relative w-full h-full'>
+        {/* ===== 4. 카테고리 필터 패널 ===== */}
+        {categoryFilterOpen && (
+          <div className='absolute top-12 left-0 w-full bg-white shadow-lg z-20 p-4 border-b border-gray-200'>
+            {/* 패널 헤더 */}
+            <div className='flex justify-between items-center mb-2'>
+              <h3 className='font-semibold text-gray-800 text-lg'>링커 카테고리 선택</h3>
+              <div className='flex gap-2'>
+                <button
+                  onClick={selectAllCategories}
+                  className='px-3 py-1.5 text-sm bg-green-500 hover:bg-green-600 rounded-lg text-white transition-colors'
+                >
+                  ✅
+                </button>
+                <button
+                  onClick={clearAllFilters}
+                  className='px-3 py-1.5 text-sm bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-700 transition-colors'
+                >
+                  ❌
+                </button>
+                <button
+                  onClick={() => setCategoryFilterOpen(false)}
+                  className='px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow transition-colors'
+                >
+                  ⭐
+                </button>
+              </div>
+            </div>
+
+            {/* 카테고리 그리드 */}
+            <div className='grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-1'>
+              {Object.entries(CATEGORY_NAMES).map(([id, name]) => {
+                const categoryId = Number(id);
+                const isSelected = selectedCategories.has(categoryId);
+                return (
+                  <button
+                    key={categoryId}
+                    onClick={() => toggleCategoryFilter(categoryId)}
+                    className={`flex flex-row items-center w-full h-14 px-3 rounded-xl border transition-all duration-200 ${
+                      isSelected
+                        ? "border-blue-500 bg-blue-50 shadow-md"
+                        : "border-gray-200 bg-white hover:bg-gray-50"
+                    }`}
+                  >
+                    <div className='w-8 h-8 mr-1 flex items-center justify-center'>
+                      <img
+                        src={CATEGORY_ICONS2[categoryId]}
+                        alt={name}
+                        className='w-6 h-6 object-contain'
+                        onError={(e) => ((e.target as HTMLImageElement).style.display = "none")}
+                      />
+                    </div>
+                    <span
+                      className={`text-sm font-medium ${isSelected ? "text-blue-700" : "text-gray-700"}`}
+                    >
+                      {name}
+                    </span>
+                    {isSelected && (
+                      <div className='absolute top-1 right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center'>
+                        <span className='text-white text-xs'>✓</span>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ===== 5. 지도 ===== */}
+        <div className='relative w-full h-[100vh]'>
           <div ref={mapRef} className='w-full h-full' />
+
+          {/* 헤더 아래 카테고리 버튼 */}
           {!searchOpen && (
-            <div className='absolute bottom-[70px] right-5 flex flex-col gap-3 z-10'>
+            <div className='absolute top-4 left-4 flex flex-col gap-3 z-10'>
+              <button
+                className='px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow transition-colors'
+                onClick={() => setCategoryFilterOpen(true)}
+              >
+                ⭐
+              </button>
+            </div>
+          )}
+
+          {!searchOpen && (
+            <div className='absolute bottom-16 right-4 flex flex-col gap-3 z-10'>
               <CircleButton
                 imgSrc='/icons/mapicon/search.png'
                 alt='검색'
@@ -566,11 +792,8 @@ export default function MapPage(): React.ReactElement {
                     navigator.geolocation.getCurrentPosition((position) => {
                       const lat = position.coords.latitude;
                       const lng = position.coords.longitude;
-                      if (kakaoMapRef.current) {
-                        //null 체크 추가
-                        kakaoMapRef.current.panTo(new (window as any).kakao.maps.LatLng(lat, lng));
-                        kakaoMapRef.current.setLevel(2);
-                      }
+                      kakaoMapRef.current?.panTo(new (window as any).kakao.maps.LatLng(lat, lng));
+                      kakaoMapRef.current?.setLevel(2);
                     });
                   }
                 }}
@@ -578,7 +801,8 @@ export default function MapPage(): React.ReactElement {
             </div>
           )}
         </div>
-        {/* 검색 패널 - react-modal-sheet */}
+
+        {/* ===== 6. 검색 패널 & 7. 모달들 ===== */}
         <Sheet
           isOpen={searchOpen}
           onClose={() => setSearchOpen(false)}
@@ -615,10 +839,8 @@ export default function MapPage(): React.ReactElement {
           onClose={() => {
             setLinkerOpen(false);
             setLinkerInitial(null);
-            if (draftMarkerRef.current) {
-              draftMarkerRef.current.setMap(null);
-              draftMarkerRef.current = null;
-            }
+            draftMarkerRef.current?.setMap(null);
+            draftMarkerRef.current = null;
           }}
           onSubmit={handleSaveLinker}
         />
