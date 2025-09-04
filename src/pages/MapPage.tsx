@@ -9,6 +9,7 @@ import LinkerCreateModal from "../components/linker/LinkerCreateModal";
 import type { SearchResult } from "../components/search/SearchPanel";
 import LinkerDetailModal from "../components/linker/LinkerDetailModal";
 import { Sheet } from "react-modal-sheet";
+import { useLocation } from "react-router-dom";
 import {
   saveLinker,
   fetchLinkers,
@@ -190,6 +191,23 @@ export default function MapPage(): React.ReactElement {
       console.error(e);
     }
   };
+
+  const location = useLocation();
+  const openedFromStateRef = useRef(false);
+
+  useEffect(() => {
+    const raw = (location.state as any)?.openLinkerId;
+    const id = Number(raw);
+    if (!id || openedFromStateRef.current) return; // 중복 방지
+    openedFromStateRef.current = true;
+
+    onOpenDetailById(id); // 상세 모달 열기 + 데이터 fetch
+
+    // 뒤로가기 등에서 반복 오픈 방지 (state 비우기)
+    try {
+      window.history.replaceState({}, document.title);
+    } catch {}
+  }, [location.state]);
 
   // Kakao Map 로드
   useEffect(() => {
