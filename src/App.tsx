@@ -3,13 +3,9 @@ import LandingPage from "./pages/LandingPage";
 import MapPage from "./pages/MapPage";
 import LoginPage from "./pages/auth/LoginPage";
 import SignUpPage from "./pages/auth/SignupPage";
-
 import PostCreatePage from "./pages/PostCreatePage";
-// import LoginPage from "./pages/auth/LoginPage";
-// import SignupPage from "./pages/auth/SignupPage";
 import AuthLayout from "./layouts/AuthLayout";
 import SignupLayout from "./layouts/SignupLayout";
-
 
 const App = () => {
   return (
