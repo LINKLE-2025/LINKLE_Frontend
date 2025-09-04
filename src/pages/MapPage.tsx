@@ -211,23 +211,23 @@ export default function MapPage(): React.ReactElement {
       linkerMarkersRef.current.forEach((m) => m.setMap(null));
       linkerMarkersRef.current = [];
 
-      const kakao = (window as any).kakao;
+      // 선택된 카테고리가 없으면 마커 생성 안함
+      if (selectedCategories.size === 0) {
+        console.log("🚫 선택된 카테고리가 없음. 마커 생성 생략");
+        return;
+      }
 
+      const kakao = (window as any).kakao;
       console.log(`🔍 현재 선택된 카테고리:`, Array.from(selectedCategories));
       console.log(`📊 총 ${items.length}개 링커 처리 시작`);
 
-      let createdMarkerCount = 0; // 실제로 생성된 마커 수 카운트
+      let createdMarkerCount = 0;
 
       items.forEach((m, index) => {
-        // 🔹 수정: X는 경도(lng), Y는 위도(lat)로 올바르게 매핑
-        const lat = m.locationY ?? m.lat; // Y가 위도(latitude)
-        const lng = m.locationX ?? m.lng; // X가 경도(longitude)
+        const lat = m.locationY ?? m.lat;
+        const lng = m.locationX ?? m.lng;
         const linkerId = m.linkerId;
         const categoryId = m.categoryId;
-
-        console.log(
-          `처리 중 [${index + 1}/${items.length}]: ${m.name} (카테고리: ${categoryId}, 좌표: ${lat},${lng})`,
-        );
 
         // 좌표 유효성 검증
         if (
@@ -244,24 +244,11 @@ export default function MapPage(): React.ReactElement {
           return;
         }
 
-        // 🔥 카테고리 필터링 적용
-        if (selectedCategories.size > 0) {
-          // categoryId가 유효한 숫자가 아니면 제외
-          if (typeof categoryId !== "number" || categoryId === null) {
-            console.log(
-              `🚫 유효하지 않은 카테고리로 인해 제외됨: ${m.name} (카테고리 ${categoryId})`,
-            );
-            return;
-          }
-
-          // 선택된 카테고리에 포함되지 않으면 제외
-          if (!selectedCategories.has(categoryId)) {
-            console.log(`🚫 카테고리 필터로 인해 제외됨: ${m.name} (카테고리 ${categoryId})`);
-            return; // 선택된 카테고리가 아니면 마커 생성하지 않음
-          }
+        // 카테고리 필터링
+        if (!selectedCategories.has(categoryId as any)) {
+          console.log(`🚫 카테고리 필터로 제외됨: ${m.name} (카테고리 ${categoryId})`);
+          return;
         }
-
-        console.log(`✅ 마커 생성 대상: ${m.name} (카테고리 ${categoryId})`);
 
         const linkerIcon = CATEGORY_ICONS[categoryId ?? 0] ?? "/icons/default.png";
 
@@ -269,9 +256,7 @@ export default function MapPage(): React.ReactElement {
           const markerImage = new kakao.maps.MarkerImage(
             linkerIcon,
             new kakao.maps.Size(45, 64.29),
-            {
-              offset: new kakao.maps.Point(22.5, 64.29),
-            },
+            { offset: new kakao.maps.Point(22.5, 64.29) },
           );
 
           const marker = new kakao.maps.Marker({
@@ -362,7 +347,7 @@ export default function MapPage(): React.ReactElement {
           setTimeout(() => {
             console.log("지도 로드 완료, 링커 로드 시작");
             loadExistingLinkers(map, onOpenDetailById);
-          }, 100);
+          });
 
           // 지도 클릭 이벤트(모달 띄우기)
           const handleMapClick = (mouseEvent: kakao.maps.event.MouseEvent) => {
@@ -727,11 +712,6 @@ export default function MapPage(): React.ReactElement {
                     >
                       {name}
                     </span>
-                    {isSelected && (
-                      <div className='absolute top-1 right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center'>
-                        <span className='text-white text-xs'>✓</span>
-                      </div>
-                    )}
                   </button>
                 );
               })}
