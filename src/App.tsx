@@ -9,7 +9,7 @@ import PostCreatePage from "./pages/PostCreatePage";
 // import SignupPage from "./pages/auth/SignupPage";
 import AuthLayout from "./layouts/AuthLayout";
 import SignupLayout from "./layouts/SignupLayout";
-
+import PointPage from "./pages/pointPage";
 
 const App = () => {
   return (
@@ -28,6 +28,7 @@ const App = () => {
       {/* 로그인 후 레이아웃 */}
       <Route path='/map' element={<MapPage />} />
       <Route path='/post' element={<PostCreatePage />} />
+      <Route path='/point' element={<PointPage />} />
     </Routes>
   );
 };

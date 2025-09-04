@@ -304,6 +304,24 @@ export default function MapPage(): React.ReactElement {
     }
   };
 
+  // 포스트에서 링커 바로가기
+  const location = useLocation();
+  const openedFromStateRef = useRef(false);
+
+  useEffect(() => {
+    const raw = (location.state as any)?.openLinkerId;
+    const id = Number(raw);
+    if (!id || openedFromStateRef.current) return;
+    openedFromStateRef.current = true;
+
+    //지도 뜬 후 링커 띄우기
+    setTimeout(() => {
+      onOpenDetailById(id);
+      try {
+        window.history.replaceState({}, document.title);
+      } catch {}
+    }, 400);
+  }, [location.state]);
   // ===== 6. 🔥 카테고리 필터 변경시 마커 다시 로드 =====
   useEffect(() => {
     console.log("🔄 카테고리 필터가 변경됨, 마커 다시 로드");
@@ -335,7 +353,6 @@ export default function MapPage(): React.ReactElement {
 
   // Kakao Map 로드
   useEffect(() => {
-    if (document.getElementById("kakao-map-script")) return;
     const script = document.createElement("script");
     script.id = "kakao-map-script";
     script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${
