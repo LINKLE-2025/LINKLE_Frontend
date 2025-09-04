@@ -192,26 +192,27 @@ export default function MapPage(): React.ReactElement {
     }
   };
 
+  // 포스트에서 링커 바로가기
   const location = useLocation();
   const openedFromStateRef = useRef(false);
 
   useEffect(() => {
     const raw = (location.state as any)?.openLinkerId;
     const id = Number(raw);
-    if (!id || openedFromStateRef.current) return; // 중복 방지
+    if (!id || openedFromStateRef.current) return;
     openedFromStateRef.current = true;
 
-    onOpenDetailById(id); // 상세 모달 열기 + 데이터 fetch
-
-    // 뒤로가기 등에서 반복 오픈 방지 (state 비우기)
-    try {
-      window.history.replaceState({}, document.title);
-    } catch {}
+    //지도 뜬 후 링커 띄우기
+    setTimeout(() => {
+      onOpenDetailById(id);
+      try {
+        window.history.replaceState({}, document.title);
+      } catch {}
+    }, 400);
   }, [location.state]);
 
   // Kakao Map 로드
   useEffect(() => {
-    if (document.getElementById("kakao-map-script")) return;
     const script = document.createElement("script");
     script.id = "kakao-map-script";
     script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${
