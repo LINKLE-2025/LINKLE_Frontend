@@ -22,18 +22,14 @@ import PointPage from "./pages/pointPage";
 const App = () => {
   return (
     <Routes>
-      {/* 로그인 및 기본화면 레이아웃 */}
+      {/* 로그인 및 회원가입 레이아웃 */}
       <Route element={<AuthLayout />}>
         <Route path='/' element={<LandingPage />} />
         <Route path='/login' element={<LoginPage />} />
-      </Route>
-
-      {/* 회원가입 레이아웃 */}
-      <Route element={<SignupLayout />}>
         <Route path='/signup' element={<SignUpPage />} />
       </Route>
 
-      {/* 로그인 후 레이아웃 */}
+      {/* 어플리케이션 레이아웃 */}
       <Route path='/map' element={<MapPage />} />
       <Route path='/post' element={<PostCreatePage />} />
 

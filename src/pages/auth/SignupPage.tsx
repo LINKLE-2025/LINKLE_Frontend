@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 import EmailStep from "@/components/auth/signupStep/EmailStep";
 import VerifyCodeStep from "@/components/auth/signupStep/VerifyCodeStep";
 import PasswordStep from "@/components/auth/signupStep/PasswordStep";
@@ -7,6 +7,7 @@ import BirthStep from "@/components/auth/signupStep/BirthStep";
 import GenderStep from "@/components/auth/signupStep/GenderStep";
 import NicknameStep from "@/components/auth/signupStep/NicknameStep";
 import AgreeTermStep from "@/components/auth/signupStep/AgreeTermStep";
+import BackTitleHeader from "@/components/header/BackTitleHeader";
 
 const stepContents: Record<number, { title: string; description: string }> = {
   1: {
@@ -72,8 +73,20 @@ export default function SignupPage() {
     // TODO: API 전송 로직
   };
 
+  // formData 변경 시 콘솔에 출력
+  useEffect(() => {
+    console.log(formData);
+  }, [formData]);
+
   return (
     <div className='flex flex-col items-center justify-center mx-auto w-full max-w-[630px] px-6'>
+      {/* header */}
+      <BackTitleHeader
+        title='회원가입'
+        className='bg-white/60'
+        onBack={step > 1 ? () => setStep(step - 1) : undefined}
+      />
+
       {/* 안내 문구 */}
       <div className='text-left max-w-sm'>
         <h2 className='text-3xl sm:text-4xl sm:text-center font-bold mt-6 mb-3 sm:mb-14'>
