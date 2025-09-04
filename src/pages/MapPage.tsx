@@ -7,7 +7,10 @@ import SearchPanel from "../components/search/SearchPanel";
 import MapWrapper from "../components/map/MapWrapper";
 import LinkerCreateModal from "../components/linker/LinkerCreateModal";
 import type { SearchResult } from "../components/search/SearchPanel";
+import LinkerDetailModal from "../components/linker/LinkerDetailModal";
 import { Sheet } from "react-modal-sheet";
+import { saveLinker, fetchLinkers } from "@/services/linkerService";
+import type { LinkerPayload } from "@/services/linkerService";
 
 interface StoredSpot {
   lat: number;
@@ -53,31 +56,42 @@ export default function MapPage(): React.ReactElement {
     lat?: number;
     lng?: number;
     address?: string;
+    addressName?: string; // 상호명
   } | null>(null);
 
   // 검색 input ref
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   // 서버 저장
+  // 서버 저장
   const handleSaveLinker = async (payload: {
     name: string;
-    memo: string;
-    address: string;
+    memo?: string;
+    address?: string;
     locationX?: number;
     locationY?: number;
     categoryId: number;
     addressDetail: string;
+    addressName?: string; // 상호명은 null 허용
   }) => {
     try {
+      const safePayload = {
+        ...payload,
+        memo: payload.memo ?? "",
+        address: payload.address ?? "",
+        addressName: payload.addressName ?? "",
+      };
+
       const res = await fetch("/api/linker", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(safePayload),
         credentials: "include",
       });
+
       if (!res.ok) throw new Error("POST /api/linker 실패");
       if (kakaoMapRef.current) {
-        await loadExistingLinkers(kakaoMapRef.current);
+        await loadExistingLinkers(kakaoMapRef.current, onOpenDetailById);
       }
     } catch (e) {
       console.error(e);
@@ -92,51 +106,149 @@ export default function MapPage(): React.ReactElement {
     }
   };
 
-  // 기존 링커 불러오기
-  const loadExistingLinkers = async (map: kakao.maps.Map) => {
+  // categoryId에 따른 아이콘 매핑
+  const CATEGORY_ICONS: Record<number, string> = {
+    1: "/icons/category/meal.png",
+    2: "/icons/category/cafe.png",
+    3: "/icons/category/music.png",
+    4: "/icons/category/movie.png",
+    5: "/icons/category/readng.png",
+    6: "/icons/category/exercise.png",
+    7: "/icons/category/drinking.png",
+    8: "/icons/category/learning.png",
+    9: "/icons/category/shopping.png",
+    10: "/icons/category/hospital.png",
+    11: "/icons/category/game.png",
+    12: "/icons/category/travel.png",
+  };
+
+  // 링커 지도에서 전체보기
+  type LinkerListItem = {
+    linkerId: number;
+    name: string;
+    categoryId?: number | null;
+    locationX: number | null; // lng
+    locationY: number | null; // lat
+    // 백워드 호환
+    lat?: number | null;
+    lng?: number | null;
+  };
+
+  //링커 상세보기 (구현중)
+  type LinkerDetail = {
+    linkerId: number;
+    name: string;
+    address?: string;
+    adresssName?: string; // 백엔드 오타 호환
+    categoryId?: number | null;
+    locationX?: number | null; // lng
+    locationY?: number | null; // lat
+    memo?: string | null;
+    createdAt?: string;
+    phone?: string | null;
+  };
+
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
+  const [detailData, setDetailData] = useState<LinkerDetail | null>(null);
+
+  //링커 상세보기 함수
+  function onOpenDetailById(linkerId: number) {
+    setDetailOpen(true);
+    setDetailLoading(true);
+    setDetailError(null);
+    setDetailData(null);
+    (async () => {
+      try {
+        const res = await fetch(`/api/linker/${linkerId}`, { credentials: "include" });
+        if (!res.ok) {
+          let serverMsg = "";
+          try {
+            const errJson = await res.json();
+            serverMsg = errJson?.message || "";
+          } catch {
+            /* ignore */
+          }
+
+          if (res.status === 404) {
+            throw new Error(serverMsg || "해당 링커를 찾을 수 없어요. (404)");
+          }
+          throw new Error(serverMsg || `상세 조회 실패 (${res.status})`);
+        }
+
+        const json = (await res.json()) as LinkerDetail;
+        setDetailData(json);
+        console.log("name:", json.name);
+        console.log("address:", json.address ?? json.adresssName ?? "(none)");
+        console.log("categoryId:", json.categoryId);
+        console.log("phone:", json.phone);
+        console.log("memo:", json.memo);
+        console.log("createdAt:", json.createdAt);
+        console.log("lat (from locationY):", json.locationY);
+        console.log("lng (from locationX):", json.locationX);
+      } catch (e: any) {
+        setDetailError(e?.message ?? String(e));
+      } finally {
+        setDetailLoading(false);
+      }
+    })();
+  }
+
+  //DB에서 기존 링커 불러와서 마커로 표시
+  //onOpenDetailById 함수도 같이 넘겨서 마커 클릭 시 상세보기 가능하게 함
+  const loadExistingLinkers = async (
+    map: kakao.maps.Map,
+    onOpenDetailById: (linkerId: number) => void,
+  ) => {
     try {
       const res = await fetch("/api/linker");
       if (!res.ok) throw new Error("GET /api/linker 실패");
-      const items: Array<{
-        name: string;
-        locationX?: number;
-        locationY?: number;
-        lat?: number;
-        lng?: number;
-      }> = await res.json();
+      const items: LinkerListItem[] = await res.json();
 
+      // 기존 마커 제거
       linkerMarkersRef.current.forEach((m) => m.setMap(null));
       linkerMarkersRef.current = [];
 
-      const kakao = window.kakao;
+      const kakao = (window as any).kakao;
+
       items.forEach((m) => {
         const lat = m.locationX ?? m.lat;
         const lng = m.locationY ?? m.lng;
+        const linkerId = m.linkerId;
         if (typeof lat !== "number" || typeof lng !== "number") return;
+
+        const linkerIcon = CATEGORY_ICONS[m.categoryId ?? 0] ?? "/icons/default.png";
+
+        const markerImage = new kakao.maps.MarkerImage(
+          linkerIcon,
+          new kakao.maps.Size(45, 64.29), // 아이콘 크기
+          { offset: new kakao.maps.Point(22.5, 64.29) },
+        );
+
         const marker = new kakao.maps.Marker({
           map,
           title: m.name,
           position: new kakao.maps.LatLng(lat, lng),
+          image: markerImage,
+          zIndex: 3,
+          //클릭/hover 이벤트 활성화
+          clickable: true,
         });
+
+        // 마커 클릭 시 상세보기 (ID 기반)
+        if (typeof linkerId === "number") {
+          kakao.maps.event.addListener(marker, "click", () => {
+            onOpenDetailById(linkerId);
+          });
+        }
+
         linkerMarkersRef.current.push(marker);
       });
     } catch (e) {
       console.error(e);
     }
   };
-
-  // spots → markers 변환
-  const markers = useMemo(
-    () =>
-      Object.entries(spots).map(([spotId, s]) => ({
-        spotId,
-        lat: s.lat,
-        lng: s.lng,
-        alias: s.alias,
-        category: s.category,
-      })),
-    [spots],
-  );
 
   // Kakao Map 로드
   useEffect(() => {
@@ -162,7 +274,7 @@ export default function MapPage(): React.ReactElement {
           };
           const map = new window.kakao.maps.Map(container, options);
           kakaoMapRef.current = map;
-          loadExistingLinkers(map);
+          loadExistingLinkers(map, onOpenDetailById);
 
           // 지도 클릭 이벤트(모달 띄우기)
           const handleMapClick = (mouseEvent: kakao.maps.event.MouseEvent) => {
@@ -194,7 +306,7 @@ export default function MapPage(): React.ReactElement {
             setCreateDraft({ lat: latlng.getLat(), lng: latlng.getLng() });
           };
 
-          window.kakao.maps.event.addListener(map, "click", handleMapClick);
+          window.kakao.maps.event.addListener(map, "click", handleMapClick as any);
 
           // 내 위치 마커
 
@@ -203,7 +315,7 @@ export default function MapPage(): React.ReactElement {
               const myLat = pos.coords.latitude;
               const myLng = pos.coords.longitude;
               const myLocationImage = new window.kakao.maps.MarkerImage(
-                "/icons/user_location2.png",
+                "/icons/mapicon/user_location2.png",
                 new window.kakao.maps.Size(20, 20),
                 { offset: new window.kakao.maps.Point(10, 10) },
               );
@@ -244,6 +356,17 @@ export default function MapPage(): React.ReactElement {
   }, []);
 
   // spot markers 렌더링
+  const markers = useMemo(
+    () =>
+      Object.entries(spots).map(([spotId, s]) => ({
+        spotId,
+        lat: s.lat,
+        lng: s.lng,
+        alias: s.alias,
+        category: s.category,
+      })),
+    [spots],
+  );
 
   useEffect(() => {
     if (!kakaoMapRef.current || !window.kakao?.maps) return;
@@ -341,10 +464,27 @@ export default function MapPage(): React.ReactElement {
     );
   };
 
-  const handleResultClick = (item: SearchItem) => {
+  const handleResultClick = (item: SearchResult) => {
     if (!kakaoMapRef.current) return;
-    kakaoMapRef.current.panTo(new window.kakao.maps.LatLng(item.lat, item.lng));
-    setSearchOpen(false);
+
+    // 지도 중심 이동
+    kakaoMapRef.current.panTo(new window.kakao.maps.LatLng(item.lat - 0.001, item.lng)); // 약간 위로
+    setTimeout(() => {
+      kakaoMapRef.current?.setLevel(2);
+    }, 400);
+
+    // 모달 초기값 세팅
+    setLinkerInitial({
+      lat: item.lat,
+      lng: item.lng,
+      address: item.address,
+      addressName: item.name, // 🔹 상호명
+    });
+    // 모달 열기
+    // setLinkerOpen(true);
+
+    // 검색창 닫기
+    // setSearchOpen(false);
   };
 
   const saveNewSpot = ({ alias, category }: { alias: string; category: string }) => {
@@ -398,6 +538,18 @@ export default function MapPage(): React.ReactElement {
 
   const spot = activeId ? spots[activeId] : null;
 
+  const handleOpenModal = (item: SearchResult) => {
+    console.log("검색 클릭 item:", item);
+    setLinkerInitial({
+      lat: item.lat,
+      lng: item.lng,
+      address: item.address,
+      addressName: item.name,
+    });
+    setLinkerOpen(true);
+    setSearchOpen(false);
+  };
+
   return (
     <>
       <MapWrapper>
@@ -437,25 +589,28 @@ export default function MapPage(): React.ReactElement {
           {!searchOpen && (
             <div className='absolute bottom-[70px] right-5 flex flex-col gap-3 z-10'>
               <CircleButton
-                imgSrc='/icons/search.png'
+                imgSrc='/icons/mapicon/search.png'
                 alt='검색'
                 onClick={() => setSearchOpen(true)}
               />
               <CircleButton
-                imgSrc='/icons/refresh.png'
+                imgSrc='/icons/mapicon/refresh.png'
                 alt='새로고침'
                 onClick={() => window.location.reload()}
               />
               <CircleButton
-                imgSrc='/icons/location.png'
+                imgSrc='/icons/mapicon/location.png'
                 alt='내 위치'
                 onClick={() => {
                   if (navigator.geolocation && kakaoMapRef.current) {
                     navigator.geolocation.getCurrentPosition((position) => {
                       const lat = position.coords.latitude;
                       const lng = position.coords.longitude;
-                      kakaoMapRef.current.panTo(new (window as any).kakao.maps.LatLng(lat, lng));
-                      kakaoMapRef.current.setLevel(2);
+                      if (kakaoMapRef.current) {
+                        //null 체크 추가
+                        kakaoMapRef.current.panTo(new (window as any).kakao.maps.LatLng(lat, lng));
+                        kakaoMapRef.current.setLevel(2);
+                      }
                     });
                   }
                 }}
@@ -467,26 +622,29 @@ export default function MapPage(): React.ReactElement {
         <Sheet
           isOpen={searchOpen}
           onClose={() => setSearchOpen(false)}
-          snapPoints={[1, 0.5, 0.3]} // <- 화면 비율 (30%, 50%, 100%)
-          initialSnap={2} // <- 처음 열릴 때 0=30%, 1=50%, 2=100%
+          snapPoints={[0.6, 0.3]}
+          initialSnap={0}
         >
           <Sheet.Container>
             <Sheet.Header>
               <div className='mx-auto my-2 h-1.5 w-12 rounded-full bg-gray-300' />
             </Sheet.Header>
             <Sheet.Content>
-              <div className='text-center py-2 border-b'>🔍 검색</div>
-              <SearchPanel
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                searchResults={searchResults}
-                handleSearch={handleSearch}
-                handleResultClick={handleResultClick}
-                inputRef={inputRef}
-                hasNextPage={hasNextPage}
-                currentPage={currentPage}
-                onOpenModal={handleResultClick}
-              />
+              <div className='flex flex-col h-[400px]'>
+                <div className='flex-1 min-h-0 overflow-y-auto'>
+                  <SearchPanel
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
+                    searchResults={searchResults}
+                    handleSearch={handleSearch}
+                    handleResultClick={handleResultClick}
+                    inputRef={inputRef}
+                    hasNextPage={hasNextPage}
+                    currentPage={currentPage}
+                    onOpenModal={handleOpenModal}
+                  />
+                </div>
+              </div>
             </Sheet.Content>
           </Sheet.Container>
         </Sheet>
@@ -503,6 +661,13 @@ export default function MapPage(): React.ReactElement {
             }
           }}
           onSubmit={handleSaveLinker}
+        />
+        <LinkerDetailModal
+          open={detailOpen}
+          onClose={() => setDetailOpen(false)}
+          detail={detailData}
+          loading={detailLoading}
+          error={detailError}
         />
       </MapWrapper>
     </>
