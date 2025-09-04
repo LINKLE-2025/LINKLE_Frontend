@@ -1,4 +1,3 @@
-import PastelBackground from "@/components/background/PastelBackground";
 import RandomPastelBackground from "@/components/background/RandomPastelBackground";
 import TeamNameFooter from "@/components/footer/TeamNameFooter";
 import MainHeader from "@/components/header/MainHeader";
@@ -19,11 +18,10 @@ export default function AuthLayout() {
   return (
     <div className='relative flex flex-col min-h-screen text-black'>
       {/* 배경 */}
-      {/* <PastelBackground /> */}
       <RandomPastelBackground />
 
       {/* header */}
-      <MainHeader className='bg-white/90' />
+      <MainHeader className='bg-white/60' />
 
       {/* Outlet */}
       <main

@@ -10,13 +10,13 @@ import FriendListPage from "@/pages/friend/FriendsListPage";
 import FriendRequestsPage from "@/pages/friend/FriendRequestsPage";
 
 import PostCreatePage from "./pages/PostCreatePage";
-// import LoginPage from "./pages/auth/LoginPage";
-// import SignupPage from "./pages/auth/SignupPage";
 import AuthLayout from "./layouts/AuthLayout";
 import SignupLayout from "./layouts/SignupLayout";
+
 import ProfileLayout from "./layouts/ProfileLayout";
 import FriendListLayout from "./layouts/FriendListLayout";
 
+import PointPage from "./pages/pointPage";
 
 
 const App = () => {
@@ -49,6 +49,9 @@ const App = () => {
         <Route path="/friend" element={<FriendListPage />} />
         <Route path="/received" element={<FriendRequestsPage />} />
       </Route>
+
+
+      <Route path='/point' element={<PointPage />} />
 
     </Routes>
   );
