@@ -87,15 +87,21 @@ const FriendsListPage: React.FC = () => {
       <div className="bg-white flex-1">
         {filteredFriends.length > 0 ? (
           <div className="divide-y divide-gray-100">
-            {filteredFriends.map((friend) => (
-              <FriendItem
-                key={friend.userId}
-                id={friend.userId}
-                name={friend.name}
-                username={friend.nickname}  // username 대신 nickname
-                buttonType={friend.state === 'ACCEPTED' ? '메시지' : '친구 추가'}
-              />
-            ))}
+             
+             {filteredFriends.map((friend) => {
+              // console.log(friend);
+
+              return (
+                <FriendItem
+                  key={friend.friendId}
+                  id={friend.userId1}
+                  name={friend.name}
+                  username={friend.nickname}
+                  buttonType={friend.state === 'ACCEPTED' ? '메시지' : '친구 추가'}
+                />
+              );
+            })}
+
           </div>
         ) : (
           <div className="flex items-center justify-center py-20">
