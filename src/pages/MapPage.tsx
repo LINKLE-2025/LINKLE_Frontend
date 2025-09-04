@@ -79,7 +79,9 @@ export default function MapPage(): React.ReactElement {
 
   // ===== 2. 🔥 새로 추가: 카테고리 필터링 상태들 =====
   const [categoryFilterOpen, setCategoryFilterOpen] = useState(false); // 카테고리 선택 패널 열림/닫힘
-  const [selectedCategories, setSelectedCategories] = useState<Set<number>>(new Set()); // 선택된 카테고리들 (Set 사용)
+  const [selectedCategories, setSelectedCategories] = useState<Set<number>>(
+    new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
+  ); // 선택된 카테고리들 (Set 사용)
 
   // ===== 3. 카테고리 관련 상수들 =====
   // categoryId에 따른 아이콘 매핑
