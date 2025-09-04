@@ -17,6 +17,7 @@ export default function EmailStep({ value, onChange, onNext }: Props) {
       return;
     }
     setError("");
+    console.log("이메일:", value);
     onNext();
   };
 
