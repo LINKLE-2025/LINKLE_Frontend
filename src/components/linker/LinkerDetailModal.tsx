@@ -184,6 +184,8 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
             ) : posts.length === 0 ? (
               <div className='p-6 text-center text-gray-400 text-sm'>
                 아직 등록된 포스트가 없어요.
+                <br />
+                <br />
               </div>
             ) : (
               <>
@@ -193,10 +195,11 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
                       key={p.postId}
                       className='aspect-square overflow-hidden bg-gray-100'
                       title={p.content ?? ""}
-                      onClick={() => {
-                        // TODO: 포스트 상세 모달/페이지로 연결
-                        // navigate(`/post/${p.postId}`);
-                      }}
+                      onClick={() =>
+                        navigate(`/post/${p.postId}`, {
+                          state: { linker: detail }, // 현재 링크된 linker 정보 같이 전달
+                        })
+                      }
                     >
                       {p.imageUrl ? (
                         <img src={p.imageUrl} alt='' className='h-full w-full object-cover' />

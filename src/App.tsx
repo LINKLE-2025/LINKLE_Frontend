@@ -4,12 +4,13 @@ import MapPage from "./pages/MapPage";
 import LoginPage from "./pages/auth/LoginPage";
 import SignUpPage from "./pages/auth/SignupPage";
 
-import PostCreatePage from "./pages/PostCreatePage";
+import PostCreatePage from "./pages/post/PostCreatePage";
 // import LoginPage from "./pages/auth/LoginPage";
 // import SignupPage from "./pages/auth/SignupPage";
 import AuthLayout from "./layouts/AuthLayout";
 import SignupLayout from "./layouts/SignupLayout";
 import PointPage from "./pages/pointPage";
+import PostDetailPage from "./pages/post/PostDetailPage";
 
 const App = () => {
   return (
@@ -29,6 +30,7 @@ const App = () => {
       <Route path='/map' element={<MapPage />} />
       <Route path='/post' element={<PostCreatePage />} />
       <Route path='/point' element={<PointPage />} />
+      <Route path='/post/:postId' element={<PostDetailPage />} />
     </Routes>
   );
 };
