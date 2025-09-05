@@ -4,20 +4,21 @@ import MapPage from "./pages/MapPage";
 import LoginPage from "./pages/auth/LoginPage";
 import SignUpPage from "./pages/auth/SignupPage";
 
+import PostCreatePage from "./pages/post/PostCreatePage";
+// import LoginPage from "./pages/auth/LoginPage";
+// import SignupPage from "./pages/auth/SignupPage";
 import ProfilePage from "@/pages/Profile/ProfilePage";
 import ProfileEditPage from "@/pages/Profile/ProfileEditPage";
 import FriendListPage from "@/pages/friend/FriendsListPage";
 import FriendRequestsPage from "@/pages/friend/FriendRequestsPage";
-
 import PostCreatePage from "./pages/PostCreatePage";
 import AuthLayout from "./layouts/AuthLayout";
-import SignupLayout from "./layouts/SignupLayout";
 
 import ProfileLayout from "./layouts/ProfileLayout";
 import FriendListLayout from "./layouts/FriendListLayout";
 
 import PointPage from "./pages/pointPage";
-
+import PostDetailPage from "./pages/post/PostDetailPage";
 
 const App = () => {
   return (
@@ -35,20 +36,19 @@ const App = () => {
 
       {/* 프로필 관련 레이아웃 */}
       <Route element={<ProfileLayout />}>
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/profileEdit" element={<ProfileEditPage />} />
-        <Route path="/profile/:userId" element={<ProfilePage />} />
+        <Route path='/profile' element={<ProfilePage />} />
+        <Route path='/profileEdit' element={<ProfileEditPage />} />
+        <Route path='/profile/:userId' element={<ProfilePage />} />
       </Route>
 
       {/* 친구 목록 관련 레이아웃 */}
       <Route element={<FriendListLayout />}>
-        <Route path="/friend" element={<FriendListPage />} />
-        <Route path="/received" element={<FriendRequestsPage />} />
+        <Route path='/friend' element={<FriendListPage />} />
+        <Route path='/received' element={<FriendRequestsPage />} />
       </Route>
 
-
       <Route path='/point' element={<PointPage />} />
-
+      <Route path='/post/:postId' element={<PostDetailPage />} />
     </Routes>
   );
 };
