@@ -11,6 +11,8 @@ export interface LinkerPayload {
 }
 
 export interface LinkerListItem {
+  address?: string;
+  addressName?: string; // 백엔드 오타 호환
   linkerId: number;
   name: string;
   categoryId?: number | null;
@@ -19,6 +21,7 @@ export interface LinkerListItem {
   // 백워드 호환
   lat?: number | null;
   lng?: number | null;
+  state?: "ACTIVATED" | "DELETED"; // ✅ 추가
 }
 
 export interface LinkerDetail {
