@@ -8,16 +8,16 @@ type Props = {
   onNext: () => void;
 };
 
-export default function EmailStep({ value, onChange, onNext }: Props) {
+export default function BirthStep({ value, onChange, onNext }: Props) {
   const [error, setError] = useState("");
 
   const handleNext = () => {
     if (!value) {
-      setError("이메일 주소를 입력하세요.");
+      setError("생년월일을 입력하세요.");
       return;
     }
+    // TODO: 생년월일 형식 검증 추가 가능
     setError("");
-    console.log("이메일:", value);
     onNext();
   };
 
@@ -25,8 +25,8 @@ export default function EmailStep({ value, onChange, onNext }: Props) {
     <div>
       {/* 이메일 입력 */}
       <AuthInput
-        type='email'
-        placeholder='이메일 주소'
+        type='text'
+        placeholder='생년월일 (YYYY-MM-DD)'
         value={value}
         onChange={(e) => {
           onChange(e.target.value);

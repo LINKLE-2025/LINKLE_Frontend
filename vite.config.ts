@@ -13,10 +13,10 @@ export default defineConfig(({ mode }) => {
       VitePWA({
         registerType: "autoUpdate",
         includeAssets: [
-          "icons/favicon/favicon.svg",
-          "icons/favicon/favicon.ico",
-          "icons/pwa/apple-touch-icon.png",
-          "icons/logos/linkle-icon.svg",
+          "/icons/favicon/favicon.svg",
+          "/icons/favicon/favicon.ico",
+          "/icons/pwa/apple-touch-icon.png",
+          "/icons/logos/linkle-icon.svg",
         ],
         devOptions: {
           enabled: true,
@@ -28,16 +28,16 @@ export default defineConfig(({ mode }) => {
           description: "Link People and LINKLE",
           start_url: "/",
           display: "standalone",
-          theme_color: "#414141",
+          theme_color: "#ffffff",
           background_color: "#ffffff",
           icons: [
             {
-              src: "icons/pwa/linkle-icon-192x192.png",
+              src: "/icons/pwa/linkle-icon-192x192.png",
               sizes: "192x192",
               type: "image/png",
             },
             {
-              src: "icons/pwa/linkle-icon-512x512.png",
+              src: "/icons/pwa/linkle-icon-512x512.png",
               sizes: "512x512",
               type: "image/png",
             },
@@ -57,6 +57,7 @@ export default defineConfig(({ mode }) => {
       },
       host: "0.0.0.0", // 외부에서도 접속 가능
       port: 3000, // 포트는 원하는 대로 설정 가능
+
       proxy: {
         "/api": {
           target: env.VITE_API_SERVER, // 예: https://localhost:7777

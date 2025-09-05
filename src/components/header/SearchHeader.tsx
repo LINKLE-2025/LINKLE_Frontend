@@ -6,7 +6,7 @@ type Props = {
   className?: string;
 };
 
-export default function SectionHeader({ title, backTo, className }: Props) {
+export default function SearchHeader({ title, backTo, className }: Props) {
   const navigate = useNavigate();
 
   return (

@@ -8,25 +8,25 @@ type Props = {
   onNext: () => void;
 };
 
-export default function EmailStep({ value, onChange, onNext }: Props) {
+export default function NicknameStep({ value, onChange, onNext }: Props) {
   const [error, setError] = useState("");
 
   const handleNext = () => {
     if (!value) {
-      setError("이메일 주소를 입력하세요.");
+      setError("닉네임을 입력하세요.");
       return;
     }
+    // TODO: 닉네임 형식 검증 추가 가능
     setError("");
-    console.log("이메일:", value);
     onNext();
   };
 
   return (
     <div>
-      {/* 이메일 입력 */}
+      {/* 닉네임 입력 */}
       <AuthInput
-        type='email'
-        placeholder='이메일 주소'
+        type='text'
+        placeholder='닉네임'
         value={value}
         onChange={(e) => {
           onChange(e.target.value);

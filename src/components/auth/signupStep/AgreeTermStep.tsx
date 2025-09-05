@@ -3,38 +3,25 @@ import AuthInput from "@/components/auth/AuthInput";
 import AuthFilledButton from "@/components/auth/AuthFilledButton";
 
 type Props = {
-  value: string;
+  value: boolean[];
   onChange: (v: string) => void;
   onNext: () => void;
 };
 
-export default function EmailStep({ value, onChange, onNext }: Props) {
+export default function AgreeTermStep({ value, onChange, onNext }: Props) {
   const [error, setError] = useState("");
 
   const handleNext = () => {
-    if (!value) {
-      setError("이메일 주소를 입력하세요.");
+    if (!value.every(Boolean)) {
+      setError("모든 약관에 동의해야 다음 단계로 진행할 수 있습니다.");
       return;
     }
     setError("");
-    console.log("이메일:", value);
     onNext();
   };
 
   return (
     <div>
-      {/* 이메일 입력 */}
-      <AuthInput
-        type='email'
-        placeholder='이메일 주소'
-        value={value}
-        onChange={(e) => {
-          onChange(e.target.value);
-          if (error) setError("");
-        }}
-        error={error}
-      />
-
       {/* 다음 버튼 */}
       <AuthFilledButton type='button' className='my-5 sm:mb-7' onClick={handleNext}>
         다음
