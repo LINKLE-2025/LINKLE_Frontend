@@ -33,6 +33,7 @@ const App = () => {
       <Route element={<AppLayout />}>
         <Route path='/map' element={<MapPage />} />
         <Route path='/post' element={<PostCreatePage />} />
+        <Route path='/post/:postId' element={<PostDetailPage />} />
       </Route>
       {/* 프로필 관련 레이아웃 */}
       <Route element={<ProfileLayout />}>
