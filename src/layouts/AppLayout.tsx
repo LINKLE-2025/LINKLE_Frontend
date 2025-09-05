@@ -45,7 +45,7 @@ export default function AppLayout() {
           ${location.pathname === "/signup" ? "justify-start sm:justify-center" : "justify-center"}`}
         style={{ paddingTop: headerHeight, paddingBottom: footerHeight }}
       >
-        <Outlet />
+        <Outlet context={{ headerHeight, footerHeight }} />
       </main>
 
       {/* Footer */}

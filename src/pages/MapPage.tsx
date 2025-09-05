@@ -20,9 +20,11 @@ import {
   type LinkerListItem,
   type LinkerDetail,
 } from "@/services/linkerService";
-import { useLocation } from "react-router-dom";
+import { useLocation, useOutletContext } from "react-router-dom";
 import ClusterMarkerList from "@/components/linker/ClustermarkerItem";
 import AddressDisplay from "@/components/map/AddressDisplay";
+
+type LayoutContext = { headerHeight: number; footerHeight: number };
 
 interface StoredSpot {
   lat: number;
@@ -64,6 +66,7 @@ export default function MapPage(): React.ReactElement {
   );
   const [activeId, setActiveId] = useState<string | null>(null);
   const [createDraft, setCreateDraft] = useState<{ lat: number; lng: number } | null>(null);
+  const [mapReady, setMapReady] = useState(false); //지도 로드 완료 여부
 
   // 검색 관련
   const [searchOpen, setSearchOpen] = useState(false);
@@ -96,6 +99,7 @@ export default function MapPage(): React.ReactElement {
   // 클러스터 리스트 상태
   const [clusterMarkers, setClusterMarkers] = useState<any[]>([]);
   const [showClusterList, setShowClusterList] = useState(false);
+  const clusterEventRegistered = useRef(false); // 중복 등록 방지
 
   // ===== 3. 🔥 마커용 아이콘 상수 (지도에 표시되는 마커용) =====
   const CATEGORY_ICONS: Record<number, string> = {
@@ -207,13 +211,20 @@ export default function MapPage(): React.ReactElement {
           );
 
           const marker = new kakao.maps.Marker({
-            map,
             title: m.name,
             position: new kakao.maps.LatLng(lat, lng),
             image: markerImage,
             zIndex: 3,
             clickable: true,
           });
+          marker.data = {
+            linkerId: m.linkerId,
+            name: m.name,
+            address: m.address ?? "",
+            categoryId: m.categoryId,
+            lat,
+            lng,
+          };
 
           if (typeof linkerId === "number") {
             kakao.maps.event.addListener(marker, "click", () => {
@@ -241,18 +252,20 @@ export default function MapPage(): React.ReactElement {
   const openedFromStateRef = useRef(false);
 
   useEffect(() => {
+    if (!mapReady) return;
+
     const raw = (location.state as any)?.openLinkerId;
     const id = Number(raw);
     if (!id || openedFromStateRef.current) return;
-    openedFromStateRef.current = true;
 
-    setTimeout(() => {
-      onOpenDetailById(id);
-      try {
-        window.history.replaceState({}, document.title);
-      } catch {}
-    }, 400);
-  }, [location.state]);
+    openedFromStateRef.current = true;
+    onOpenDetailById(id);
+
+    // 🔹 한 번 열고 나면 state 제거(뒤로가기해도 다시 안 열리게)
+    try {
+      window.history.replaceState({}, document.title);
+    } catch {}
+  }, [mapReady, location.state]);
 
   // ===== 5. 🔥 카테고리 필터 변경시 마커 다시 로드 (selectedCategories 의존성) =====
   useEffect(() => {
@@ -318,6 +331,10 @@ export default function MapPage(): React.ReactElement {
             }
           });
 
+          // 지도 준비 완료 상태 설정
+          // 포스트에서 링커 바로가기 기능에서 사용
+          setMapReady(true);
+
           const handleMapClick = (mouseEvent: kakao.maps.event.MouseEvent) => {
             console.log("지도 클릭 시 이벤트");
             const latlng = mouseEvent.latLng;
@@ -376,7 +393,7 @@ export default function MapPage(): React.ReactElement {
               });
             });
           }
-          const clusterer = new window.kakao.maps.MarkerClusterer({
+          const clusterer = new (window.kakao.maps as any).MarkerClusterer({
             map,
             averageCenter: true,
             minLevel: 2,
@@ -388,20 +405,23 @@ export default function MapPage(): React.ReactElement {
           });
 
           // 클러스터 클릭 이벤트
-          window.kakao.maps.event.addListener(clusterer, "clusterclick", (cluster: any) => {
-            const level = map.getLevel();
-            const clusterData = cluster.getMarkers().map((m: any) => ({
-              marker: m,
-              ...m.data, // 마커에 넣어둔 원본 데이터
-            }));
+          if (!clusterer.__clusterclickRegistered) {
+            window.kakao.maps.event.addListener(clusterer, "clusterclick", (cluster: any) => {
+              const level = (map as any).getLevel();
+              const clusterData = cluster.getMarkers().map((m: any) => ({
+                marker: m,
+                ...m.data, // 마커에 넣어둔 원본 데이터
+              }));
 
-            if (level > 3) {
-              map.setLevel(level - 1, { anchor: cluster.getCenter() });
-            } else {
-              setClusterMarkers(clusterData);
-              setShowClusterList(true);
-            }
-          });
+              if (level > 3) {
+                (map as any).setLevel(level - 1, { anchor: cluster.getCenter() });
+              } else {
+                setClusterMarkers(clusterData);
+                setShowClusterList(true);
+              }
+            });
+            clusterer.__clusterclickRegistered = true; // 플래그 설정
+          }
         };
 
         if (navigator.geolocation) {
@@ -583,6 +603,8 @@ export default function MapPage(): React.ReactElement {
     setSearchOpen(false);
   };
 
+  const { headerHeight, footerHeight } = useOutletContext<LayoutContext>();
+
   return (
     <MapWrapper>
       {/* ===== 헤더 ===== */}
@@ -631,7 +653,10 @@ export default function MapPage(): React.ReactElement {
         onClearAll={clearAllFilters}
       />
       {/* 지도 영역 */}
-      <div className='relative w-full h-full'>
+      <div
+        className='relative w-full'
+        style={{ height: `calc(100vh - ${headerHeight + footerHeight}px)` }}
+      >
         <div ref={mapRef} className='w-full h-full' />
 
         {/* 🔥 카테고리 토글 버튼 (커스텀 훅의 함수 사용) */}
@@ -655,7 +680,7 @@ export default function MapPage(): React.ReactElement {
 
         {/* 지도 컨트롤 버튼들 (오른쪽 하단) */}
         {!searchOpen && (
-          <div className='absolute bottom-16 right-4 flex flex-col gap-3 z-10'>
+          <div className='absolute bottom-50 right-4 flex flex-col gap-3 z-10'>
             <CircleButton
               imgSrc='/icons/mapicon/search.png'
               alt='검색'

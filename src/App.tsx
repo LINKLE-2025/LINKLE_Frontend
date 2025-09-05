@@ -20,6 +20,7 @@ import ChatPage from "./pages/chat/ChatPage";
 import PointPage from "./pages/pointPage";
 import AppLayout from "./layouts/AppLayout";
 import PostDetailPage from "./pages/post/PostDetailPage";
+import LinkerDetail from "./components/linker/LinkerDetailModal";
 
 const App = () => {
   return (
