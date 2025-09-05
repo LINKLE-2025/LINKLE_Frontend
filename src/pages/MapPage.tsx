@@ -20,7 +20,7 @@ import {
   type LinkerListItem,
   type LinkerDetail,
 } from "@/services/linkerService";
-import { useLocation } from "react-router-dom";
+import { useLocation, useOutletContext } from "react-router-dom";
 import ClusterMarkerList from "@/components/linker/ClustermarkerItem";
 import AddressDisplay from "@/components/map/AddressDisplay";
 
@@ -603,6 +603,8 @@ export default function MapPage(): React.ReactElement {
     setSearchOpen(false);
   };
 
+  const { headerHeight, footerHeight } = useOutletContext<LayoutContext>();
+
   return (
     <MapWrapper>
       {/* ===== 헤더 ===== */}
@@ -651,7 +653,10 @@ export default function MapPage(): React.ReactElement {
         onClearAll={clearAllFilters}
       />
       {/* 지도 영역 */}
-      <div className='relative w-full h-full'>
+      <div
+        className='relative w-full'
+        style={{ height: `calc(100vh - ${headerHeight + footerHeight}px)` }}
+      >
         <div ref={mapRef} className='w-full h-full' />
 
         {/* 🔥 카테고리 토글 버튼 (커스텀 훅의 함수 사용) */}
