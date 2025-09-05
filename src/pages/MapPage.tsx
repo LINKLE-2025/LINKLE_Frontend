@@ -21,6 +21,8 @@ import {
   type LinkerDetail,
 } from "@/services/linkerService";
 import { useLocation } from "react-router-dom";
+import MainHeader from "@/components/header/MainHeader";
+import AddressDisplay from "@/components/map/AddressDisplay";
 
 interface StoredSpot {
   lat: number;
@@ -551,7 +553,7 @@ export default function MapPage(): React.ReactElement {
   return (
     <MapWrapper>
       {/* ===== 헤더 ===== */}
-      <div className='h-12 flex justify-between items-center px-4 bg-white shadow-md z-20'>
+      {/* <div className='h-12 flex justify-between items-center px-4 bg-white shadow-md z-20'>
         {searchOpen ? (
           <button
             className='w-9 h-9 text-lg bg-white border border-gray-300 rounded-full flex items-center justify-center'
@@ -573,7 +575,8 @@ export default function MapPage(): React.ReactElement {
         <div className='flex items-center gap-2'>
           <span>🔔</span>
         </div>
-      </div>
+      </div> */}
+      <MainHeader />
 
       {/* 검색창 열렸을 때 상단 버튼 */}
       {searchOpen && (
@@ -603,7 +606,7 @@ export default function MapPage(): React.ReactElement {
 
         {/* 🔥 카테고리 토글 버튼 (커스텀 훅의 함수 사용) */}
         {!searchOpen && (
-          <div className='absolute top-4 left-4 z-10'>
+          <div className='absolute top-16 left-4 z-10'>
             <button
               className={`px-4 py-2 rounded-lg shadow transition-colors ${
                 categoryFilterOpen
@@ -649,8 +652,9 @@ export default function MapPage(): React.ReactElement {
             />
           </div>
         )}
+        {/* 🔥 주소 표시 컴포넌트 (테스트할때만 켜세요!!!!!! 중심이동할때마다 쿼리 보내서 위험) */}
+        {/* {kakaoMapRef.current && <AddressDisplay map={kakaoMapRef.current} />} */}
       </div>
-
       {/* 나머지 모달들 (기존과 동일) */}
       <Sheet
         isOpen={searchOpen}
