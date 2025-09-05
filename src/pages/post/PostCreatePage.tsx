@@ -1,9 +1,11 @@
 // src/pages/PostCreatePage.tsx
 import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import PostForm, { LinkerLite } from "@/components/post/PostForm";
 
 export default function PostCreatePage(): React.ReactElement {
+  const { footerHeight } = useOutletContext<{ headerHeight: number; footerHeight: number }>();
+
   const navigate = useNavigate();
   const [sp] = useSearchParams();
   const location = useLocation() as { state?: { linker?: LinkerLite } };
@@ -87,6 +89,7 @@ export default function PostCreatePage(): React.ReactElement {
         submitLabel='작성하기'
         onClickLinker={goToLinkerOnMap}
         onSubmit={handleSubmit}
+        footerOffset={footerHeight}
       />
     </div>
   );
