@@ -15,11 +15,11 @@ import AuthLayout from "./layouts/AuthLayout";
 import ProfileLayout from "./layouts/ProfileLayout";
 import FriendListLayout from "./layouts/FriendListLayout";
 
-import ChatLayout from "./layouts/ChatLayout";
 import ChatRoom from "./pages/chat/ChatRoom";
-//import ChatPage from "./pages/chat/ChatPage";
+import ChatPage from "./pages/chat/ChatPage";
 
 import PointPage from "./pages/pointPage";
+import AppLayout from "./layouts/AppLayout";
 
 const App = () => {
   return (
@@ -49,8 +49,8 @@ const App = () => {
       </Route>
 
       {/* 채팅 관련 레이아웃 */}
-      <Route element={<ChatLayout />}>
-        {/* <Route path='/chat' element={<ChatPage />} /> */}
+      <Route element={<AppLayout />}>
+        <Route path='/chat' element={<ChatPage />} />
         <Route path='/chat/room/:roomId' element={<ChatRoom />} />
       </Route>
 
