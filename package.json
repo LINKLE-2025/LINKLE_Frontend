@@ -11,10 +11,10 @@
   },
   "dependencies": {
     "@headlessui/react": "^2.2.7",
+    "lucide-react": "^0.542.0",
     "@stomp/stompjs": "^7.1.1",
     "@tanstack/react-query": "^5.86.0",
     "axios": "^1.11.0",
-    "lucide-react": "^0.542.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-kakao-maps-sdk": "^1.2.0",

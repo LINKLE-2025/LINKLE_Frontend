@@ -21,6 +21,8 @@ import {
   type LinkerDetail,
 } from "@/services/linkerService";
 import { useLocation } from "react-router-dom";
+import ClusterMarkerList from "@/components/linker/ClustermarkerItem";
+import AddressDisplay from "@/components/map/AddressDisplay";
 
 interface StoredSpot {
   lat: number;
@@ -91,6 +93,10 @@ export default function MapPage(): React.ReactElement {
   const [detailError, setDetailError] = useState<string | null>(null);
   const [detailData, setDetailData] = useState<LinkerDetail | null>(null);
 
+  // 클러스터 리스트 상태
+  const [clusterMarkers, setClusterMarkers] = useState<any[]>([]);
+  const [showClusterList, setShowClusterList] = useState(false);
+
   // ===== 3. 🔥 마커용 아이콘 상수 (지도에 표시되는 마커용) =====
   const CATEGORY_ICONS: Record<number, string> = {
     1: "/icons/category/meal.png",
@@ -142,7 +148,10 @@ export default function MapPage(): React.ReactElement {
     try {
       console.log("🔄 링커 데이터 불러오는 중...");
       const items = await fetchLinkers();
-      console.log("불러온 링커 목록:", items);
+
+      // ✅ 상태 필터링 추가
+      const activeItems = items.filter((m) => m.state === "ACTIVATED");
+      console.log("불러온 링커 목록:", activeItems);
 
       // 기존 마커 제거
       linkerMarkersRef.current.forEach((m) => m.setMap(null));
@@ -157,11 +166,11 @@ export default function MapPage(): React.ReactElement {
       const kakao = (window as any).kakao;
       console.log(`🔍 현재 선택된 카테고리 수: ${selectedCount}`);
       console.log(`🔍 선택된 카테고리들:`, Array.from(selectedCategories));
-      console.log(`📊 총 ${items.length}개 링커 처리 시작`);
+      console.log(`📊 총 ${activeItems.length}개 링커 처리 시작`);
 
       let createdMarkerCount = 0;
 
-      items.forEach((m, index) => {
+      activeItems.forEach((m, index) => {
         const lat = m.locationY ?? m.lat;
         const lng = m.locationX ?? m.lng;
         const linkerId = m.linkerId;
@@ -280,7 +289,7 @@ export default function MapPage(): React.ReactElement {
     script.id = "kakao-map-script";
     script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${
       import.meta.env.VITE_KAKAO_MAP_KEY ?? "YOUR_KEY"
-    }&autoload=false&libraries=services`;
+    }&autoload=false&libraries=services,clusterer`; // 사용할 서비스 명시
     script.async = true;
     document.head.appendChild(script);
 
@@ -367,6 +376,32 @@ export default function MapPage(): React.ReactElement {
               });
             });
           }
+          const clusterer = new window.kakao.maps.MarkerClusterer({
+            map,
+            averageCenter: true,
+            minLevel: 2,
+          });
+
+          // 기존 마커를 clusterer에 넣을 수 있도록 loadExistingLinkers 수정
+          loadExistingLinkers(map, onOpenDetailById).then(() => {
+            clusterer.addMarkers(linkerMarkersRef.current);
+          });
+
+          // 클러스터 클릭 이벤트
+          window.kakao.maps.event.addListener(clusterer, "clusterclick", (cluster: any) => {
+            const level = map.getLevel();
+            const clusterData = cluster.getMarkers().map((m: any) => ({
+              marker: m,
+              ...m.data, // 마커에 넣어둔 원본 데이터
+            }));
+
+            if (level > 3) {
+              map.setLevel(level - 1, { anchor: cluster.getCenter() });
+            } else {
+              setClusterMarkers(clusterData);
+              setShowClusterList(true);
+            }
+          });
         };
 
         if (navigator.geolocation) {
@@ -551,7 +586,7 @@ export default function MapPage(): React.ReactElement {
   return (
     <MapWrapper>
       {/* ===== 헤더 ===== */}
-      <div className='h-12 flex justify-between items-center px-4 bg-white shadow-md z-20'>
+      {/* <div className='h-12 flex justify-between items-center px-4 bg-white shadow-md z-20'>
         {searchOpen ? (
           <button
             className='w-9 h-9 text-lg bg-white border border-gray-300 rounded-full flex items-center justify-center'
@@ -573,8 +608,8 @@ export default function MapPage(): React.ReactElement {
         <div className='flex items-center gap-2'>
           <span>🔔</span>
         </div>
-      </div>
-
+      </div> */}
+      {/* <MainHeader /> */}
       {/* 검색창 열렸을 때 상단 버튼 */}
       {searchOpen && (
         <div className='absolute top-14 left-0 w-full flex justify-center z-20'>
@@ -586,7 +621,6 @@ export default function MapPage(): React.ReactElement {
           </button>
         </div>
       )}
-
       {/* ===== 🔥 CategoryFilter 컴포넌트 사용 (커스텀 훅의 값들 전달) ===== */}
       <CategoryFilter
         isOpen={categoryFilterOpen}
@@ -596,14 +630,13 @@ export default function MapPage(): React.ReactElement {
         onSelectAll={selectAllCategories}
         onClearAll={clearAllFilters}
       />
-
       {/* 지도 영역 */}
-      <div className='relative w-full h-[100vh]'>
+      <div className='relative w-full h-full'>
         <div ref={mapRef} className='w-full h-full' />
 
         {/* 🔥 카테고리 토글 버튼 (커스텀 훅의 함수 사용) */}
         {!searchOpen && (
-          <div className='absolute top-4 left-4 z-10'>
+          <div className='absolute top-16 left-4 z-10'>
             <button
               className={`px-4 py-2 rounded-lg shadow transition-colors ${
                 categoryFilterOpen
@@ -649,8 +682,9 @@ export default function MapPage(): React.ReactElement {
             />
           </div>
         )}
+        {/* 🔥 주소 표시 컴포넌트 (테스트할때만 켜세요!!!!!! 중심이동할때마다 쿼리 보내서 위험) */}
+        {/* {kakaoMapRef.current && <AddressDisplay map={kakaoMapRef.current} />} */}
       </div>
-
       {/* 나머지 모달들 (기존과 동일) */}
       <Sheet
         isOpen={searchOpen}
@@ -681,7 +715,6 @@ export default function MapPage(): React.ReactElement {
           </Sheet.Content>
         </Sheet.Container>
       </Sheet>
-
       <LinkerCreateModal
         open={linkerOpen}
         initial={linkerInitial ?? undefined}
@@ -693,13 +726,22 @@ export default function MapPage(): React.ReactElement {
         }}
         onSubmit={handleSaveLinker}
       />
-
       <LinkerDetailModal
         open={detailOpen}
         onClose={() => setDetailOpen(false)}
         detail={detailData}
         loading={detailLoading}
         error={detailError}
+      />
+      {/* 클러스터 리스트 모달 */}
+      <ClusterMarkerList
+        isOpen={showClusterList}
+        markers={clusterMarkers}
+        onClose={() => setShowClusterList(false)}
+        onMarkerClick={(linkerId) => {
+          console.log("클러스터 리스트에서 선택된 링커:", linkerId);
+          onOpenDetailById(linkerId); // 기존 상세 모달 열기 재사용
+        }}
       />
     </MapWrapper>
   );

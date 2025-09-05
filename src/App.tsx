@@ -4,12 +4,11 @@ import MapPage from "./pages/MapPage";
 import LoginPage from "./pages/auth/LoginPage";
 import SignUpPage from "./pages/auth/SignupPage";
 
+import PostCreatePage from "./pages/post/PostCreatePage";
 import ProfilePage from "@/pages/Profile/ProfilePage";
 import ProfileEditPage from "@/pages/Profile/ProfileEditPage";
 import FriendListPage from "@/pages/friend/FriendsListPage";
 import FriendRequestsPage from "@/pages/friend/FriendRequestsPage";
-
-import PostCreatePage from "./pages/PostCreatePage";
 import AuthLayout from "./layouts/AuthLayout";
 
 import ProfileLayout from "./layouts/ProfileLayout";
@@ -20,6 +19,7 @@ import ChatPage from "./pages/chat/ChatPage";
 
 import PointPage from "./pages/pointPage";
 import AppLayout from "./layouts/AppLayout";
+import PostDetailPage from "./pages/post/PostDetailPage";
 
 const App = () => {
   return (
@@ -32,9 +32,10 @@ const App = () => {
       </Route>
 
       {/* 어플리케이션 레이아웃 */}
-      <Route path='/map' element={<MapPage />} />
-      <Route path='/post' element={<PostCreatePage />} />
-
+      <Route element={<AppLayout />}>
+        <Route path='/map' element={<MapPage />} />
+        <Route path='/post' element={<PostCreatePage />} />
+      </Route>
       {/* 프로필 관련 레이아웃 */}
       <Route element={<ProfileLayout />}>
         <Route path='/profile' element={<ProfilePage />} />
@@ -55,6 +56,7 @@ const App = () => {
       </Route>
 
       <Route path='/point' element={<PointPage />} />
+      <Route path='/post/:postId' element={<PostDetailPage />} />
     </Routes>
   );
 };

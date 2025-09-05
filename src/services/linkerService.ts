@@ -19,6 +19,7 @@ export interface LinkerListItem {
   // 백워드 호환
   lat?: number | null;
   lng?: number | null;
+  state?: "ACTIVATED" | "DELETED"; // ✅ 추가
 }
 
 export interface LinkerDetail {
