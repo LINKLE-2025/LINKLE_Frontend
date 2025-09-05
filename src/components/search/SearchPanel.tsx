@@ -35,6 +35,7 @@ export default function SearchPanel({
     <div className='flex flex-col h-full bg-white'>
       <div className='flex items-center p-2 border-b border-gray-200 gap-x-2'>
         <input
+          id='search-input'
           ref={inputRef}
           type='text'
           placeholder='장소 검색'
@@ -55,7 +56,7 @@ export default function SearchPanel({
           className='w-14 h-12 flex items-center justify-center bg-white  cursor-pointer'
         >
           <img
-            src='/icons/search.png' // 🔍 돋보기 이미지 경로
+            src='/icons/mapicon/search.png' // 🔍 돋보기 이미지 경로
             alt='검색'
             className='w-7 h-7'
           />

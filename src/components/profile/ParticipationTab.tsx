@@ -1,0 +1,54 @@
+import React from "react";
+
+interface UserParticipateLinkerDTO {
+  linkerId: number;
+  name: string;
+  participatedDate: string;
+  memo: string;
+  linkerState: string;
+}
+
+interface ParticipationTabProps {
+  participations: UserParticipateLinkerDTO[];
+}
+
+// 링커 참여 내역을 리스트로 보여줌 
+const ParticipationTab: React.FC<ParticipationTabProps> = ({ participations }) => {
+  if (!participations || participations.length === 0) {
+    return <p className="text-gray-500 text-center py-6">참여한 링커가 없습니다.</p>;
+  }
+
+  return (
+    <div className="px-4 py-2 space-y-3">
+      {participations.map((linker) => (
+        <div
+          key={linker.linkerId}
+          className="flex items-center p-4 bg-white rounded-2xl shadow-sm border border-gray-200"
+        >
+          {/* 링커 이미지 (임시 아이콘 or 추후 MinIO 이미지) */}
+          <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center mr-4">
+            <span className="text-2xl">🍲</span>
+          </div>
+
+          {/* 링커 정보 */}
+          <div className="flex-1">
+            <h3 className="font-semibold text-gray-900">{linker.name}</h3>
+            <p className="text-sm text-gray-500">
+              참여일: {linker.participatedDate} | 상태: {linker.linkerState}
+            </p>
+            <p className="text-xs text-gray-400">{linker.memo}</p>
+          </div>
+
+          {/* 우측 통계 (예: 채팅방 수, 포스트 수 → 추후 서버에서 내려주면 교체 가능) */}
+          <div className="text-right text-sm text-gray-500">
+            <p>3 채팅방</p>
+            <p>85 포스트</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default ParticipationTab;
+  

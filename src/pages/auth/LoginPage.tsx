@@ -1,7 +1,7 @@
 import AuthFilledButton from "@/components/auth/AuthFilledButton";
 import AuthInput from "@/components/auth/AuthInput";
 import AuthOutlinedButton from "@/components/auth/AuthOutlinedButton";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -14,6 +14,11 @@ export default function LoginPage() {
     // 로그인 처리 로직 (API 요청 등)
     console.log("로그인 시도:", { email, password });
   };
+
+  // email, password 변경 시 콘솔에 출력
+  useEffect(() => {
+    console.log({ email, password });
+  }, [email, password]);
 
   return (
     <div className='flex flex-col items-center justify-center mx-auto w-full max-w-[630px] px-6'>
