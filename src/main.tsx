@@ -10,8 +10,7 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path='/chat/room/:roomId' element={<ChatRoom />} /> {/* ✅ 채팅 페이지 */}
-        <Route path='/*' element={<App />} /> {/* 나머지는 기존 App */}
+        <Route path='/*' element={<App />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,
