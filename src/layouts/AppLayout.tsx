@@ -36,7 +36,7 @@ export default function AppLayout() {
       {location.pathname === "/signup" ? (
         <BackTitleHeader title='회원가입' className='bg-white/60' />
       ) : (
-        <MainHeader className='bg-white/60' />
+        <MainHeader />
       )}
 
       {/* Outlet */}

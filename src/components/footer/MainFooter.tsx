@@ -14,9 +14,9 @@ function MainFooter() {
         <button className='p-3'>
           <Mic className='w-6 h-6 text-gray-400' />
         </button>
-        <button className='p-3'>
+        <Link to='/chat' className='p-3'>
           <MessageSquare className='w-6 h-6 text-gray-400' />
-        </button>
+        </Link>
         <Link to='/profile' className='p-3'>
           <User className='w-6 h-6 text-gray-900' />
         </Link>

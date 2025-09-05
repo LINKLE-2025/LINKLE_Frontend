@@ -14,6 +14,9 @@ import AuthLayout from "./layouts/AuthLayout";
 import ProfileLayout from "./layouts/ProfileLayout";
 import FriendListLayout from "./layouts/FriendListLayout";
 
+import ChatRoom from "./pages/chat/ChatRoom";
+import ChatPage from "./pages/chat/ChatPage";
+
 import PointPage from "./pages/pointPage";
 import AppLayout from "./layouts/AppLayout";
 import PostDetailPage from "./pages/post/PostDetailPage";
@@ -45,6 +48,12 @@ const App = () => {
       <Route element={<FriendListLayout />}>
         <Route path='/friend' element={<FriendListPage />} />
         <Route path='/received' element={<FriendRequestsPage />} />
+      </Route>
+
+      {/* 채팅 관련 레이아웃 */}
+      <Route element={<AppLayout />}>
+        <Route path='/chat' element={<ChatPage />} />
+        <Route path='/chat/room/:roomId' element={<ChatRoom />} />
       </Route>
 
       <Route path='/point' element={<PointPage />} />
