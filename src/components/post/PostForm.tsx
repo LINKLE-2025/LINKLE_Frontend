@@ -1,5 +1,6 @@
 // src/components/post/PostForm.tsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export type LinkerLite = { linkerId: number; name: string; address?: string | null };
 
@@ -34,6 +35,8 @@ export default function PostForm({
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(initialImageUrl);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  //링커 바로가기
+  const navigate = useNavigate();
 
   const canSubmit = useMemo(
     () => !readOnly && (text.trim().length > 0 || !!file),
@@ -69,6 +72,14 @@ export default function PostForm({
     if (preview && preview.startsWith("blob:")) URL.revokeObjectURL(preview);
     setPreview(null);
   };
+
+  //링커 바로가기
+  const ClickLinker =
+    onClickLinker ??
+    (() => {
+      if (!linker) return;
+      navigate("/map", { state: { openLinkerId: linker.linkerId } });
+    });
 
   return (
     <div className='flex w-full flex-col bg-[#f6f6f6]'>
@@ -121,8 +132,7 @@ export default function PostForm({
             <button
               type='button'
               className='flex items-center gap-1 text-[11px] text-gray-700'
-              onClick={onClickLinker}
-              disabled={readOnly} // 클릭 막기 =
+              onClick={ClickLinker}
             >
               <img src='/icons/fire.png' className='h-4 w-4' alt='fire' />
               <span className='truncate'>{linker.name}</span>

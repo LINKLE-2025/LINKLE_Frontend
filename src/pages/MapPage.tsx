@@ -24,6 +24,8 @@ import { useLocation } from "react-router-dom";
 import MainHeader from "@/components/header/MainHeader";
 import AddressDisplay from "@/components/map/AddressDisplay";
 
+type LayoutContext = { headerHeight: number; footerHeight: number };
+
 interface StoredSpot {
   lat: number;
   lng: number;
@@ -64,6 +66,7 @@ export default function MapPage(): React.ReactElement {
   );
   const [activeId, setActiveId] = useState<string | null>(null);
   const [createDraft, setCreateDraft] = useState<{ lat: number; lng: number } | null>(null);
+  const [mapReady, setMapReady] = useState(false); //지도 로드 완료 여부
 
   // 검색 관련
   const [searchOpen, setSearchOpen] = useState(false);
@@ -234,18 +237,20 @@ export default function MapPage(): React.ReactElement {
   const openedFromStateRef = useRef(false);
 
   useEffect(() => {
+    if (!mapReady) return;
+
     const raw = (location.state as any)?.openLinkerId;
     const id = Number(raw);
     if (!id || openedFromStateRef.current) return;
-    openedFromStateRef.current = true;
 
-    setTimeout(() => {
-      onOpenDetailById(id);
-      try {
-        window.history.replaceState({}, document.title);
-      } catch {}
-    }, 400);
-  }, [location.state]);
+    openedFromStateRef.current = true;
+    onOpenDetailById(id);
+
+    // 🔹 한 번 열고 나면 state 제거(뒤로가기해도 다시 안 열리게)
+    try {
+      window.history.replaceState({}, document.title);
+    } catch {}
+  }, [mapReady, location.state]);
 
   // ===== 5. 🔥 카테고리 필터 변경시 마커 다시 로드 (selectedCategories 의존성) =====
   useEffect(() => {
@@ -310,6 +315,10 @@ export default function MapPage(): React.ReactElement {
               loadExistingLinkers(map, onOpenDetailById);
             }
           });
+
+          // 지도 준비 완료 상태 설정
+          // 포스트에서 링커 바로가기 기능에서 사용
+          setMapReady(true);
 
           const handleMapClick = (mouseEvent: kakao.maps.event.MouseEvent) => {
             console.log("지도 클릭 시 이벤트");
@@ -601,7 +610,8 @@ export default function MapPage(): React.ReactElement {
       />
 
       {/* 지도 영역 */}
-      <div className='relative w-full h-[100vh]'>
+      {/* <div className='relative w-full h-[100vh]'> */}
+      <div className='relative w-full'>
         <div ref={mapRef} className='w-full h-full' />
 
         {/* 🔥 카테고리 토글 버튼 (커스텀 훅의 함수 사용) */}
@@ -625,7 +635,7 @@ export default function MapPage(): React.ReactElement {
 
         {/* 지도 컨트롤 버튼들 (오른쪽 하단) */}
         {!searchOpen && (
-          <div className='absolute bottom-16 right-4 flex flex-col gap-3 z-10'>
+          <div className='absolute bottom-50 right-4 flex flex-col gap-3 z-10'>
             <CircleButton
               imgSrc='/icons/mapicon/search.png'
               alt='검색'
