@@ -64,6 +64,7 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           secure: false,
         },
+        "/ws-stomp": { target: env.VITE_API_SERVER, changeOrigin: true, secure: false, ws: true },
       },
     },
   };

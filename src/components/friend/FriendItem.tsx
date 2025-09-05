@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 
 // Friend 요약 정보 타입
 interface FriendItemProps {
-  id: number;
+  id: number; // 대상 유저 ID
   name: string;
   nickname: string;
   buttonType: '메시지' | '친구 추가' | '수락 대기중' | '취소'; // 버튼 타입 추가
@@ -36,6 +36,7 @@ const FriendItem: React.FC<FriendItemProps> = ({ id, name, nickname, buttonType 
             );
           }}
         />
+
         </Link>
         {/* 친구 이름과 닉네임을 보여줌 */}
         <div>
@@ -51,6 +52,7 @@ const FriendItem: React.FC<FriendItemProps> = ({ id, name, nickname, buttonType 
       >
         {buttonType}
       </button>
+
     </div>
   );
 };
