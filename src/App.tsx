@@ -11,13 +11,11 @@ import FriendRequestsPage from "@/pages/friend/FriendRequestsPage";
 
 import PostCreatePage from "./pages/PostCreatePage";
 import AuthLayout from "./layouts/AuthLayout";
-import SignupLayout from "./layouts/SignupLayout";
 
 import ProfileLayout from "./layouts/ProfileLayout";
 import FriendListLayout from "./layouts/FriendListLayout";
 
 import PointPage from "./pages/pointPage";
-
 
 const App = () => {
   return (
@@ -35,20 +33,18 @@ const App = () => {
 
       {/* 프로필 관련 레이아웃 */}
       <Route element={<ProfileLayout />}>
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/profileEdit" element={<ProfileEditPage />} />
-        <Route path="/profile/:userId" element={<ProfilePage />} />
+        <Route path='/profile' element={<ProfilePage />} />
+        <Route path='/profileEdit' element={<ProfileEditPage />} />
+        <Route path='/profile/:userId' element={<ProfilePage />} />
       </Route>
 
       {/* 친구 목록 관련 레이아웃 */}
       <Route element={<FriendListLayout />}>
-        <Route path="/friend" element={<FriendListPage />} />
-        <Route path="/received" element={<FriendRequestsPage />} />
+        <Route path='/friend' element={<FriendListPage />} />
+        <Route path='/received' element={<FriendRequestsPage />} />
       </Route>
 
-
       <Route path='/point' element={<PointPage />} />
-
     </Routes>
   );
 };
