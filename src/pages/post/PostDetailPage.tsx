@@ -1,6 +1,6 @@
 // src/pages/PostDetailPage.tsx
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import PostForm, { LinkerLite } from "@/components/post/PostForm";
 
 type PostDTO = {
@@ -13,6 +13,8 @@ type PostDTO = {
 };
 
 export default function PostDetailPage(): React.ReactElement {
+  const { footerHeight } = useOutletContext<{ headerHeight: number; footerHeight: number }>();
+
   const { postId } = useParams<{ postId: string }>();
   const navigate = useNavigate();
 
@@ -27,7 +29,10 @@ export default function PostDetailPage(): React.ReactElement {
   const [submitting, setSubmitting] = useState(false);
 
   // TODO: 로그인 연동 시 실제 유저 ID 사용
-  const currentUserId = 2;
+  const currentUserId = 1;
+
+  // 편집 모드 on off
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     if (!postId) return;
@@ -62,7 +67,9 @@ export default function PostDetailPage(): React.ReactElement {
       if (!res.ok) throw new Error(`수정 실패 (${res.status})`);
 
       alert("수정 완료");
-      navigate(-1);
+      navigate("/post/" + postId, { replace: true }); //수정이니까 수정잘 된 페이지 보여주기
+      //navigate("/map", { replace: true });
+      //navigate(-1); <- 이전 페이지가 맵이 아닐 수도 있어서 맵으로 고정
     } catch (e: any) {
       alert(e?.message ?? "수정 실패");
     } finally {
@@ -71,18 +78,17 @@ export default function PostDetailPage(): React.ReactElement {
   };
 
   const handleDelete = async () => {
-    if (!postId || !confirm("정말 삭제하시겠습니까?")) return;
+    if (!window.confirm("정말 삭제하시겠습니까?")) return;
+
     try {
       setSubmitting(true);
       const res = await fetch(`/api/post/${postId}`, { method: "DELETE", credentials: "include" });
       if (!res.ok) throw new Error(`삭제 실패 (${res.status})`);
-
       alert("삭제 완료");
-      navigate(-1);
-    } catch (e: any) {
-      alert(e?.message ?? "삭제 실패");
-    } finally {
-      setSubmitting(false);
+      navigate("/map", { replace: true }); //삭제 후 맵으로 이동
+    } catch (err) {
+      console.error(err);
+      alert("삭제 중 오류가 발생했습니다.");
     }
   };
 
@@ -90,6 +96,7 @@ export default function PostDetailPage(): React.ReactElement {
   if (error) return <div className='p-6 text-red-500'>{error}</div>;
   if (!post) return <div className='p-6 text-gray-400'>포스트 없음</div>;
 
+  //포스트 작성자가 현재 로그인한 유저인지 확인
   const isMine = post.userId === currentUserId;
 
   return (
@@ -98,12 +105,34 @@ export default function PostDetailPage(): React.ReactElement {
       <div className='h-12 flex items-center justify-center relative bg-white border-b'>
         <button
           className='absolute left-3 text-[22px]'
-          onClick={() => navigate(-1)}
+          onClick={() => (isEditing ? setIsEditing(false) : navigate(-1))}
           aria-label='back'
         >
           <span className='inline-block -translate-y-[1px]'>‹</span>
         </button>
-        <div className='text-[15px] font-semibold'>포스트</div>
+
+        <div className='text-[15px] font-semibold'>{isEditing ? "포스트 편집" : "포스트"}</div>
+
+        {/* 우측: 편집 토글/완료 버튼 */}
+        {isMine && (
+          <div className='absolute right-3 flex items-center gap-2'>
+            {!isEditing ? (
+              <button
+                className='px-3 py-1.5 text-sm rounded bg-black text-white'
+                onClick={() => setIsEditing(true)}
+              >
+                편집
+              </button>
+            ) : (
+              <button
+                className='px-3 py-1.5 text-sm rounded bg-gray-200'
+                onClick={() => setIsEditing(false)}
+              >
+                취소
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <PostForm
@@ -113,9 +142,10 @@ export default function PostDetailPage(): React.ReactElement {
         submitting={submitting}
         submitLabel='수정하기'
         onSubmit={handleUpdate} // PostForm 내부 버튼이 호출
-        onCancel={handleDelete} // 삭제 버튼 동작
-        readOnly={!isMine} // 내 글만 수정 가능
+        onDelete={handleDelete} // 삭제 버튼 동작
+        readOnly={!(isMine && isEditing)} // 내 글만 수정 가능
         showDeleteButton={isMine} // 내 글일 때만 삭제 버튼 노출
+        footerOffset={footerHeight}
       />
     </div>
   );

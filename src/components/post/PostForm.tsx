@@ -5,13 +5,17 @@ import { useNavigate } from "react-router-dom";
 export type LinkerLite = { linkerId: number; name: string; address?: string | null };
 
 type Props = {
+  PostId?: number;
   linker?: LinkerLite | null;
   initialText?: string;
   initialImageUrl?: string | null;
   submitting?: boolean;
   submitLabel?: string;
+  footerOffset?: number;
+  //수정
   onSubmit: (payload: { text: string; file?: File | null }) => void;
-  onCancel?: () => void;
+  //삭제
+  onDelete?: () => void;
   onClickLinker?: () => void;
   /** 상세보기 재활용을 위한 읽기 전용 모드 */
   readOnly?: boolean;
@@ -25,8 +29,9 @@ export default function PostForm({
   initialImageUrl = null,
   submitting = false,
   submitLabel = "작성하기",
+  footerOffset,
   onSubmit,
-  onCancel,
+  onDelete,
   onClickLinker,
   readOnly = false,
   showDeleteButton = true,
@@ -117,7 +122,6 @@ export default function PostForm({
           </>
         )}
       </div>
-
       {/* 작성자/링커 */}
       <div className='bg-white px-4 py-3 border-b'>
         <div className='flex items-center justify-between'>
@@ -140,7 +144,6 @@ export default function PostForm({
           )}
         </div>
       </div>
-
       {/* 텍스트 입력 */}
       <div className='bg-white px-4 py-3'>
         <textarea
@@ -152,10 +155,15 @@ export default function PostForm({
           readOnly={readOnly} //
         />
       </div>
-
       {/* 하단 버튼 – readOnly면 전체 숨김 */}
       {!readOnly && (
-        <div className='fixed bottom-0 left-0 right-0 bg-white border-t'>
+        <div
+          className='fixed left-0 right-0 bg-white border-t z-30'
+          style={{
+            bottom: footerOffset || 0, // Footer 높이만큼 위에 붙이기
+            paddingBottom: "env(safe-area-inset-bottom)", // iOS 홈바 안전영역
+          }}
+        >
           <div className='flex'>
             <button
               onClick={() => onSubmit({ text, file })}
@@ -168,10 +176,7 @@ export default function PostForm({
 
             {showDeleteButton && (
               <button
-                onClick={() => {
-                  reset();
-                  onCancel?.();
-                }}
+                onClick={onDelete}
                 className='flex-1 py-4 text-center font-semibold text-[14px] text-red-500'
               >
                 삭제하기
