@@ -27,7 +27,7 @@ const FriendsListPage: React.FC = () => {
     fetch(`/api/friend/${loggedInUserId}`)
         .then((res) => res.json())
         .then((data: FriendResponse[]) => {
-          console.log("friendList:", data);
+          // console.log("friendList:", data);
           setFriendList(data);
         })
         .catch((err) => console.error(err));
@@ -94,9 +94,9 @@ const FriendsListPage: React.FC = () => {
               return (
                 <FriendItem
                   key={friend.friendId}
-                  id={friend.userId1}
+                  id={friend.userId1 === loggedInUserId ? friend.userId2 : friend.userId1}
                   name={friend.name}
-                  username={friend.nickname}
+                  nickname={friend.nickname}
                   buttonType={friend.state === 'ACCEPTED' ? '메시지' : '친구 추가'}
                 />
               );
