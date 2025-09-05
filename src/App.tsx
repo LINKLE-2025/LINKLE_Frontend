@@ -39,9 +39,9 @@ const App = () => {
       </Route>
       {/* 프로필 관련 레이아웃 */}
       <Route element={<ProfileLayout />}>
-        <Route path='/profile' element={<ProfilePage />} />
-        <Route path='/profileEdit' element={<ProfileEditPage />} />
-        <Route path='/profile/:userId' element={<ProfilePage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/profileEdit" element={<ProfileEditPage />} />
+        <Route path="/profileEdit/:userId" element={<ProfileEditPage />} />
       </Route>
 
       {/* 친구 목록 관련 레이아웃 */}
