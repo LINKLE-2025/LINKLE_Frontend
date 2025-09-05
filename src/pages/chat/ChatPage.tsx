@@ -87,7 +87,7 @@ export default function ChatPage() {
               <ChatListItem
                 key={item.roomId}
                 item={item}
-                onClick={() => navigate(`/chat/${item.roomId}`)}
+                onClick={() => navigate(`/chat/room/${item.roomId}`)}
               />
             ))
           )}

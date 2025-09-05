@@ -23,9 +23,9 @@ const FriendItem: React.FC<FriendItemProps> = ({ id, name, nickname, buttonType 
     }
     setLoading(true);
     try {
-      // ✅ DM 방 열기 or 재사용
+      //  DM 방 열기 or 재사용
       const room = await openDm(id);
-      // ✅ 생성된 채팅방으로 이동
+      //  생성된 채팅방으로 이동
       navigate(`/chat/room/${room.roomId}`);
     } catch (e) {
       console.error(e);
