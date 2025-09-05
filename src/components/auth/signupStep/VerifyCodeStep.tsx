@@ -17,7 +17,7 @@ export default function VerifyCodeStep({ value, onChange, onNext }: Props) {
       setError("유효한 인증 코드를 입력하세요.");
       return;
     }
-    // TODO: 이메일 형식 검증 추가 가능
+
     setError("");
     onNext();
   };
