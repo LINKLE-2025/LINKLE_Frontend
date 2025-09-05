@@ -51,7 +51,7 @@ const stepContents: Record<number, { title: string; description: string }> = {
 export default function SignupPage() {
   const [step, setStep] = useState(1);
 
-  // ✅ 모든 입력값을 하나의 상태에서 관리
+  // 전체 폼 데이터 상태
   const [formData, setFormData] = useState({
     email: "",
     code: "",
