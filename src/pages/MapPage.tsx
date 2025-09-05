@@ -576,7 +576,7 @@ export default function MapPage(): React.ReactElement {
           <span>🔔</span>
         </div>
       </div> */}
-      <MainHeader />
+      {/* <MainHeader /> */}
 
       {/* 검색창 열렸을 때 상단 버튼 */}
       {searchOpen && (
