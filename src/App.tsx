@@ -17,6 +17,7 @@ import FriendListLayout from "./layouts/FriendListLayout";
 import PointPage from "./pages/pointPage";
 import AppLayout from "./layouts/AppLayout";
 import PostDetailPage from "./pages/post/PostDetailPage";
+import LinkerDetail from "./components/linker/LinkerDetailModal";
 
 const App = () => {
   return (

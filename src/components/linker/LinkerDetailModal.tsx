@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Sheet } from "react-modal-sheet";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 
 export type LinkerDetail = {
   linkerId: number;
@@ -11,7 +11,7 @@ export type LinkerDetail = {
   locationX?: number | null;
   locationY?: number | null;
   memo?: string | null;
-  createdAt?: string;
+  createdDate?: string;
   phone?: string | null;
 };
 
@@ -23,7 +23,6 @@ type Props = {
   error: string | null;
 };
 
-// 포스트 타입
 type LinkerPost = {
   postId: number;
   imageUrl?: string | null;
@@ -37,14 +36,18 @@ const prettyDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString() :
 export default function LinkerDetailSheet({ open, onClose, detail, loading, error }: Props) {
   const navigate = useNavigate();
 
-  // 포스트 관련 state
+  // AppLayout에서 Outlet context로 받은 header/footer 높이
+  type LayoutContext = { headerHeight: number; footerHeight: number };
+  const { footerHeight } = useOutletContext<LayoutContext>();
+
+  // 포스트 상태
   const [posts, setPosts] = useState<LinkerPost[]>([]);
   const [postLoading, setPostLoading] = useState(false);
   const [postError, setPostError] = useState<string | null>(null);
   const [postPage, setPostPage] = useState(1);
   const [postHasNext, setPostHasNext] = useState(false);
 
-  // 포스트 불러오기 함수
+  // 포스트 불러오기
   async function LinkerPost(linkerId: number) {
     setPostLoading(true);
     setPostError(null);
@@ -60,20 +63,19 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
         memo?: string | null;
         createdDate?: string;
       };
-
       const raw: PostDTO[] = await res.json();
       const postImageUrl = (postId: number) => `/api/post/${postId}/image`;
 
       const mapped: LinkerPost[] = (raw ?? []).map((p) => ({
         postId: p.postId,
         imageUrl: p.image ? postImageUrl(p.postId) : null,
-        content: p.memo ?? null, // memo  → content
+        content: p.memo ?? null,
         createdDate: p.createdDate ?? undefined,
-        author: null, // 필요시 나중에 채우기
+        author: null,
       }));
 
       setPosts(mapped);
-      setPostHasNext(false); // 현재 API는 페이지네이션 없음
+      setPostHasNext(false);
       setPostPage(1);
     } catch (e: any) {
       setPostError(e?.message ?? String(e));
@@ -81,9 +83,10 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
       setPostLoading(false);
     }
   }
+
   useEffect(() => {
     if (!open || !detail?.linkerId) return;
-    LinkerPost(detail.linkerId); // ← 여기
+    LinkerPost(detail.linkerId);
   }, [open, detail?.linkerId]);
 
   useEffect(() => {
@@ -97,7 +100,9 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
 
   const CreatePost = () => {
     if (!detail) return;
-    navigate(`/post?linkerId=${detail.linkerId}`, { state: { linker: detail } });
+    navigate(`/post?linkerId=${detail.linkerId}`, {
+      state: { linker: detail },
+    });
   };
 
   return (
@@ -105,17 +110,15 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
       isOpen={open}
       onClose={onClose}
       snapPoints={[0.92, 0.78, 0.6]}
-      initialSnap={1}
+      initialSnap={3}
       detent='content-height'
     >
-      <Sheet.Container>
-        {/* 상단 핸들바 */}
+      <Sheet.Container style={{ bottom: footerHeight, zIndex: 1500, boxShadow: "none" }}>
         <Sheet.Header>
           <div className='mx-auto my-2 h-1.5 w-12 rounded-full bg-gray-300' />
         </Sheet.Header>
 
-        <Sheet.Content>
-          {/* 제목/주소/우측 아이콘 */}
+        <Sheet.Content style={{ paddingBottom: 12 }}>
           <div className='px-4 pb-2'>
             {loading ? (
               <p className='text-gray-500'>불러오는 중…</p>
@@ -150,10 +153,14 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
                 <div className='mt-3 flex items-center justify-between text-xs text-gray-500'>
                   <div className='flex gap-4'>
                     <span>3 채팅방</span>
-                    {/* 실제 포스트 개수로 표시 */}
                     <span>{posts.length} 포스트</span>
                   </div>
-                  <span>{prettyDate(detail?.createdAt)} 만료 예정</span>
+                  <span>
+                    {prettyDate(
+                      detail?.createdDate, //TODO: 만료일자로 바꾸기
+                    )}{" "}
+                    만료 예정
+                  </span>
                 </div>
               </>
             )}
@@ -197,7 +204,7 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
                       title={p.content ?? ""}
                       onClick={() =>
                         navigate(`/post/${p.postId}`, {
-                          state: { linker: detail }, // 현재 링크된 linker 정보 같이 전달
+                          state: { linker: detail },
                         })
                       }
                     >
@@ -211,29 +218,14 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
                     </button>
                   ))}
                 </div>
-
-                {/* 더 보기 
-                <div className='mt-3 flex justify-center'>
-                  {postHasNext ? (
-                    <button
-                      disabled={postLoading}
-                      onClick={() => LinkerPost(detail!.linkerId, postPage + 1)}
-                      className='px-4 py-2 text-sm border rounded-lg bg-white disabled:opacity-50'
-                    >
-                      {postLoading ? "불러오는 중…" : "더 보기"}
-                    </button>
-                  ) : (
-                    posts.length > 0 && (
-                      <div className='py-2 text-xs text-gray-400'>마지막 포스트까지 다 봤어요</div>
-                    )
-                  )}
-                </div>
-                */}
               </>
             )}
           </div>
         </Sheet.Content>
       </Sheet.Container>
+
+      {/* 백드롭도 푸터 위에서 끝나도록 */}
+      <Sheet.Backdrop style={{ bottom: footerHeight, zIndex: 1490, background: "transparent" }} />
     </Sheet>
   );
 }
