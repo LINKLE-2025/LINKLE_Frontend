@@ -96,6 +96,7 @@ export default function MapPage(): React.ReactElement {
   // 클러스터 리스트 상태
   const [clusterMarkers, setClusterMarkers] = useState<any[]>([]);
   const [showClusterList, setShowClusterList] = useState(false);
+  const clusterEventRegistered = useRef(false); // 중복 등록 방지
 
   // ===== 3. 🔥 마커용 아이콘 상수 (지도에 표시되는 마커용) =====
   const CATEGORY_ICONS: Record<number, string> = {
@@ -207,13 +208,20 @@ export default function MapPage(): React.ReactElement {
           );
 
           const marker = new kakao.maps.Marker({
-            map,
             title: m.name,
             position: new kakao.maps.LatLng(lat, lng),
             image: markerImage,
             zIndex: 3,
             clickable: true,
           });
+          marker.data = {
+            linkerId: m.linkerId,
+            name: m.name,
+            address: m.address ?? "",
+            categoryId: m.categoryId,
+            lat,
+            lng,
+          };
 
           if (typeof linkerId === "number") {
             kakao.maps.event.addListener(marker, "click", () => {
@@ -376,7 +384,7 @@ export default function MapPage(): React.ReactElement {
               });
             });
           }
-          const clusterer = new window.kakao.maps.MarkerClusterer({
+          const clusterer = new (window.kakao.maps as any).MarkerClusterer({
             map,
             averageCenter: true,
             minLevel: 2,
@@ -388,20 +396,23 @@ export default function MapPage(): React.ReactElement {
           });
 
           // 클러스터 클릭 이벤트
-          window.kakao.maps.event.addListener(clusterer, "clusterclick", (cluster: any) => {
-            const level = map.getLevel();
-            const clusterData = cluster.getMarkers().map((m: any) => ({
-              marker: m,
-              ...m.data, // 마커에 넣어둔 원본 데이터
-            }));
+          if (!clusterer.__clusterclickRegistered) {
+            window.kakao.maps.event.addListener(clusterer, "clusterclick", (cluster: any) => {
+              const level = (map as any).getLevel();
+              const clusterData = cluster.getMarkers().map((m: any) => ({
+                marker: m,
+                ...m.data, // 마커에 넣어둔 원본 데이터
+              }));
 
-            if (level > 3) {
-              map.setLevel(level - 1, { anchor: cluster.getCenter() });
-            } else {
-              setClusterMarkers(clusterData);
-              setShowClusterList(true);
-            }
-          });
+              if (level > 3) {
+                (map as any).setLevel(level - 1, { anchor: cluster.getCenter() });
+              } else {
+                setClusterMarkers(clusterData);
+                setShowClusterList(true);
+              }
+            });
+            clusterer.__clusterclickRegistered = true; // 플래그 설정
+          }
         };
 
         if (navigator.geolocation) {

@@ -11,6 +11,8 @@ export interface LinkerPayload {
 }
 
 export interface LinkerListItem {
+  address?: string;
+  addressName?: string; // 백엔드 오타 호환
   linkerId: number;
   name: string;
   categoryId?: number | null;
