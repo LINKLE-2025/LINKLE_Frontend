@@ -14,7 +14,7 @@ export interface RoomResponseDTO {
   memberCount?: number | null;
   unreadCount?: number | null;
   friendUserId?: number | null;
-  friendNickname?: string | null;
+  friendName?: string | null;
   friendImage?: string | null;
   lastMessagePreview?: string | null;
   lastMessageDate?: string | null;
@@ -22,7 +22,7 @@ export interface RoomResponseDTO {
 
 export interface MemberResponseDTO {
   userId: number;
-  nickname: string;
+  name: string;
   image?: string | null;
 }
 

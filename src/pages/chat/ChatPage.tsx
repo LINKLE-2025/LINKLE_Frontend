@@ -14,7 +14,7 @@ export type RoomResponse = {
   roomId: number;
   roomType: RoomType;
   roomName?: string | null;
-  friendNickname?: string | null;
+  friendName?: string | null;
   lastMessage?: string | null;
   lastMessageAt?: string | null;
   unreadCount?: number | null;
@@ -60,7 +60,7 @@ async function fetchRooms(): Promise<RoomResponse[]> {
     roomId: (r.roomId as number) ?? (r.id as number),
     roomType: (r.roomType as RoomType) ?? "DM",
     roomName: (r.roomName as string) ?? (r.name as string) ?? null,
-    friendNickname: (r.friendNickname as string) ?? (r.friendName as string) ?? null,
+    friendName: (r.friendName as string) ?? (r.friendName as string) ?? null,
     lastMessage: (r.lastMessage as string) ?? (r.lastText as string) ?? null,
     lastMessageAt: (r.lastMessageAt as string) ?? (r.lastAt as string) ?? null,
     unreadCount: (r.unreadCount as number) ?? (r.unread as number) ?? 0,
@@ -93,7 +93,7 @@ function SegmentTabs({ value, onChange }: { value: string; onChange: (v: string)
 }
 
 function ChatListItem({ item, onClick }: { item: RoomResponse; onClick: () => void }) {
-  const title = item.roomType === "DM" ? item.friendNickname : item.roomName;
+  const title = item.roomType === "DM" ? item.friendName : item.roomName;
   return (
     <button
       onClick={onClick}
