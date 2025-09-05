@@ -14,7 +14,7 @@ type MessageDTO = {
   messageId: number;
   roomId: number;
   messageType: "TEXT" | "SYSTEM";
-  text: string; // ✅ text로 통일
+  text: string; //
   createdDate: string; // ISO
   senderId?: number | null;
   senderName?: string | null;
@@ -157,7 +157,7 @@ export default function ChatRoom() {
                 maxWidth: "70%",
                 padding: "8px 12px",
                 borderRadius: 12,
-                background: m.senderId === Number(DEV_UID) ? "#d7f5d0" : "#fff",
+                background: m.senderId === Number(DEV_UID) ? "#e9ffe4ff" : "#fff",
                 boxShadow: "0 1px 2px rgba(0,0,0,.05)",
               }}
             >
@@ -185,7 +185,7 @@ export default function ChatRoom() {
           style={{
             padding: "10px 14px",
             borderRadius: 12,
-            background: "#2a7",
+            background: "rgba(111, 226, 184, 1)",
             color: "#fff",
             border: "none",
           }}
