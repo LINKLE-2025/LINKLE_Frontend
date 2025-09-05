@@ -1,5 +1,6 @@
 import React from "react";
 
+// UserParticipateLinkerDTO 타입 정의
 interface UserParticipateLinkerDTO {
   linkerId: number;
   name: string;
@@ -8,17 +9,22 @@ interface UserParticipateLinkerDTO {
   linkerState: string;
 }
 
+// ParticipationTab 컴포넌트 props 타입 정의
+// Props는 타입을 명확하게 정의하기 위해서 인터페이스로 작성한다.
+// 이는 선언된 타입 이외의 다른 타입이 들어오면, 오류 메시지를 보여준다.
 interface ParticipationTabProps {
   participations: UserParticipateLinkerDTO[];
 }
 
 // 링커 참여 내역을 리스트로 보여줌 
 const ParticipationTab: React.FC<ParticipationTabProps> = ({ participations }) => {
+  // 참여한 링커가 없을 경우 참여한 링커가 없다는 것을 메시지로 보여줌
   if (!participations || participations.length === 0) {
     return <p className="text-gray-500 text-center py-6">참여한 링커가 없습니다.</p>;
   }
 
   return (
+    // 각 참여한 링커 정보를 카드 형태로 보여줌
     <div className="px-4 py-2 space-y-3">
       {participations.map((linker) => (
         <div

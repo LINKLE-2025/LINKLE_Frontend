@@ -39,33 +39,34 @@ const FriendRequestsPage: React.FC = () => {
         method: "PUT"
       });
       if (res.ok) {
-        console.log("친구 요청 수락 완료");
+        // console.log("친구 요청 수락 완료");
         setReceivedRequests(prev => prev.filter(req => req.friendId !== friendId));
       }
     } catch (err) {
-      console.error("수락 실패:", err);
+      // console.error("수락 실패:", err);
     }
   };
   
 
   const handleReject = async (friend: FriendResponse) => {
+    // console.log("거절할 친구:", friend);
     try {
       const res = await fetch(`/api/friend/refusal`, { 
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           friendId: friend.friendId,
-          userId1: friend.userId1,   // 필요하다면
-          userId2: friend.userId2,   // 필요하다면
-          state: friend.state        // PENDING 상태일 가능성 큼
+          userId1: friend.userId1,
+          userId2: friend.userId2,
+          state: friend.state
         })
       });
       if (res.ok) {
-        console.log("친구 요청 거절 완료");
+        // console.log("친구 요청 거절 완료");
         setReceivedRequests(prev => prev.filter(req => req.friendId !== friend.friendId));
       }
     } catch (err) {
-      console.error("거절 실패:", err);
+      // console.error("거절 실패:", err);
     }
   };
 
@@ -83,7 +84,7 @@ const FriendRequestsPage: React.FC = () => {
       fetch(`/api/user/${profileUserId}`)
         .then((res) => res.json())
         .then((data: UserResponseDTO) => {
-          console.log("user:", data);
+          // console.log("user:", data);
           setUser(data);
         })
         .catch((err) => console.error(err));
@@ -92,6 +93,7 @@ const FriendRequestsPage: React.FC = () => {
       fetch(`/api/friend/received?user_id2=${profileUserId}`)
         .then((res) => res.json())
         .then((data: FriendResponse[]) => {
+          console.log("receivedRequests:", data);
           setReceivedRequests(data);
         })
         .catch((err) => console.error(err));
@@ -100,6 +102,7 @@ const FriendRequestsPage: React.FC = () => {
       fetch(`/api/friend/sent?user_id1=${profileUserId}`)
         .then((res) => res.json())
         .then((data: FriendResponse[]) => {
+          console.log("sentRequests:", data);
           setSentRequests(data);
         })
         .catch((err) => console.error(err));
@@ -135,19 +138,23 @@ const FriendRequestsPage: React.FC = () => {
                 </h2>
               </div>
               <div className="bg-white divide-y divide-gray-100">
-                {filteredReceived.map((request, index) => (
+              {filteredReceived.map((request) => {
+                // console.log("request:", request);
+                return (
                   <FriendRequestItem
-                  key={request.friendId}
-                    id={request.userId}
+                    key={request.friendId}
+                    id={request.userId1 === loggedInUserId ? request.userId2 : request.userId1}
                     friendId={request.friendId}
                     name={request.name}
-                    username={request.nickname}
+                    nickname={request.nickname}
                     avatar="bg-blue-500"
                     type="received"
                     onAccept={handleAccept}
                     onReject={() => handleReject(request)}
+                    onCancel={() => handleReject(request)}
                   />
-                ))}
+                );
+              })}
               </div>
             </div>
           )}
@@ -164,14 +171,15 @@ const FriendRequestsPage: React.FC = () => {
                 {filteredSent.map((request, index) => (
                   <FriendRequestItem
                   key={request.friendId}
-                  id={request.userId}
+                  id={request.userId1 === loggedInUserId ? request.userId2 : request.userId1}
                   friendId={request.friendId} 
                   name={request.name}
-                  username={request.nickname}
+                  nickname={request.nickname}
                   avatar="bg-blue-500"
                   type="sent"
                   onAccept={handleAccept}
                   onReject={() => handleReject(request)}
+                  onCancel={() => handleReject(request)}
                   />
                 ))}
               </div>

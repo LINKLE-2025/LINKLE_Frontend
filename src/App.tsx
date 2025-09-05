@@ -11,7 +11,6 @@ import FriendRequestsPage from "@/pages/friend/FriendRequestsPage";
 
 import PostCreatePage from "./pages/PostCreatePage";
 import AuthLayout from "./layouts/AuthLayout";
-import SignupLayout from "./layouts/SignupLayout";
 
 import ProfileLayout from "./layouts/ProfileLayout";
 import FriendListLayout from "./layouts/FriendListLayout";
@@ -37,6 +36,7 @@ const App = () => {
       <Route element={<ProfileLayout />}>
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/profileEdit" element={<ProfileEditPage />} />
+        <Route path="/profileEdit/:userId" element={<ProfileEditPage />} />
         <Route path="/profile/:userId" element={<ProfilePage />} />
       </Route>
 

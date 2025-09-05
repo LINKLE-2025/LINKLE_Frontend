@@ -5,10 +5,12 @@ import { determineProfileType } from "@/utils/determineProfileType";
 import { ProfileType, FriendResponse } from "@/types/friend";
 
 import ProfileContent from '../../components/profile/ProfileContent';
+import ProfileBarContent from '../../components/profile/ProfileBarContent';
 import PostsTab from '../../components/profile/PostsTab';
 import ParticipationTab from '../../components/profile/ParticipationTab';
 import StateTab from '../../components/profile/StateTab';
-import { UserResponseDTO, UserParticipateLinkerDTO } from '@/types/user';
+import { useLocation } from "react-router-dom";
+import { UserResponseDTO, UserParticipateLinkerDTO, ProfilePostDTO, ProfileLinkerCountDTO } from '@/types/user';
 
 const ProfilePage: React.FC = () => {
   // 중간 post 페이지/링커 참여 페이지/링커 참여 통계 페이지 선택
@@ -23,18 +25,28 @@ const ProfilePage: React.FC = () => {
   const loggedInUserId = 1;
   // 현재 보고 있는 프로필 userId
   const { userId: profileUserIdParam } = useParams<{ userId: string }>();
+  // 포스트 목록 저장
+  const [posts, setPosts] = useState<ProfilePostDTO[]>([]);
+  // 링커 참여 통계 내역 저장
+  const [linkerStats, setLinkerStats] = useState<ProfileLinkerCountDTO[]>([]);
+  // 현재 URL의 상태를 확인하여 탭을 설정 (기본값은 posts)
+  const location = useLocation();
+  const { type, friendId } = (location.state as { type?: string; friendId?: number }) || {};
+
+  // state에서 userId 받기
+  const state = location.state as { userId?: number } | undefined;
+
+
   // URL에 userId가 없으면 본인 프로필로 설정
-  const profileUserId = profileUserIdParam
-    ? Number(profileUserIdParam)
-    : loggedInUserId;
+  const profileUserId = state?.userId ?? loggedInUserId;
   // 유저 정보, 링커 참여 내역, 친구 목록 불러오기
 
   const getFriendUserId = (friend: FriendResponse, loggedInUserId: number): number => {
     return friend.userId1 === loggedInUserId ? friend.userId2 : friend.userId1;
   };
   useEffect(() => {
-    console.log("현재 프로필:", profileUserId);
-    console.log("로그인 유저:", loggedInUserId);
+    // console.log("현재 프로필:", profileUserId);
+    // console.log("로그인 유저:", loggedInUserId);
 
 
     // userId가 없으면 요청하지 않음
@@ -43,10 +55,45 @@ const ProfilePage: React.FC = () => {
     fetch(`/api/user/${profileUserId}`)
       .then((res) => res.json())
       .then((data: UserResponseDTO) => {
-        console.log("user:", data);
+        // console.log("user:", data);
         setUser(data);
       })
       .catch((err) => console.error(err));
+
+    // 포스트 목록 불러오기
+    fetch(`/api/post/user/${profileUserId}`)
+      .then((res) => res.json())
+      .then((data: ProfilePostDTO[]) => {
+        // console.log("posts:", data);
+        setPosts(data);
+      })
+      .catch((err) => console.error(err));
+
+    // 링커 참여 내역 통계 불러오기
+    fetch("/api/user/linker/history", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: profileUserId }),
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const errorText = await res.text(); // 또는 res.json()
+          // console.error("링커 API 오류:", errorText);
+          throw new Error("링커 참여 내역 불러오기 실패");
+        }
+        return res.json();
+      })
+      .then((data: ProfileLinkerCountDTO[]) => {
+        if (!Array.isArray(data)) {
+          throw new Error("링커 참여 내역 응답 형식 오류");
+        }
+        setLinkerStats(data);
+      })
+      .catch((err) => {
+        // console.error("참여 내역 요청 실패:", err);
+        setParticipations([]); // 안전하게 빈 배열로 fallback
+      });
+
     // 링커 참여 내역 불러오기
     fetch("/api/user/linker/list", {
       method: "POST",
@@ -56,7 +103,7 @@ const ProfilePage: React.FC = () => {
       .then(async (res) => {
         if (!res.ok) {
           const errorText = await res.text(); // 또는 res.json()
-          console.error("링커 API 오류:", errorText);
+          // console.error("링커 API 오류:", errorText);
           throw new Error("링커 참여 내역 불러오기 실패");
         }
         return res.json();
@@ -68,7 +115,7 @@ const ProfilePage: React.FC = () => {
         setParticipations(data);
       })
       .catch((err) => {
-        console.error("참여 내역 요청 실패:", err);
+        // console.error("참여 내역 요청 실패:", err);
         setParticipations([]); // 안전하게 빈 배열로 fallback
       });
     // 친구 목록 불러오기
@@ -77,7 +124,7 @@ const ProfilePage: React.FC = () => {
     fetch(`/api/friend/${targetUserId}`)
       .then((res) => res.json())
       .then((data: FriendResponse[]) => {
-        console.log("friendList:", data);
+        // console.log("friendList:", data);
         setFriendList(data);
       })
       .catch((err) => console.error(err));
@@ -89,58 +136,72 @@ const ProfilePage: React.FC = () => {
     switch (activeTab) {
       // PostsTab 포스트 목록 전달
       case 'posts':
-        return <PostsTab />;
+        return <PostsTab posts={posts} />;
       // 링커 참여 내역 리스트 전달
       case 'participation':
         return <ParticipationTab participations={participations} />;
       // 링커 참여 통계 내역 리스트 전달
       case 'state':
-        return <StateTab />;
+        return <StateTab linkerStats={linkerStats}/>;
       // 기본은 post 탭으로 설정
       default:
-        return <PostsTab />;
+        return <PostsTab posts={posts} />;
     }
   };
   // 프로필 타입 결정
-  const profileType: ProfileType = React.useMemo(
+  let profileType: ProfileType = React.useMemo(
     // determineProfileType은 utils에 정의
     () => determineProfileType(loggedInUserId, profileUserId, friendList),
     [loggedInUserId, profileUserId, friendList]
   );
+  // 만약 친구 요청 페이지에서 넘어왔다면 type으로 강제 세팅
+  if (type === "sent" || type === "received") {
+    profileType = "wait";  // 항상 "수락 대기 중"
+  }
 
+  const friendListProcessed = friendList.map(f => ({
+    id: f.userId1 === loggedInUserId ? f.userId2 : f.userId1,
+    name: f.name,
+    nickname: f.nickname,
+  }));
+  
+  const computedVerified = profileType === 'self'
+    ? true
+    : (user?.verified ?? false);
   return (
     
     <div>
-      <div>
-        {/* 
-        프로필 헤더
-        profileType, name, username, description 전달 본인일때 isVerified = true로 설정
-        */}
-         {user ? (
+    <div>
+      {/* 프로필 헤더 / 바 */}
+      {user ? (
+        <>
           <ProfileContent
             userId={profileUserId}
             profileType={profileType}
             name={user.name}
-            username={user.username}
+            nickname={user.nickname}
             description={user.description}
             createDate={user.createdDate}
-            isVerified={user.verified ?? false}
-            friendList={friendList.map(f => ({
-              id: f.userId1 === loggedInUserId ? f.userId2 : f.userId1,
-              name: f.name,
-              username: f.nickname,
-            }))}
+            isVerified={computedVerified}
+            friendList={friendListProcessed}
           />
-        ) : (
-          <p>로딩중...</p>
-        )}
-      </div>
+
+          <ProfileBarContent
+            userId={profileUserId}
+            profileType={profileType}
+            isVerified={computedVerified}
+          />
+        </>
+      ) : (
+        <p>로딩중...</p>
+      )}
+    </div>
       {/* 
       탭 버튼
       누를때마다 해당 컴포넌트로 이동을 위한 내용 전달
       */}
 
-      <div className="bg-white border-b">
+      <div className="bg-white border-b py-1">
         <div className="flex">
           <button
             className={`flex-1 py-3 flex items-center justify-center border-b-2 ${
@@ -173,7 +234,9 @@ const ProfilePage: React.FC = () => {
       탭 컨텐츠
       위에서 선택한 내용을 해당 컴포넌트로 이동해 보여줌
       */}
-      <div className="flex-1">{renderTabContent()}</div>
+      <div className="flex1">
+        {renderTabContent()}
+      </div>
     </div>
   );
 };

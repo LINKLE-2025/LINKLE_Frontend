@@ -1,32 +1,15 @@
-import React, { useState } from 'react';
-import ProfileHeader from '@/components/profile/ProfileHeader';
-import ProfileAvatar from '@/components/profile/ProfileAvatar';
-import ProfileForm from '@/components/profile/ProfileForm';
+import { useParams } from "react-router-dom";
+import ProfileEditContainer from "./ProfileEditContainer";
 
-const ProfileEditPage: React.FC = () => {
-  const [profileData, setProfileData] = useState({
-    name: '이정현',
-    password: '••••••••••',
-    nickname: 'qhrgn98',
-    gender: '남자',
-    intro: '신한 DS 금융 어플리케이션 5기',
-    email: 'linkle@naver.com',
-  });
-
-  const updateField = (field: string, value: string) => {
-    setProfileData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
+export default function ProfileEditPage() {
+  const { userId } = useParams<{ userId: string }>();
+  console.log("Editing profile for userId:", userId);
+  if (!userId) return <div>잘못된 접근입니다</div>;
 
   return (
-    <div className="max-w-md mx-auto bg-gray-50 min-h-screen flex flex-col">
-      <ProfileHeader />
-      <ProfileAvatar />
-      <ProfileForm profileData={profileData} updateField={updateField} />
+    <div className="max-w-2xl mx-auto">
+      <h1 className="text-xl font-bold mb-4">프로필 편집</h1>
+      <ProfileEditContainer userId={parseInt(userId, 10)} />
     </div>
   );
-};
-
-export default ProfileEditPage;
+}
