@@ -209,6 +209,34 @@ export default function ChatRoom() {
 
   return (
     <>
+      {/* ===== 상대 정보 (옵션) ===== */}
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 768,
+          margin: "0 auto",
+          padding: "8px 16px 0",
+          boxSizing: "border-box",
+        }}
+      >
+        {peer && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {peer.avatar ? (
+              <img
+                src={peer.avatar}
+                alt={peer.name}
+                style={{ width: 28, height: 28, borderRadius: "9999px", objectFit: "cover" }}
+              />
+            ) : (
+              <div
+                style={{ width: 28, height: 28, borderRadius: "9999px", background: "#e5e7eb" }}
+              />
+            )}
+            <strong style={{ fontSize: 13 }}>{peer.name}</strong>
+          </div>
+        )}
+      </div>
+
       {/* ===== 메시지 영역 (입력창 높이만큼 padding-bottom) ===== */}
       <main
         style={{
@@ -225,6 +253,7 @@ export default function ChatRoom() {
         {msgs.map((m, i) => {
           const isMine = m.senderId === Number(DEV_UID);
           const prev = msgs[i - 1];
+          // 상대가 연속으로 보낸 경우 첫 메시지에만 아바타/이름
           const newSenderBlock = !isMine && (!prev || prev.senderId !== m.senderId);
 
           return (
@@ -237,7 +266,7 @@ export default function ChatRoom() {
                   gap: 8,
                 }}
               >
-                {/* 👇 상대 메시지일 때만 왼쪽에 아바타(연속이면 첫 메시지만) */}
+                {/* 아바타 (내 메시지는 없음, 연속 중 첫 메시지에서만 표시 / 정렬유지용 스페이서 제공) */}
                 {!isMine &&
                   (newSenderBlock ? (
                     (m.senderImage ?? peer?.avatar) ? (
@@ -267,48 +296,77 @@ export default function ChatRoom() {
                       />
                     )
                   ) : (
-                    // 연속 메시지는 아바타 대신 같은 폭의 스페이서로 정렬 유지
+                    // 연속 메시지는 스페이서만 (정렬 유지)
                     <div style={{ width: 36, height: 1, flexShrink: 0 }} />
                   ))}
 
                 {/* 본문(이름 + 말풍선 + 시간) */}
                 <div style={{ maxWidth: "72%" }}>
-                  {/* 이름: 상대 블록의 첫 메시지에만 상단에 작게 */}
+                  {/* 이름: 상대의 블록 첫 메시지에만 */}
                   {!isMine && newSenderBlock && (
                     <div style={{ fontSize: 12, color: "#666", margin: "0 0 4px 4px" }}>
                       {m.senderName ?? peer?.name ?? "상대"}
                     </div>
                   )}
 
-                  {/* 말풍선 + 시간(말풍선 오른쪽) */}
-                  <div style={{ display: "flex", alignItems: "flex-end", gap: 6 }}>
-                    <div
-                      style={{
-                        display: "inline-block",
-                        padding: "10px 12px",
-                        borderRadius: 16,
-                        background: isMine ? "#e9ffe4" : "#fff",
-                        boxShadow: "0 1px 2px rgba(0,0,0,.05)",
-                        whiteSpace: "pre-wrap",
-                        wordBreak: "break-word",
-                      }}
-                    >
-                      {m.text}
+                  {/* ✅ 분기: 내가 보낸 메시지는 '시간 → 말풍선' 순서로 배치해서 시간(왼쪽), 말풍선(오른쪽) */}
+                  {isMine ? (
+                    <div style={{ display: "flex", alignItems: "flex-end", gap: 6 }}>
+                      {/* 시간 (왼쪽) */}
+                      <div
+                        style={{
+                          fontSize: 11,
+                          color: "#888",
+                          marginBottom: 2,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {formatTimeLabel(m.createdDate)}
+                      </div>
+
+                      {/* 말풍선 (오른쪽) */}
+                      <div
+                        style={{
+                          display: "inline-block",
+                          padding: "10px 12px",
+                          borderRadius: 16,
+                          background: "#e9ffe4",
+                          boxShadow: "0 1px 2px rgba(0,0,0,.05)",
+                          whiteSpace: "pre-wrap",
+                          wordBreak: "break-word",
+                        }}
+                      >
+                        {m.text}
+                      </div>
                     </div>
-                    <div
-                      style={{
-                        fontSize: 11,
-                        color: "#888",
-                        marginBottom: 2,
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {new Date(m.createdDate).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                  ) : (
+                    /* 받은 메시지: 말풍선(왼쪽) + 시간(오른쪽) */
+                    <div style={{ display: "flex", alignItems: "flex-end", gap: 6 }}>
+                      <div
+                        style={{
+                          display: "inline-block",
+                          padding: "10px 12px",
+                          borderRadius: 16,
+                          background: "#fff",
+                          boxShadow: "0 1px 2px rgba(0,0,0,.05)",
+                          whiteSpace: "pre-wrap",
+                          wordBreak: "break-word",
+                        }}
+                      >
+                        {m.text}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 11,
+                          color: "#888",
+                          marginBottom: 2,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {formatTimeLabel(m.createdDate)}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -346,15 +404,7 @@ export default function ChatRoom() {
               aria-label='send'
               type='button'
             >
-              <svg width='20' height='20' viewBox='0 0 24 24' fill='none'>
-                <path d='M22 2L11 13' stroke='#6b7280' strokeWidth='2' strokeLinecap='round' />
-                <path
-                  d='M22 2L15 22L11 13L2 9L22 2Z'
-                  stroke='#6b7280'
-                  strokeWidth='2'
-                  fill='none'
-                />
-              </svg>
+              <Send size={20} className='text-gray-600' />
             </button>
           </div>
         </div>
