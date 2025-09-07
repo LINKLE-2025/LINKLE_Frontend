@@ -1,6 +1,7 @@
 import AuthFilledButton from "@/components/auth/AuthFilledButton";
 import AuthInput from "@/components/auth/AuthInput";
 import AuthOutlinedButton from "@/components/auth/AuthOutlinedButton";
+import axios from "axios";
 import { useEffect, useState } from "react";
 
 export default function LoginPage() {
@@ -9,16 +10,39 @@ export default function LoginPage() {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // 로그인 처리 로직 (API 요청 등)
-    console.log("로그인 시도:", { email, password });
-  };
-
   // email, password 변경 시 콘솔에 출력
   useEffect(() => {
     console.log({ email, password });
   }, [email, password]);
+
+  // 로그인 폼 제출 처리 함수
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("로그인 시도:", { email, password });
+
+    // 로그인 처리 로직 (API 요청 등)
+    try {
+      const response = await axios.post("/api/auth/login", {
+        email,
+        password,
+      });
+      console.log("로그인 응답:", response.data);
+
+      // 로그인 성공 시 처리
+      if (response.data.success) {
+        console.log("로그인 성공:", response.data);
+        alert("로그인 성공!");
+        // JWT 토큰 저장 (예: localStorage)
+        localStorage.setItem("token", response.data.token);
+        window.location.href = "/"; // 메인 페이지 이동
+      } else {
+        setPasswordError("이메일 또는 비밀번호가 올바르지 않습니다.");
+      }
+    } catch (error) {
+      console.error("로그인 오류:", error);
+      setPasswordError("로그인 중 오류가 발생했습니다.");
+    }
+  };
 
   return (
     <div className='flex flex-col items-center justify-center mx-auto w-full max-w-[630px] px-6'>

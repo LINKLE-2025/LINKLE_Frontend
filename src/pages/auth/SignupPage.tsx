@@ -8,6 +8,7 @@ import GenderStep from "@/components/auth/signupStep/GenderStep";
 import NicknameStep from "@/components/auth/signupStep/NicknameStep";
 import AgreeTermStep from "@/components/auth/signupStep/AgreeTermStep";
 import BackTitleHeader from "@/components/header/BackTitleHeader";
+import axios from "axios";
 
 // 각 단계별 안내 문구
 const stepContents: Record<number, { title: string; description: string }> = {
@@ -22,7 +23,8 @@ const stepContents: Record<number, { title: string; description: string }> = {
   },
   3: {
     title: "비밀번호 만들기",
-    description: "다른 사람이 추측할 수 없는 6자 이상의 문자 또는 숫자로 비밀번호를 만드세요.",
+    description:
+      "다른 사람이 추측할 수 없는 6자 이상의 영문 대소문자, 숫자 및 특수문자의 조합으로 비밀번호를 만드세요.",
   },
   4: {
     title: "이름 입력",
@@ -77,27 +79,43 @@ export default function SignupPage() {
     agree: [false, false, false],
   });
 
-  const updateField = (field: keyof typeof formData, value: string | boolean | boolean[]) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleSubmit = () => {
-    const ageGroup = getAgeGroup(formData.birth);
-
-    const payload = {
-      ...formData,
-      age: ageGroup, // ✅ DB 저장용 필드
-      // birth는 서버에서 필요 없으면 제외
-    };
-    console.log("최종 제출 데이터:", payload);
-    alert("회원가입 완료!");
-    // TODO: API 전송 로직
-  };
-
   // formData 변경 시 콘솔에 출력
   useEffect(() => {
     console.log(formData);
   }, [formData]);
+
+  // formData 업데이트 함수
+  const updateField = (field: keyof typeof formData, value: string | boolean | boolean[]) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // 최종 제출 처리 함수
+  const handleSubmit = async () => {
+    // 나이 그룹 변환
+    const ageGroup = getAgeGroup(formData.birth);
+
+    // 페이로드 설정
+    const payload = {
+      ...formData,
+      age: ageGroup,
+    };
+    console.log("최종 제출 데이터:", payload);
+
+    // 서버에 회원가입 요청
+    try {
+      const response = await axios.post("/api/auth/signup", payload);
+      if (response.data) {
+        console.log("회원가입 성공:", response.data);
+        alert("회원가입이 완료되었습니다.");
+        window.location.href = "/login"; // 로그인 페이지로 이동
+      } else {
+        alert("이미 사용 중인 이메일이거나 닉네임입니다.");
+      }
+    } catch (error) {
+      console.error("회원가입 오류:", error);
+      alert("회원가입에 실패했습니다.");
+    }
+  };
 
   return (
     <div className='flex flex-col items-center justify-center mx-auto w-full max-w-[630px] px-6'>
