@@ -12,11 +12,18 @@ export default function PasswordStep({ value, onChange, onNext }: Props) {
   const [error, setError] = useState("");
 
   const handleNext = () => {
+    // 비밀번호 유효성 검사
     if (!value) {
       setError("비밀번호를 입력하세요.");
       return;
     }
-    // TODO: 비밀번호 형식 검증 추가 가능
+    // 비밀번호 길이 검사
+    if (value.length < 6) {
+      setError("비밀번호는 6자 이상이어야 합니다.");
+      return;
+    }
+    // 유효성 검사 통과
+    console.log("비밀번호:", value);
     setError("");
     onNext();
   };

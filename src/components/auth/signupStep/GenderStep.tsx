@@ -24,30 +24,33 @@ export default function GenderStep({ value, onChange, onNext }: Props) {
     <div>
       {/* 성별 선택 */}
       <div className='flex gap-4'>
-        <label>
-          <AuthInput
-            type='radio'
-            name='gender'
-            value='남성'
-            onChange={(e) => {
-              onChange(e.target.value);
-              if (error) setError("");
-            }}
-          />
-          남성
-        </label>
-        <label>
-          <AuthInput
-            type='radio'
-            name='gender'
-            value='여성'
-            onChange={(e) => {
-              onChange(e.target.value);
-              if (error) setError("");
-            }}
-          />
-          여성
-        </label>
+        <AuthInput
+          type='button'
+          name='gender'
+          value='남성'
+          onClick={(e) => {
+            onChange(e.currentTarget.value);
+            if (error) setError("");
+          }}
+          selected={value === "남성"}
+          className='font-bold'
+        />
+        <AuthInput
+          type='button'
+          name='gender'
+          value='여성'
+          onClick={(e) => {
+            onChange(e.currentTarget.value);
+            if (error) setError("");
+          }}
+          selected={value === "여성"}
+          className='font-bold'
+        />
+      </div>
+
+      <div className='text-center mt-1'>
+        {/* 에러 메시지 */}
+        {error && <p className='text-sm font-medium text-red-500'>{error}</p>}
       </div>
 
       {/* 다음 버튼 */}

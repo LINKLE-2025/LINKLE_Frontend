@@ -40,7 +40,7 @@ export default function LoginPage() {
       {/* 로그인 폼 */}
       <form
         onSubmit={handleSubmit}
-        className='w-full max-w-sm flex flex-col items-center justify-center text-center gap-3'
+        className='w-full max-w-sm flex flex-col items-center justify-center text-center gap-2'
       >
         <AuthInput
           type='email'
