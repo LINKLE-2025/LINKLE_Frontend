@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AuthInput from "@/components/auth/AuthInput";
 import AuthFilledButton from "@/components/auth/AuthFilledButton";
 import axios from "axios";
@@ -26,7 +26,7 @@ export default function EmailStep({ value, onChange, onNext }: Props) {
       return;
     }
 
-    // 중복 검사 통과
+    // 형식 검사 통과
     setError("");
     console.log("이메일:", value);
 
@@ -40,7 +40,7 @@ export default function EmailStep({ value, onChange, onNext }: Props) {
     onNext();
   };
 
-  // 이메일 중복 검사 및 인증 코드 발송 요청
+  // 이메일 중복 검사 요청
   const checkEmailOnServer = async (email: string) => {
     try {
       const response = await axios.get(`/api/auth/email/${encodeURIComponent(email)}`);

@@ -10,13 +10,21 @@ type Props = {
 
 export default function NameStep({ value, onChange, onNext }: Props) {
   const [error, setError] = useState("");
+  const nameRegex = /^[0-9a-zA-Z가-힣\s]+$/;
 
   const handleNext = () => {
+    // 이름 유효성 검사
     if (!value) {
       setError("이름을 입력하세요.");
       return;
     }
-    // TODO: 이름 형식 검증 추가 가능
+    // 이름 형식 검사 (한글, 영문 대소문자, 공백 허용)
+    if (!nameRegex.test(value)) {
+      setError("유효하지 않은 이름 형식입니다.");
+      return;
+    }
+    // 유효성 검사 통과
+    console.log("이름:", value);
     setError("");
     onNext();
   };

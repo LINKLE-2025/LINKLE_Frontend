@@ -9,6 +9,7 @@ import NicknameStep from "@/components/auth/signupStep/NicknameStep";
 import AgreeTermStep from "@/components/auth/signupStep/AgreeTermStep";
 import BackTitleHeader from "@/components/header/BackTitleHeader";
 
+// 각 단계별 안내 문구
 const stepContents: Record<number, { title: string; description: string }> = {
   1: {
     title: "이메일 주소 입력",
@@ -26,7 +27,7 @@ const stepContents: Record<number, { title: string; description: string }> = {
   4: {
     title: "이름 입력",
     description:
-      "친구들이 회원님을 찾을 수 있도록 이름을 추가하세요. 이름은 언제든 변경할 수 있습니다.",
+      "친구들이 회원님을 찾을 수 있도록 이름을 추가하세요. 이름은 언제든 변경할 수 있습니다. (한글, 영문 대소문자, 숫자 및 공백만 가능)",
   },
   5: {
     title: "생년월일 입력",
@@ -40,12 +41,25 @@ const stepContents: Record<number, { title: string; description: string }> = {
   },
   7: {
     title: "닉네임 만들기",
-    description: "회원님의 개성을 드러낼 수 있는 닉네임을 사용하세요.언제든지 변경할 수 있습니다.",
+    description:
+      "회원님의 개성을 드러낼 수 있는 닉네임을 사용하세요. 언제든지 변경할 수 있습니다. (4~20자의 숫자, 영문 소문자 및 언더스코어(_)만 가능)",
   },
   8: {
     title: "약관 동의",
     description: "서비스 이용을 위해 약관에 동의해 주세요.",
   },
+};
+
+// 나이 그룹 변환 함수
+const getAgeGroup = (birth: string) => {
+  const year = new Date(birth).getFullYear();
+  const age = new Date().getFullYear() - year;
+
+  if (age < 30) return 20;
+  if (age < 40) return 30;
+  if (age < 50) return 40;
+  if (age < 60) return 50;
+  return 60;
 };
 
 export default function SignupPage() {
@@ -63,12 +77,19 @@ export default function SignupPage() {
     agree: [false, false, false],
   });
 
-  const updateField = (field: keyof typeof formData, value: string | boolean) => {
+  const updateField = (field: keyof typeof formData, value: string | boolean | boolean[]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = () => {
-    console.log("최종 제출 데이터:", formData);
+    const ageGroup = getAgeGroup(formData.birth);
+
+    const payload = {
+      ...formData,
+      age: ageGroup, // ✅ DB 저장용 필드
+      // birth는 서버에서 필요 없으면 제외
+    };
+    console.log("최종 제출 데이터:", payload);
     alert("회원가입 완료!");
     // TODO: API 전송 로직
   };
@@ -88,7 +109,7 @@ export default function SignupPage() {
       />
 
       {/* 안내 문구 */}
-      <div className='text-left max-w-sm'>
+      <div className='text-left w-full max-w-sm'>
         <h2 className='text-3xl sm:text-4xl sm:text-center font-bold mt-6 mb-3 sm:mb-14'>
           {stepContents[step].title}
         </h2>
@@ -107,6 +128,7 @@ export default function SignupPage() {
         {step === 2 && (
           <VerifyCodeStep
             value={formData.code}
+            email={formData.email}
             onChange={(v) => updateField("code", v)}
             onNext={() => setStep(3)}
           />
