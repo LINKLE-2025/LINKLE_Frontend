@@ -33,80 +33,42 @@ export default function BirthStep({ value, onChange, onNext }: Props) {
   return (
     <div>
       <div className='relative'>
-        {/* 생년월일 입력 */}
-        <AuthInput
-          type='text'
-          placeholder='생년월일'
-          value={value ? format(new Date(value), "yyyy-MM-dd") : ""}
-          readOnly
-          onChange={(e) => {
-            onChange(e.target.value);
-            if (error) setError("");
-          }}
-          className='pr-12'
-          error={error}
-        />
-
         {/* 캘린더 버튼 및 다이얼로그 */}
-        {isMobile ? (
-          <Dialog open={open} onOpenChange={setOpen}>
-            <VisuallyHidden>
-              <DialogTitle>날짜 선택</DialogTitle>
-            </VisuallyHidden>
-            <DialogTrigger asChild>
-              <button
-                type='button'
-                className='
-                  absolute right-3 top-1/2 -translate-y-1/2
-                  p-1.5 pb-2.5 rounded-md
-                  text-linkleGray hover:text-black'
-              >
-                <CalendarIcon className='h-5 w-5' />
-              </button>
-            </DialogTrigger>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <VisuallyHidden>
+            <DialogTitle>날짜 선택</DialogTitle>
+          </VisuallyHidden>
+          <DialogTrigger asChild>
+            {/* 생년월일 입력 */}
+            <AuthInput
+              type='text'
+              placeholder='생년월일'
+              value={value ? format(new Date(value), "yyyy-MM-dd") : ""}
+              readOnly
+              onChange={(e) => {
+                onChange(e.target.value);
+                if (error) setError("");
+              }}
+              className='pr-12'
+              error={error}
+            />
+          </DialogTrigger>
 
-            <DialogContent className='w-auto p-0'>
-              <Calendar
-                mode='single'
-                selected={value ? new Date(value) : undefined}
-                onSelect={(d) => {
-                  if (d) {
-                    onChange(format(d, "yyyy-MM-dd"));
-                    setOpen(false);
-                  }
-                }}
-                className='w-[300px] h-[333px]'
-              />
-            </DialogContent>
-          </Dialog>
-        ) : (
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-              <button
-                type='button'
-                className='
-                absolute right-3 top-1/2 -translate-y-1/2
-                p-1.5 pb-2.5 rounded-md
-                text-linkleGray hover:text-black'
-              >
-                <CalendarIcon className='h-5 w-5' />
-              </button>
-            </PopoverTrigger>
-
-            <PopoverContent className='w-auto p-0'>
-              <Calendar
-                mode='single'
-                selected={value ? new Date(value) : undefined}
-                onSelect={(d) => {
-                  if (d) {
-                    onChange(format(d, "yyyy-MM-dd"));
-                    setOpen(false);
-                  }
-                }}
-              />
-            </PopoverContent>
-          </Popover>
-        )}
+          <DialogContent className='w-auto h-auto p-0'>
+            <Calendar
+              captionLayout='dropdown'
+              mode='single'
+              selected={value ? new Date(value) : undefined}
+              onSelect={(d) => {
+                if (d) {
+                  onChange(format(d, "yyyy-MM-dd"));
+                  setOpen(false);
+                }
+              }}
+              className='sm:w-[320px]'
+            />
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* 다음 버튼 */}

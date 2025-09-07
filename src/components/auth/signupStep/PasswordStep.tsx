@@ -10,6 +10,7 @@ type Props = {
 
 export default function PasswordStep({ value, onChange, onNext }: Props) {
   const [error, setError] = useState("");
+  const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{6,}$/; // 6자 이상, 영문 대소문자, 숫자, 특수문자 포함
 
   const handleNext = () => {
     // 비밀번호 유효성 검사
@@ -18,8 +19,8 @@ export default function PasswordStep({ value, onChange, onNext }: Props) {
       return;
     }
     // 비밀번호 길이 검사
-    if (value.length < 6) {
-      setError("비밀번호는 6자 이상이어야 합니다.");
+    if (passwordRegex.test(value) === false) {
+      setError("유효하지 않은 비밀번호 형식입니다.");
       return;
     }
     // 유효성 검사 통과
