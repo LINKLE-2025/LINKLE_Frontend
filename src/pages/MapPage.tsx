@@ -697,7 +697,7 @@ export default function MapPage(): React.ReactElement {
 
         {/* 🔥 카테고리 토글 버튼 (커스텀 훅의 함수 사용) */}
         {!searchOpen && (
-          <div className='absolute top-16 left-4 z-10'>
+          <div className='absolute top-4 left-4 z-10'>
             <button
               className={`px-4 py-2 rounded-lg shadow transition-colors ${
                 categoryFilterOpen
