@@ -51,20 +51,24 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
+      host: env.VITE_HOST || "0.0.0.0",
+      port: Number(env.VITE_PORT) || 3000,
       https: {
         key: fs.readFileSync(env.VITE_SSL_KEY),
         cert: fs.readFileSync(env.VITE_SSL_CERT),
       },
-      host: "0.0.0.0", // 외부에서도 접속 가능
-      port: 3000, // 포트는 원하는 대로 설정 가능
-
       proxy: {
         "/api": {
-          target: env.VITE_API_SERVER, // 예: https://localhost:7777
+          target: env.VITE_API_SERVER,
           changeOrigin: true,
           secure: false,
         },
-        "/ws-stomp": { target: env.VITE_API_SERVER, changeOrigin: true, secure: false, ws: true },
+        "/ws-stomp": {
+          target: env.VITE_API_SERVER,
+          changeOrigin: true,
+          secure: false,
+          ws: true,
+        },
       },
     },
   };
