@@ -129,7 +129,7 @@ export default function MapPage(): React.ReactElement {
         const json = await fetchLinkerDetail(linkerId);
         setDetailData(json);
         console.log("name:", json.name);
-        console.log("address:", json.address ?? json.adresssName ?? "(none)");
+        console.log("address:", json.address ?? json.addressName ?? "(none)");
         console.log("categoryId:", json.categoryId);
         console.log("phone:", json.phone);
         console.log("memo:", json.memo);

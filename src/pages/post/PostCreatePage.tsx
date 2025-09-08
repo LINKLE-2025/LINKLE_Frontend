@@ -28,7 +28,7 @@ export default function PostCreatePage(): React.ReactElement {
           const res = await fetch(`/api/linker/${linkerId}`, { credentials: "include" });
           if (!res.ok) throw new Error(`링커 조회 실패 (${res.status})`);
           const j = await res.json();
-          setLinker({ linkerId: j.linkerId, name: j.name, address: j.address ?? j.adresssName });
+          setLinker({ linkerId: j.linkerId, name: j.name, address: j.address ?? j.addressName });
         } catch {}
       })();
     }
