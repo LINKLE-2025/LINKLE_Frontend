@@ -23,6 +23,7 @@ import { useLocation, useOutletContext } from "react-router-dom";
 import ClusterMarkerList from "@/components/linker/ClustermarkerItem";
 import AddressDisplay from "@/components/map/AddressDisplay";
 import BackTitleHeader from "@/components/header/BackTitleHeader";
+import LinkerListModal from "@/components/linker/ListLinkerDetail";
 
 type LayoutContext = { headerHeight: number; footerHeight: number };
 
@@ -124,6 +125,12 @@ export default function MapPage(): React.ReactElement {
     12: "/icons/category/travel.png",
   };
 
+  // 전체 활성 링커를 메모리에 보관
+  const [linkers, setLinkers] = useState<LinkerListItem[]>([]);
+
+  // 문자열 정규화 유틸 (공백/대소문자 정리) -> 특정 상호명에 생성된 링커 조회에 사용
+  const normalize = (s?: string | null) => (s ?? "").trim().replace(/\s+/g, " ").toLowerCase();
+
   // ===== 4. 🔥 링커 로드 함수 (selectedCategories 의존성 사용) =====
   // 링커 상세보기
   function onOpenDetailById(linkerId: number) {
@@ -162,9 +169,12 @@ export default function MapPage(): React.ReactElement {
       console.log("🔄 링커 데이터 불러오는 중...");
       const items = await fetchLinkers();
 
-      // ✅ 상태 필터링 추가
+      // 상태 필터링 추가
       const activeItems = items.filter((m) => m.state === "ACTIVATED");
       console.log("불러온 링커 목록:", activeItems);
+
+      setLinkers(activeItems);
+      console.log(`링커 setLinkers 완료, 총 ${activeItems.length}개`);
 
       // 기존 마커 제거
       linkerMarkersRef.current.forEach((m) => m.setMap(null));
@@ -548,6 +558,27 @@ export default function MapPage(): React.ReactElement {
     );
   };
 
+  // 특정 상호명으로 링커 리스트 열기
+
+  // 상태 추가
+  const [filteredLinkers, setFilteredLinkers] = useState<LinkerListItem[]>([]);
+  const [listModalOpen, setListModalOpen] = useState(false);
+
+  // 특정 상호명으로 링커 리스트 열기
+  const handleOpenLinkerList = (item: SearchResult) => {
+    const key = normalize(item.name);
+    const matches = linkers.filter(
+      (l) => normalize(l.name) === key || normalize(l.addressName) === key,
+    );
+    if (matches.length === 0) {
+      alert("일치하는 링커가 없어요!");
+      return;
+    }
+    setFilteredLinkers(matches);
+    setListModalOpen(true);
+    setSearchOpen(false);
+  };
+
   const handleResultClick = (item: SearchResult) => {
     // 검색 결과 클릭 로직 (기존과 동일)
     if (!kakaoMapRef.current) return;
@@ -773,6 +804,7 @@ export default function MapPage(): React.ReactElement {
                   hasNextPage={hasNextPage}
                   currentPage={currentPage}
                   onOpenModal={handleOpenModal}
+                  onOpenLinkerList={handleOpenLinkerList}
                 />
               </div>
             </div>
@@ -806,6 +838,21 @@ export default function MapPage(): React.ReactElement {
           console.log("클러스터 리스트에서 선택된 링커:", linkerId);
           onOpenDetailById(linkerId); // 기존 상세 모달 열기 재사용
         }}
+      />
+      {/* 특정 상호명에 생성된 링커조회 */}
+      <LinkerListModal
+        isOpen={listModalOpen}
+        linkers={filteredLinkers.map((l) => ({
+          linkerId: l.linkerId,
+          name: l.name,
+          address: l.address ?? l.addressName ?? "",
+          categoryId: l.categoryId ?? 0,
+          lat: l.locationY ?? 0,
+          lng: l.locationX ?? 0,
+        }))}
+        title='검색된 링커'
+        onClose={() => setListModalOpen(false)}
+        onItemClick={(linkerId) => onOpenDetailById(linkerId)}
       />
     </MapWrapper>
   );
