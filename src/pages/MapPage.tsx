@@ -81,6 +81,12 @@ export default function MapPage(): React.ReactElement {
   // 🔥 클러스터러 인스턴스를 저장할 ref 추가 (중복 이벤트 방지를 위해)
   const clustererRef = useRef<any>(null);
 
+  // AppLayout의 Outlet context에 상태 전달
+  const outletContext = useOutletContext<{
+    headerHeight: number;
+    footerHeight: number;
+  }>();
+
   // 모달 관련
   const [linkerOpen, setLinkerOpen] = useState(false);
   const [linkerInitial, setLinkerInitial] = useState<{
@@ -695,7 +701,7 @@ export default function MapPage(): React.ReactElement {
 
         {/* 지도 컨트롤 버튼들 (오른쪽 하단) */}
         {!searchOpen && (
-          <div className='absolute bottom-50 right-4 flex flex-col gap-3 z-10'>
+          <div className='absolute bottom-5 right-4 flex flex-col gap-3 z-10'>
             <CircleButton
               imgSrc='/icons/mapicon/search.png'
               alt='검색'
