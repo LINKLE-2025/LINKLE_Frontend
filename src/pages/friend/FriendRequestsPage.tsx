@@ -1,7 +1,6 @@
-import React, { useState,useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { useParams } from "react-router-dom";
-
 
 import FriendRequestItem from '../../components/friend/FriendRequestItem';
 import EmptyState from '../../components/friend/EmptyState';
@@ -10,16 +9,14 @@ import { FriendResponse } from "@/types/friend";
 
 import { RECEIVED_REQUESTS, SENT_REQUESTS } from '../../constants/friendRequests';
 
-const FriendRequestsPage: React.FC = () => {
+function FriendRequestsPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [user, setUser] = useState<UserResponseDTO | null>(null);  
+  const [user, setUser] = useState<UserResponseDTO | null>(null);
   const [receivedRequests, setReceivedRequests] = useState<FriendResponse[]>([]);
   const [sentRequests, setSentRequests] = useState<FriendResponse[]>([]);
-  const [requests, setRequests] = useState<FriendResponse[]>();
-
+  const [requests, setRequests] = useState<FriendResponse[]>(); // 사용 안함 (필요 시 제거 가능)
 
   const isEmpty = receivedRequests.length === 0 && sentRequests.length === 0;
-
 
   const filteredReceived = receivedRequests.filter(
     (friend) =>
@@ -39,19 +36,16 @@ const FriendRequestsPage: React.FC = () => {
         method: "PUT"
       });
       if (res.ok) {
-        // console.log("친구 요청 수락 완료");
         setReceivedRequests(prev => prev.filter(req => req.friendId !== friendId));
       }
     } catch (err) {
-      // console.error("수락 실패:", err);
+      console.error("친구 수락 실패:", err);
     }
   };
-  
 
   const handleReject = async (friend: FriendResponse) => {
-    // console.log("거절할 친구:", friend);
     try {
-      const res = await fetch(`/api/friend/refusal`, { 
+      const res = await fetch(`/api/friend/refusal`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -62,51 +56,35 @@ const FriendRequestsPage: React.FC = () => {
         })
       });
       if (res.ok) {
-        // console.log("친구 요청 거절 완료");
         setReceivedRequests(prev => prev.filter(req => req.friendId !== friend.friendId));
       }
     } catch (err) {
-      // console.error("거절 실패:", err);
+      console.error("친구 거절 실패:", err);
     }
   };
 
-  //로그인한 유저 아이디
   const loggedInUserId = 1;
-  // 현재 보고 있는 프로필 userId
   const { userId: profileUserIdParam } = useParams<{ userId: string }>();
-  const profileUserId = profileUserIdParam
-    ? Number(profileUserIdParam)
-    : loggedInUserId;
+  const profileUserId = profileUserIdParam ? Number(profileUserIdParam) : loggedInUserId;
 
   useEffect(() => {
-      if (!profileUserId) return;
-    
-      fetch(`/api/user/${profileUserId}`)
-        .then((res) => res.json())
-        .then((data: UserResponseDTO) => {
-          // console.log("user:", data);
-          setUser(data);
-        })
-        .catch((err) => console.error(err));
-    
-      // 받은 요청 가져오기
-      fetch(`/api/friend/received?user_id2=${profileUserId}`)
-        .then((res) => res.json())
-        .then((data: FriendResponse[]) => {
-          console.log("receivedRequests:", data);
-          setReceivedRequests(data);
-        })
-        .catch((err) => console.error(err));
+    if (!profileUserId) return;
 
-      // 보낸 요청 가져오기
-      fetch(`/api/friend/sent?user_id1=${profileUserId}`)
-        .then((res) => res.json())
-        .then((data: FriendResponse[]) => {
-          console.log("sentRequests:", data);
-          setSentRequests(data);
-        })
-        .catch((err) => console.error(err));
-    }, [profileUserId]);
+    fetch(`/api/user/${profileUserId}`)
+      .then((res) => res.json())
+      .then((data: UserResponseDTO) => setUser(data))
+      .catch((err) => console.error(err));
+
+    fetch(`/api/friend/received?user_id2=${profileUserId}`)
+      .then((res) => res.json())
+      .then((data: FriendResponse[]) => setReceivedRequests(data))
+      .catch((err) => console.error(err));
+
+    fetch(`/api/friend/sent?user_id1=${profileUserId}`)
+      .then((res) => res.json())
+      .then((data: FriendResponse[]) => setSentRequests(data))
+      .catch((err) => console.error(err));
+  }, [profileUserId]);
 
   return (
     <div className="max-w-md mx-auto bg-gray-50 min-h-screen flex flex-col">
@@ -138,9 +116,7 @@ const FriendRequestsPage: React.FC = () => {
                 </h2>
               </div>
               <div className="bg-white divide-y divide-gray-100">
-              {filteredReceived.map((request) => {
-                // console.log("request:", request);
-                return (
+                {filteredReceived.map((request) => (
                   <FriendRequestItem
                     key={request.friendId}
                     id={request.userId1 === loggedInUserId ? request.userId2 : request.userId1}
@@ -153,8 +129,7 @@ const FriendRequestsPage: React.FC = () => {
                     onReject={() => handleReject(request)}
                     onCancel={() => handleReject(request)}
                   />
-                );
-              })}
+                ))}
               </div>
             </div>
           )}
@@ -168,18 +143,18 @@ const FriendRequestsPage: React.FC = () => {
                 </h2>
               </div>
               <div className="bg-white divide-y divide-gray-100">
-                {filteredSent.map((request, index) => (
+                {filteredSent.map((request) => (
                   <FriendRequestItem
-                  key={request.friendId}
-                  id={request.userId1 === loggedInUserId ? request.userId2 : request.userId1}
-                  friendId={request.friendId} 
-                  name={request.name}
-                  nickname={request.nickname}
-                  avatar="bg-blue-500"
-                  type="sent"
-                  onAccept={handleAccept}
-                  onReject={() => handleReject(request)}
-                  onCancel={() => handleReject(request)}
+                    key={request.friendId}
+                    id={request.userId1 === loggedInUserId ? request.userId2 : request.userId1}
+                    friendId={request.friendId}
+                    name={request.name}
+                    nickname={request.nickname}
+                    avatar="bg-blue-500"
+                    type="sent"
+                    onAccept={handleAccept}
+                    onReject={() => handleReject(request)}
+                    onCancel={() => handleReject(request)}
                   />
                 ))}
               </div>
@@ -187,10 +162,8 @@ const FriendRequestsPage: React.FC = () => {
           )}
         </div>
       )}
-
-
     </div>
   );
-};
+}
 
 export default FriendRequestsPage;

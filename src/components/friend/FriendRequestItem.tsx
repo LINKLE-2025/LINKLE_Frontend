@@ -17,7 +17,18 @@ interface FriendRequestItemProps {
   onCancel?: (id: number) => void;
 }
 
-const FriendRequestItem: React.FC<FriendRequestItemProps> = ({friendId, id, name, nickname, avatar, type, onAccept, onReject, onCancel }) => {
+// React.FC 제거한 함수형 컴포넌트
+function FriendRequestItem({
+  friendId,
+  id,
+  name,
+  nickname,
+  avatar,
+  type,
+  onAccept,
+  onReject,
+  onCancel,
+}: FriendRequestItemProps) {
   return (
     // 친구 리스트에서 각 친구 항목을 표시해주는 영역
     <div className="flex items-center justify-between px-4 py-3">
@@ -25,24 +36,24 @@ const FriendRequestItem: React.FC<FriendRequestItemProps> = ({friendId, id, name
       <div className="flex items-center space-x-3">
         {/* 각 ID값을 활용해 해당 프로필로 이동 */}
         <Link
-        to={`/profile`}
-        state={{userId:id, type, friendId }}
+          to={`/profile`}
+          state={{ userId: id, type, friendId }}
         >
-        {/* 프로필 이지미를 보여줌 */}
-        <img
-          src={`/api/user/view/profile/${id}`}
-          alt={`${name} 프로필`}
-          className="w-12 h-12 object-cover rounded-full"
-          // 예외 처리 이미지 로드 실패시 실행 시켜주는 함수
-          onError={(e) => {
-            e.currentTarget.style.display = "none";
-            // 회색 기본 프로필 아이콘을 DOM에 추가해 준다.
-            e.currentTarget.insertAdjacentHTML(
-              "afterend",
-              '<svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5.121 17.804A9.953 9.953 0 0112 15c2.485 0 4.735.896 6.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>'
-            );
-          }}
-        />
+          {/* 프로필 이지미를 보여줌 */}
+          <img
+            src={`/api/user/view/profile/${id}`}
+            alt={`${name} 프로필`}
+            className="w-12 h-12 object-cover rounded-full"
+            // 예외 처리 이미지 로드 실패시 실행 시켜주는 함수
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+              // 회색 기본 프로필 아이콘을 DOM에 추가해 준다.
+              e.currentTarget.insertAdjacentHTML(
+                "afterend",
+                '<svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5.121 17.804A9.953 9.953 0 0112 15c2.485 0 4.735.896 6.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>'
+              );
+            }}
+          />
         </Link>
         {/* 친구 이름과 닉네임을 보여줌 */}
         <div>
@@ -52,32 +63,32 @@ const FriendRequestItem: React.FC<FriendRequestItemProps> = ({friendId, id, name
       </div>
       {/* 해당 type에 따라 버튼을 보여주는 것을 조절해주고 해당 버튼을 클릭했을때 반응을 조절해주도록 한다. */}
       <div className="flex space-x-2">
-      {type === 'received' ? (
-        <>
+        {type === 'received' ? (
+          <>
+            <button
+              className="px-4 py-2 text-sm rounded-lg bg-blue-500 text-white"
+              onClick={() => onAccept?.(friendId)}
+            >
+              수락
+            </button>
+            <button
+              className="px-4 py-2 text-sm rounded-lg bg-red-500 text-white"
+              onClick={() => onReject?.(friendId)}
+            >
+              거절
+            </button>
+          </>
+        ) : (
           <button
-            className="px-4 py-2 text-sm rounded-lg bg-blue-500 text-white"
-            onClick={() => onAccept?.(friendId)}
-          >
-            수락
-          </button>
-          <button
-            className="px-4 py-2 text-sm rounded-lg bg-red-500 text-white"
+            className="px-4 py-2 text-sm rounded-lg bg-gray-200 text-gray-700"
             onClick={() => onReject?.(friendId)}
           >
-            거절
+            취소
           </button>
-        </>
-      ) : (
-        <button
-          className="px-4 py-2 text-sm rounded-lg bg-gray-200 text-gray-700"
-          onClick={() => onReject?.(friendId)}
-        >
-          취소
-        </button>
-      )}
+        )}
       </div>
     </div>
   );
-};
+}
 
 export default FriendRequestItem;

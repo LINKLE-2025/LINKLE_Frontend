@@ -1,6 +1,6 @@
 import React from 'react';
 
-const EmptyState: React.FC = () => {
+function EmptyState() {
   return (
     <div className="flex-1 bg-gray-50 flex flex-col items-center justify-center py-20">
       <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mb-8 opacity-30">
@@ -12,6 +12,6 @@ const EmptyState: React.FC = () => {
       </div>
     </div>
   );
-};
+}
 
 export default EmptyState;

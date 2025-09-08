@@ -1,13 +1,18 @@
 import { ProfilePostDTO } from '@/types/user';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
+//  게시물 탭 컴포넌트
+// post의 정보를 불러옴
 interface PostsTabProps {
   posts: ProfilePostDTO[];
 }
 
-const PostsTab: React.FC<PostsTabProps> = ({ posts }) => {
+function PostsTab({ posts }: PostsTabProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const navigate = useNavigate();
 
+  // 게시물이 없을 때 보여지는 문구 및 그리드 형태의 게시물을 보여줌
   return (
     <div>
       {posts.length === 0 ? (
@@ -23,28 +28,14 @@ const PostsTab: React.FC<PostsTabProps> = ({ posts }) => {
                 src={`/api/post/${post.postId}/image`}
                 alt="post"
                 className="w-full h-full object-cover cursor-pointer"
-                onClick={() => setPreviewImage(`/api/post/${post.postId}/image`)}
+                onClick={() => navigate(`/post/${post.postId}`)}
               />
             </div>
           ))}
         </div>
       )}
-
-      {/* 프리뷰 모달 추후 포스트 디테일 링크 생기면 삭제 예정*/}
-      {previewImage && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50"
-          onClick={() => setPreviewImage(null)}
-        >
-          <img
-            src={previewImage}
-            alt="preview"
-            className="max-w-[90%] max-h-[90%] rounded-lg shadow-lg"
-          />
-        </div>
-      )}
     </div>
   );
-};
+}
 
 export default PostsTab;

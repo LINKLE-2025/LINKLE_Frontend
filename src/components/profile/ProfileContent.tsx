@@ -23,7 +23,7 @@ interface ProfileContentProps {
 }
 
 // ProfileContent 컴포넌트
-const ProfileContent: React.FC<ProfileContentProps> = ({
+function ProfileContent({
   userId,
   profileType,
   name,
@@ -32,8 +32,9 @@ const ProfileContent: React.FC<ProfileContentProps> = ({
   createDate,
   isVerified = false,
   friendList,
-}) => {
+}: ProfileContentProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+
   // 프로필 타입을 받아와 버튼을 각각 다르게 렌더링해줌
   const renderButton = () => {
     switch (profileType) {
@@ -162,6 +163,6 @@ const ProfileContent: React.FC<ProfileContentProps> = ({
       )}
     </div>
   );
-};
+}
 
 export default ProfileContent;
