@@ -68,6 +68,7 @@ export default function PostDetailPage(): React.ReactElement {
 
       alert("수정 완료");
       navigate("/post/" + postId, { replace: true }); //수정이니까 수정잘 된 페이지 보여주기
+      setIsEditing(false);
       //navigate("/map", { replace: true });
       //navigate(-1); <- 이전 페이지가 맵이 아닐 수도 있어서 맵으로 고정
     } catch (e: any) {

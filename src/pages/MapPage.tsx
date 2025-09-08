@@ -118,6 +118,7 @@ export default function MapPage(): React.ReactElement {
   };
 
   // ===== 4. 🔥 링커 로드 함수 (selectedCategories 의존성 사용) =====
+  // 링커 상세보기
   function onOpenDetailById(linkerId: number) {
     setDetailOpen(true);
     setDetailLoading(true);
