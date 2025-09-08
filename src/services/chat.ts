@@ -9,7 +9,7 @@ export interface RoomResponseDTO {
   lastMessageAt?: string | null;
   unreadCount?: number | null;
 
-  // ✅ DM 전용 필드
+  //DM 전용 필드
   dmPartnerId?: number | null;
   dmPartnerName?: string | null;
 
