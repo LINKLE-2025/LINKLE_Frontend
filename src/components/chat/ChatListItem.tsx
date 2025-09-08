@@ -7,8 +7,12 @@ function initials(name?: string | null) {
   const p = n.split(/\s+/);
   return p.length === 1 ? p[0]!.slice(0, 2) : `${p[0]![0] ?? ""}${p[1]![0] ?? ""}`;
 }
-const profileUrl = (userId?: number | null) => (userId ? `/api/user/view/profile/${userId}` : "");
-const roomBgUrl = (roomId?: number | null) => (roomId ? `/chat/view/background/${roomId}` : "");
+const API_BASE = import.meta.env.VITE_API_SERVER as string;
+
+const profileUrl = (userId?: number | null) => (userId ? `/api/user/view/profile/${userId}` : ""); // 기존 그대로 둬도 되고,
+
+const roomBgUrl = (roomId?: number | null) =>
+  roomId ? `${API_BASE}/chat/view/background/${roomId}` : "";
 
 // participants에서 상대 id 추론 (필요 시)
 function partnerFromArray(arr: any[] | undefined, me?: number) {
