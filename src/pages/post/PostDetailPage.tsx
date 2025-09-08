@@ -100,7 +100,8 @@ export default function PostDetailPage(): React.ReactElement {
   const isMine = post.userId === currentUserId;
 
   return (
-    <div className='flex w-full flex-col'>
+    <div className='flex flex-col min-h-screen w-full'>
+      {/*      // min-h-screen: 헤더+푸터 제외한 화면 전체 높이 */}
       {/* 헤더 */}
       <div className='h-12 flex items-center justify-center relative bg-white border-b'>
         <button
@@ -134,7 +135,6 @@ export default function PostDetailPage(): React.ReactElement {
           </div>
         )}
       </div>
-
       <PostForm
         linker={post.linker}
         initialText={post.memo ?? " "}
