@@ -4,7 +4,10 @@ import { Search, Users, ChevronRight } from 'lucide-react';
 
 import FriendItem from '../../components/friend/FriendItem';
 import { FriendResponse } from "@/types/friend";
+import { useOutletContext } from "react-router-dom";
 
+//로그인한 유저 아이디
+type OutletContextType = { loggedInUserId: number };
 function FriendsListPage() {
   // 친구 검색
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,7 +24,7 @@ function FriendsListPage() {
   );
 
   // 로그인한 유저 아이디
-  const loggedInUserId = 1;
+  const { loggedInUserId } = useOutletContext<OutletContextType>();
 
   useEffect(() => {
     // 유저의 친구 목록 가져오기

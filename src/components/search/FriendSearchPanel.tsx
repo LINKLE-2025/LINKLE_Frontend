@@ -2,8 +2,12 @@
 import { type RefObject, type KeyboardEvent, useState } from "react";
 import { MessageCircle, Clock, UserPlus, Users } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { ProfileType } from "@/types/friend";
 import { openDm } from "@/services/chat";
+import { useOutletContext } from "react-router-dom";
+import { ProfileType, FriendResponse } from "@/types/friend";
+
+//로그인한 유저 아이디
+type OutletContextType = { loggedInUserId: number };
 
 export interface FriendResult {
     id: number;
@@ -53,13 +57,16 @@ export default function FriendSearchPanel({
     handleSearch,
     inputRef,
 }: FriendSearchPanelProps) {
+    // console.log(currentUserId)
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const { loggedInUserId } = useOutletContext<OutletContextType>();
 
+    // console.log(loggedInUserId)
     // DM 열기 (상대방 userId로)
     const handleMessage = async (targetUserId: number) => {
         if (loading) return;
-        if (targetUserId === currentUserId) {
+        if (targetUserId === loggedInUserId) {
             alert("자기 자신에게는 DM을 보낼 수 없습니다.");
             return;
         }
@@ -80,7 +87,7 @@ export default function FriendSearchPanel({
             const response = await fetch("/api/friend", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId1: currentUserId, userId2: targetUserId }),
+                body: JSON.stringify({ userId1: loggedInUserId, userId2: targetUserId }),
             });
             if (!response.ok) throw new Error("친구 요청 실패");
 
@@ -96,6 +103,7 @@ export default function FriendSearchPanel({
 
     // 프로필 타입별 버튼 렌더링 (user 단위)
     const renderButton = (user: FriendResult) => {
+        // console.log(user);
         const config = getButtonConfig(user.profileType);
         const ButtonIcon = config.icon;
 

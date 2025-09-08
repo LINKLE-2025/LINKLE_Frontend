@@ -8,7 +8,10 @@ import { UserResponseDTO } from '@/types/user';
 import { FriendResponse } from "@/types/friend";
 
 import { RECEIVED_REQUESTS, SENT_REQUESTS } from '../../constants/friendRequests';
+import { useOutletContext } from "react-router-dom";
 
+//로그인한 유저 아이디
+type OutletContextType = { loggedInUserId: number };
 function FriendRequestsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [user, setUser] = useState<UserResponseDTO | null>(null);
@@ -63,7 +66,9 @@ function FriendRequestsPage() {
     }
   };
 
-  const loggedInUserId = 1;
+  
+  const { loggedInUserId } = useOutletContext<OutletContextType>();
+  // 
   const { userId: profileUserIdParam } = useParams<{ userId: string }>();
   const profileUserId = profileUserIdParam ? Number(profileUserIdParam) : loggedInUserId;
 
