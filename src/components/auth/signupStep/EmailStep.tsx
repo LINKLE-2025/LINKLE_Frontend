@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import AuthInput from "@/components/auth/AuthInput";
 import AuthFilledButton from "@/components/auth/AuthFilledButton";
-import axios from "axios";
+import { checkEmail, sendEmailCode } from "@/api/authApi";
 
 type Props = {
   value: string;
@@ -35,7 +35,7 @@ export default function EmailStep({ value, onChange, onNext }: Props) {
     if (!isEmailAvailable) return;
 
     // 인증 코드 자동 발송 및 다음 단계로 이동
-    sendVerificationCode(value);
+    sendEmailCodeOnServer(value);
     console.log("이메일 사용 가능, 다음 단계로 이동");
     onNext();
   };
@@ -43,9 +43,9 @@ export default function EmailStep({ value, onChange, onNext }: Props) {
   // 이메일 중복 검사 요청
   const checkEmailOnServer = async (email: string) => {
     try {
-      const response = await axios.get(`/api/auth/email/${encodeURIComponent(email)}`);
-      console.log("이메일 사용 가능 여부: " + response.data.available);
-      if (response.data.available) {
+      const available = await checkEmail(email);
+      if (available) {
+        console.log("이메일 사용 가능");
         return true;
       }
       setError("이미 사용 중인 이메일입니다.");
@@ -58,9 +58,9 @@ export default function EmailStep({ value, onChange, onNext }: Props) {
   };
 
   // 서버에 인증 코드 발송 요청
-  const sendVerificationCode = async (email: string) => {
+  const sendEmailCodeOnServer = async (email: string) => {
     try {
-      await axios.post(`/api/auth/email/${encodeURIComponent(email)}`);
+      await sendEmailCode(email);
       console.log("인증 코드가 이메일로 발송되었습니다.");
       return true;
     } catch (error) {
