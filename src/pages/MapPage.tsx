@@ -125,6 +125,7 @@ export default function MapPage(): React.ReactElement {
   };
 
   // ===== 4. 🔥 링커 로드 함수 (selectedCategories 의존성 사용) =====
+  // 링커 상세보기
   function onOpenDetailById(linkerId: number) {
     setDetailOpen(true);
     setDetailLoading(true);
@@ -388,6 +389,8 @@ export default function MapPage(): React.ReactElement {
           // 🔥 지도 클릭 이벤트 핸들러
           const handleMapClick = (mouseEvent: kakao.maps.event.MouseEvent) => {
             console.log("지도 클릭 시 이벤트");
+            setDetailOpen(false);
+
             const latlng = mouseEvent.latLng;
             const geocoder = new window.kakao.maps.services.Geocoder();
 

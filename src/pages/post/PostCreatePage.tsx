@@ -2,10 +2,10 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import PostForm, { LinkerLite } from "@/components/post/PostForm";
+import { createPost, getLinker } from "@/api/postApi";
 
 export default function PostCreatePage(): React.ReactElement {
   const { footerHeight } = useOutletContext<{ headerHeight: number; footerHeight: number }>();
-
   const navigate = useNavigate();
   const [sp] = useSearchParams();
   const location = useLocation() as { state?: { linker?: LinkerLite } };
@@ -16,7 +16,6 @@ export default function PostCreatePage(): React.ReactElement {
 
   useEffect(() => {
     if (!linkerId) {
-      // 필요하면 alert("잘못된 접근입니다."); 후 이동
       navigate(-1);
     }
   }, [linkerId, navigate]);
@@ -25,11 +24,11 @@ export default function PostCreatePage(): React.ReactElement {
     if (!linker && linkerId) {
       (async () => {
         try {
-          const res = await fetch(`/api/linker/${linkerId}`, { credentials: "include" });
-          if (!res.ok) throw new Error(`링커 조회 실패 (${res.status})`);
-          const j = await res.json();
+          const j = await getLinker(linkerId);
           setLinker({ linkerId: j.linkerId, name: j.name, address: j.address ?? j.addressName });
-        } catch {}
+        } catch {
+          alert("링커 조회 실패");
+        }
       })();
     }
   }, [linker, linkerId]);
@@ -41,7 +40,6 @@ export default function PostCreatePage(): React.ReactElement {
 
   const handleSubmit = async ({ text, file }: { text: string; file?: File | null }) => {
     if (!linkerId) return;
-    //사진 필수
     if (!file) {
       alert("사진을 첨부해 주세요.");
       return;
@@ -49,22 +47,14 @@ export default function PostCreatePage(): React.ReactElement {
 
     try {
       setSubmitting(true);
-      const form = new FormData();
-      form.append("linkerId", linkerId);
-      form.append("content", text);
-      if (file) form.append("image", file);
-
-      const res = await fetch("/api/post", { method: "POST", body: form, credentials: "include" });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j?.message || `게시글 생성 실패 (${res.status})`);
-      }
+      await createPost(linkerId, text, file);
 
       const openId = Number(linker?.linkerId ?? linkerId);
       navigate("/map", { replace: true, state: { openLinkerId: openId } });
     } catch (e: any) {
       alert(e?.message ?? "업로드 실패");
     } finally {
+      alert("포스트가 생성되었습니다");
       setSubmitting(false);
     }
   };
