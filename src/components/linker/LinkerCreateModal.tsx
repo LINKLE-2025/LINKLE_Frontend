@@ -67,6 +67,22 @@ export default function LinkerCreateModal({
     setConfirmOpen(true);
   };
 
+  // 카테고리 아이콘 이미지
+  const CATEGORY_ICONS: Record<number, string> = {
+    1: "/icons/category/mealicon.png",
+    2: "/icons/category/cafeicon.png",
+    3: "/icons/category/musicicon.png",
+    4: "/icons/category/movieicon.png",
+    5: "/icons/category/readingicon.png",
+    6: "/icons/category/exerciseicon.png",
+    7: "/icons/category/drinkingicon.png",
+    8: "/icons/category/learningicon.png",
+    9: "/icons/category/shoppingicon.png",
+    10: "/icons/category/hospitalicon.png",
+    11: "/icons/category/gameicon.png",
+    12: "/icons/category/travelicon.png",
+  };
+
   const handleConfirm = () => {
     // 🔹 시/도 이름 통일 함수
     const normalizeRegion = (raw: string) => {
@@ -168,18 +184,33 @@ export default function LinkerCreateModal({
                   {ACTIVITIES.map((label, idx) => {
                     const id = idx + 1;
                     const selected = activityId === id;
+                    const iconSrc = CATEGORY_ICONS[id] ?? "/icons/default.png"; // 이미지 경로
+
                     return (
                       <button
                         type='button'
                         key={id}
                         onClick={() => setActivityId(id)}
-                        className={`rounded-xl border px-2 py-2.5 text-sm cursor-pointer transition ${
+                        className={`flex flex-col items-center justify-center rounded-xl border px-2 py-2.5 text-sm cursor-pointer transition ${
                           selected ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white"
                         }`}
                         aria-pressed={selected}
                         aria-label={`${label} 선택`}
                       >
-                        {label}
+                        {/* 🔹 아이콘 */}
+                        <div className='w-8 h-8 mb-1 flex items-center justify-center'>
+                          <img
+                            src={iconSrc}
+                            alt={label}
+                            className='w-6 h-6 object-contain'
+                            onError={(e) => {
+                              console.log(`아이콘 로드 실패: ${iconSrc}`);
+                              (e.target as HTMLImageElement).style.display = "none";
+                            }}
+                          />
+                        </div>
+                        {/* 🔹 텍스트 */}
+                        <span>{label}</span>
                       </button>
                     );
                   })}

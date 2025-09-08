@@ -64,7 +64,7 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className='absolute top-12 left-0 w-full bg-white shadow-lg z-20 p-4 border-b border-gray-200'>
+    <div className='absolute top-0 left-0 w-full bg-white shadow-lg z-20 p-4 border-b border-gray-200'>
       {/* 패널 헤더 */}
       <div className='flex justify-between items-center mb-2'>
         <h3 className='font-semibold text-gray-800 text-lg'>링커 카테고리 선택</h3>
