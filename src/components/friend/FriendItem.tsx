@@ -1,20 +1,29 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { openDm } from "@/services/chat";
+import { fr } from "date-fns/locale";
+
+interface FriendSummary {
+  id: number;
+  name: string;
+  nickname: string;
+  friendId: number;
+}
+
 
 interface FriendItemProps {
   id: number; // 대상 유저 ID
   name: string;
   nickname: string;
   buttonType: "메시지" | "친구 추가" | "수락 대기중" | "취소";
+  friendId?: number; // 친구 관계 ID (친구 요청 수락/거절/삭제 등에 필요)
 }
 
 const DEV_UID = Number(import.meta.env.VITE_DEV_USER_ID ?? "1");
 
-function FriendItem({ id, name, nickname, buttonType }: FriendItemProps) {
+function FriendItem({ id, name, nickname, buttonType, friendId }: FriendItemProps) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-
   const handleMessage = async () => {
     if (loading) return;
     if (id === DEV_UID) {
@@ -36,7 +45,7 @@ function FriendItem({ id, name, nickname, buttonType }: FriendItemProps) {
   return (
     <div className="flex items-center justify-between px-4 py-3">
       <div className="flex items-center space-x-3">
-        <Link to={`/profile`} state={{ userId: id }}>
+        <Link to={`/profile`} state={{ userId: id, friendId: friendId }}>
           <img
             src={`/api/user/view/profile/${id}`}
             alt={`${name} 프로필`}

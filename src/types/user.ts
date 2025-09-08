@@ -1,3 +1,5 @@
+// import
+
 // 유저가 참여한 링커
 export interface UserParticipateLinkerDTO {
   linkerId: number;
@@ -53,29 +55,3 @@ export function backgroundImageUrl(userId: number, v?: number) {
   return `/api/user/view/background/${userId}${v ? `?v=${v}` : ""}`;
 }
 
-// API: 프로필 조회
-export async function getUserProfile(userId: number): Promise<UserResponseDTO> {
-  const res = await fetch(`/api/user/${userId}`, { credentials: "include" });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
-}
-
-// API: 프로필 수정
-export async function patchUserProfile(
-  userId: number,
-  dto: ProfileDTO,
-  files?: { profile?: File | null; background?: File | null }
-): Promise<UserResponseDTO> {
-  const fd = new FormData();
-  fd.append("dto", new Blob([JSON.stringify(dto)], { type: "application/json" }));
-  if (files?.profile) fd.append("profile", files.profile);
-  if (files?.background) fd.append("background", files.background);
-
-  const res = await fetch(`/api/user/${userId}`, {
-    method: "PATCH",
-    body: fd,
-    credentials: "include",
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
-}
