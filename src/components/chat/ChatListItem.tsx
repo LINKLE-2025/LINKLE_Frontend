@@ -9,8 +9,9 @@ function initials(name?: string | null) {
   const p = n.split(/\s+/);
   return p.length === 1 ? p[0]!.slice(0, 2) : `${p[0]![0] ?? ""}${p[1]![0] ?? ""}`;
 }
-const profileUrl = (userId?: number | null, v?: string | number | null) =>
-  userId ? `/api/user/view/profile/${userId}` : "";
+const profileUrl = (userId?: number | null) => (userId ? `/api/user/view/profile/${userId}` : "");
+const roomBackgroundUrl = (roomId?: number | null) =>
+  roomId ? `/api/chat/view/background/${roomId}` : "";
 
 // participants/members/users 등에서 상대 id 추론
 function partnerFromArray(arr: any[] | undefined, me?: number) {
@@ -51,7 +52,7 @@ export default function ChatListItem({
   const roomType = String((item as any).roomType ?? "").toUpperCase();
   const isDM = roomType === "DM" || roomType === "DIRECT";
 
-  // 제목/미리보기/시간 (양쪽 필드 다 대응)
+  // 제목/미리보기/시간
   const rawTitle =
     (isDM ? (item as any).dmPartnerName : undefined) ??
     (item as any).friendName ??
@@ -60,20 +61,19 @@ export default function ChatListItem({
 
   const preview =
     (item as any).lastMessagePreview ?? (item as any).lastMessage ?? "대화를 시작해 보세요";
-
   const when = (item as any).lastMessageDate ?? (item as any).lastMessageAt ?? null;
 
-  const version = (item as any).avatarVersion ?? when ?? null;
-
-  // 아바타: 오직 /api/user/view/profile/{userId}
+  // 아바타/배경 URL
   const partnerId = useMemo(
     () => (isDM ? extractPartnerId(item, currentUserId) : undefined),
     [isDM, item, currentUserId],
   );
-  const avatarSrc = useMemo(
-    () => (isDM && partnerId ? profileUrl(partnerId, version) : ""),
-    [isDM, partnerId, version],
-  );
+
+  const avatarSrc = useMemo(() => {
+    if (isDM && partnerId) return profileUrl(partnerId);
+    if (!isDM && item.roomId) return roomBackgroundUrl(item.roomId);
+    return "";
+  }, [isDM, partnerId, item.roomId]);
 
   return (
     <button
