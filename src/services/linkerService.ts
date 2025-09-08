@@ -21,14 +21,14 @@ export interface LinkerListItem {
   // 백워드 호환
   lat?: number | null;
   lng?: number | null;
-  state?: "ACTIVATED" | "DELETED"; // ✅ 추가
+  state?: "ACTIVATED" | "DELETED";
 }
 
 export interface LinkerDetail {
   linkerId: number;
   name: string;
   address?: string;
-  adresssName?: string; // 백엔드 오타 호환
+  addressName?: string; // 백엔드 오타 호환
   categoryId?: number | null;
   locationX?: number | null;
   locationY?: number | null;
@@ -36,6 +36,9 @@ export interface LinkerDetail {
   createdAt?: string;
   phone?: string | null;
 }
+
+// ✅ API BASE 경로 (환경변수에서 가져오기)
+const API_BASE = import.meta.env.VITE_API_BASE;
 
 // 링커 저장
 export async function saveLinker(payload: LinkerPayload) {
@@ -46,29 +49,39 @@ export async function saveLinker(payload: LinkerPayload) {
     addressName: payload.addressName ?? "",
   };
 
-  const res = await fetch("/api/linker", {
+  const res = await fetch(`${API_BASE}/linker`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(safePayload),
     credentials: "include",
   });
 
-  if (!res.ok) throw new Error("POST /api/linker 실패");
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`POST /linker 실패: ${res.status} ${res.statusText}, body=${text}`);
+  }
   return res;
 }
 
 // 링커 목록 조회
 export async function fetchLinkers(): Promise<LinkerListItem[]> {
-  const res = await fetch("/api/linker", {
+  const res = await fetch(`${API_BASE}/linker`, {
     credentials: "include",
   });
-  if (!res.ok) throw new Error("GET /api/linker 실패");
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`GET /linker 실패: ${res.status} ${res.statusText}, body=${text}`);
+  }
+
   return res.json();
 }
 
 // 링커 상세 조회
 export async function fetchLinkerDetail(linkerId: number): Promise<LinkerDetail> {
-  const res = await fetch(`/api/linker/${linkerId}`, { credentials: "include" });
+  const res = await fetch(`${API_BASE}/linker/${linkerId}`, {
+    credentials: "include",
+  });
 
   if (!res.ok) {
     let serverMsg = "";

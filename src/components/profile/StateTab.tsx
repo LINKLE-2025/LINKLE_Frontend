@@ -17,7 +17,7 @@ const ACTIVITIES = [
   "여행",  // 12
 ];
 
-const StateTab: React.FC<StateTabProps> = ({ linkerStats }) => {
+function StateTab({ linkerStats }: StateTabProps) {
   return (
     <div className="p-4 space-y-3">
       {linkerStats.map((state) => {
@@ -35,6 +35,6 @@ const StateTab: React.FC<StateTabProps> = ({ linkerStats }) => {
       )}
     </div>
   );
-};
+}
 
 export default StateTab;
