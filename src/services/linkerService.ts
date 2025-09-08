@@ -21,14 +21,14 @@ export interface LinkerListItem {
   // 백워드 호환
   lat?: number | null;
   lng?: number | null;
-  state?: "ACTIVATED" | "DELETED"; // ✅ 추가
+  state?: "ACTIVATED" | "DELETED";
 }
 
 export interface LinkerDetail {
   linkerId: number;
   name: string;
   address?: string;
-  adresssName?: string; // 백엔드 오타 호환
+  addressName?: string; // 백엔드 오타 호환
   categoryId?: number | null;
   locationX?: number | null;
   locationY?: number | null;

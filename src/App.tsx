@@ -9,6 +9,7 @@ import ProfilePage from "@/pages/Profile/ProfilePage";
 import ProfileEditPage from "@/pages/Profile/ProfileEditPage";
 import FriendListPage from "@/pages/friend/FriendsListPage";
 import FriendRequestsPage from "@/pages/friend/FriendRequestsPage";
+import FriendSearchPage from "@/pages/friendSearch/FriendSearchPage";
 import AuthLayout from "./layouts/AuthLayout";
 
 import ProfileLayout from "./layouts/ProfileLayout";
@@ -49,6 +50,10 @@ const App = () => {
       <Route element={<FriendListLayout />}>
         <Route path='/friend' element={<FriendListPage />} />
         <Route path='/received' element={<FriendRequestsPage />} />
+      </Route>
+
+      <Route element={<FriendListLayout />}>
+        <Route path='/search' element={<FriendSearchPage />} />
       </Route>
 
       {/* 채팅 관련 레이아웃 */}

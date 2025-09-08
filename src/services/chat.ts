@@ -8,12 +8,19 @@ export interface RoomResponseDTO {
   lastMessage?: string | null;
   lastMessageAt?: string | null;
   unreadCount?: number | null;
-  avatarUrl?: string | null; // DM 아바타 등
+
+  // ✅ DM 전용 필드
+  dmPartnerId?: number | null;
+  dmPartnerName?: string | null;
+
+  // fallback 용 (ex. 그룹 아바타 URL)
+  avatarUrl?: string | null;
 }
 
 const API_BASE = import.meta.env.VITE_API_SERVER as string;
-const DEV_UID = String(import.meta.env.VITE_DEV_USER_ID ?? "1");
+const DEV_UID = String(import.meta.env.VITE_DEV_USER_ID ?? "2");
 
+/** 공통 fetch 래퍼 */
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
@@ -41,6 +48,12 @@ export async function fetchRooms(): Promise<RoomResponseDTO[]> {
     lastMessage: r.lastMessage ?? r.lastMessagePreview ?? null,
     lastMessageAt: r.lastMessageAt ?? r.lastMessageDate ?? null,
     unreadCount: r.unreadCount ?? r.unread ?? 0,
+
+    // ✅ DM 전용 값 매핑
+    dmPartnerId: r.dmPartnerId ?? null,
+    dmPartnerName: r.dmPartnerName ?? null,
+
+    // 그룹/클래스 전용 fallback 아바타
     avatarUrl: r.avatarUrl ?? r.dmPartnerProfileImageUrl ?? null,
   }));
 }

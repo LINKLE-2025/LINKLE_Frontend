@@ -6,7 +6,7 @@ export type LinkerDetail = {
   linkerId: number;
   name: string;
   address?: string;
-  adresssName?: string;
+  addressName?: string;
   categoryId?: number | null;
   locationX?: number | null;
   locationY?: number | null;
@@ -130,7 +130,7 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
                   <div className='min-w-0'>
                     <h2 className='text-lg font-bold truncate'>{detail?.name ?? "-"}</h2>
                     <p className='mt-0.5 text-sm text-gray-500 truncate'>
-                      {detail?.address ?? detail?.adresssName ?? "-"}
+                      {detail?.address ?? detail?.addressName ?? "-"}
                     </p>
                   </div>
                   <div className='ml-3 flex shrink-0 gap-2'>

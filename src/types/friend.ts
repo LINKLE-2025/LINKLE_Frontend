@@ -19,3 +19,6 @@ export interface FriendSummary {
   nickname: string;
   imageUrl?: string;
 }
+export interface FriendSummaryWithProfileType extends FriendSummary {
+  profileType: ProfileType;
+}
