@@ -8,7 +8,7 @@ import GenderStep from "@/components/auth/signupStep/GenderStep";
 import NicknameStep from "@/components/auth/signupStep/NicknameStep";
 import AgreeTermStep from "@/components/auth/signupStep/AgreeTermStep";
 import BackTitleHeader from "@/components/header/BackTitleHeader";
-import axios from "axios";
+import { signup } from "@/api/authApi";
 
 // 각 단계별 안내 문구
 const stepContents: Record<number, { title: string; description: string }> = {
@@ -103,9 +103,8 @@ export default function SignupPage() {
 
     // 서버에 회원가입 요청
     try {
-      const response = await axios.post("/api/auth/signup", payload);
-      if (response.data) {
-        console.log("회원가입 성공:", response.data);
+      if (await signup(payload)) {
+        console.log("회원가입 성공: ", payload);
         alert("회원가입이 완료되었습니다.");
         window.location.href = "/login"; // 로그인 페이지로 이동
       } else {
