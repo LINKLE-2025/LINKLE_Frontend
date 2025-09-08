@@ -10,13 +10,13 @@ interface ProfileContentProps {
   profileType: 'self' | 'friend' | 'stranger' | 'wait';
   isVerified?: boolean;
 }
-// const { open: openMenu, ActionMenu } = useActionMenu();
+
 // ProfileBarContent 컴포넌트
-const ProfileContent: React.FC<ProfileContentProps> = ({
+function ProfileContent({
   userId,
   profileType,
   isVerified = false,
-}) => {
+}: ProfileContentProps) {
   // ActionMenu 훅 사용
   // openMenu: 액션 시트 열기 함수
   // ActionMenu: 렌더링할 액션 시트 컴포넌트
@@ -26,7 +26,6 @@ const ProfileContent: React.FC<ProfileContentProps> = ({
   // 프로필 편집 또는 친구 관리 버튼 클릭 시 실행되는 함수
   // 각 버튼 클릭 시 다른 액션 시트를 보여줌
   const onEditProfile = async () => {
-    
     // 3개 들어올 때 액션
     await openMenu({
       title: "내 프로필 관리",
@@ -39,6 +38,7 @@ const ProfileContent: React.FC<ProfileContentProps> = ({
       closeOnOverlay: true,
     });
   };
+
   // 링커 생성시 실행되는 함수
   const onCreateLinker = async () => {
     const { confirmed, data } = await confirm({
@@ -57,6 +57,7 @@ const ProfileContent: React.FC<ProfileContentProps> = ({
     if (!confirmed) return;
     // 생성 성공 후 후처리 (data 사용 가능)
   };
+
   // 친구 관리 버튼 클릭시 실행되는 함수
   const onFriendMenu = async () => {
     // 2개(행동 1 + 취소)
@@ -81,10 +82,10 @@ const ProfileContent: React.FC<ProfileContentProps> = ({
     });
 
     if (res?.pickedId === "delete_friend") {
-      // res.data에 서버 응답 있음 (JSON 또는 text)
-      // TODO: 토스트/리프레시
+      // 친구 삭제 후 후처리
     }
   };
+
   const renderButton = () => {
     switch (profileType) {
       case 'self':
@@ -119,15 +120,15 @@ const ProfileContent: React.FC<ProfileContentProps> = ({
           ⋯
         </button>
       </div>
-  
+
       {/* 나머지 프로필 내용 */}
       <div className="flex flex-col items-center">
         {/* 프로필 이미지, 이름, 닉네임 등 */}
       </div>
-  
+
       {ActionMenu}
     </div>
   );
-};
+}
 
 export default ProfileContent;
