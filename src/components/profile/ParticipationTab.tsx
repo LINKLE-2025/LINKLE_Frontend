@@ -17,7 +17,7 @@ interface ParticipationTabProps {
 }
 
 // 링커 참여 내역을 리스트로 보여줌 
-const ParticipationTab: React.FC<ParticipationTabProps> = ({ participations }) => {
+function ParticipationTab({ participations }: ParticipationTabProps) {
   // 참여한 링커가 없을 경우 참여한 링커가 없다는 것을 메시지로 보여줌
   if (!participations || participations.length === 0) {
     return <p className="text-gray-500 text-center py-6">참여한 링커가 없습니다.</p>;
@@ -54,7 +54,6 @@ const ParticipationTab: React.FC<ParticipationTabProps> = ({ participations }) =
       ))}
     </div>
   );
-};
+}
 
 export default ParticipationTab;
-  

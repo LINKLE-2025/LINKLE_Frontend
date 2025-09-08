@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { openDm } from "@/services/chat"; // ✅ DM 열기 API 불러오기
+import { openDm } from "@/services/chat";
 
 interface FriendItemProps {
   id: number; // 대상 유저 ID
@@ -11,7 +11,7 @@ interface FriendItemProps {
 
 const DEV_UID = Number(import.meta.env.VITE_DEV_USER_ID ?? "1");
 
-const FriendItem: React.FC<FriendItemProps> = ({ id, name, nickname, buttonType }) => {
+function FriendItem({ id, name, nickname, buttonType }: FriendItemProps) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
@@ -23,9 +23,7 @@ const FriendItem: React.FC<FriendItemProps> = ({ id, name, nickname, buttonType 
     }
     setLoading(true);
     try {
-      //  DM 방 열기 or 재사용
       const room = await openDm(id);
-      //  생성된 채팅방으로 이동
       navigate(`/chat/room/${room.roomId}`);
     } catch (e) {
       console.error(e);
@@ -36,13 +34,13 @@ const FriendItem: React.FC<FriendItemProps> = ({ id, name, nickname, buttonType 
   };
 
   return (
-    <div className='flex items-center justify-between px-4 py-3'>
-      <div className='flex items-center space-x-3'>
+    <div className="flex items-center justify-between px-4 py-3">
+      <div className="flex items-center space-x-3">
         <Link to={`/profile`} state={{ userId: id }}>
           <img
             src={`/api/user/view/profile/${id}`}
             alt={`${name} 프로필`}
-            className='w-12 h-12 object-cover rounded-full'
+            className="w-12 h-12 object-cover rounded-full"
             onError={(e) => {
               e.currentTarget.style.display = "none";
               e.currentTarget.insertAdjacentHTML(
@@ -53,8 +51,8 @@ const FriendItem: React.FC<FriendItemProps> = ({ id, name, nickname, buttonType 
           />
         </Link>
         <div>
-          <h3 className='font-medium text-gray-900'>{name}</h3>
-          <p className='text-sm text-gray-500'>@{nickname}</p>
+          <h3 className="font-medium text-gray-900">{name}</h3>
+          <p className="text-sm text-gray-500">@{nickname}</p>
         </div>
       </div>
 
@@ -62,17 +60,17 @@ const FriendItem: React.FC<FriendItemProps> = ({ id, name, nickname, buttonType 
         <button
           onClick={handleMessage}
           disabled={loading}
-          className='px-4 py-2 text-sm rounded-lg bg-blue-500 text-white disabled:opacity-60'
+          className="px-4 py-2 text-sm rounded-lg bg-blue-500 text-white disabled:opacity-60"
         >
           {loading ? "여는 중…" : "메시지"}
         </button>
       ) : (
-        <button className='px-4 py-2 text-sm rounded-lg bg-blue-500 text-white'>
+        <button className="px-4 py-2 text-sm rounded-lg bg-blue-500 text-white">
           {buttonType}
         </button>
       )}
     </div>
   );
-};
+}
 
 export default FriendItem;
