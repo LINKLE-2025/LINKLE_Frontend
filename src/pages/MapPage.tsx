@@ -389,6 +389,8 @@ export default function MapPage(): React.ReactElement {
           // 🔥 지도 클릭 이벤트 핸들러
           const handleMapClick = (mouseEvent: kakao.maps.event.MouseEvent) => {
             console.log("지도 클릭 시 이벤트");
+            setDetailOpen(false);
+
             const latlng = mouseEvent.latLng;
             const geocoder = new window.kakao.maps.services.Geocoder();
 
