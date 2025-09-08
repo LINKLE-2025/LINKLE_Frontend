@@ -68,6 +68,10 @@ export default function MapPage(): React.ReactElement {
   const [createDraft, setCreateDraft] = useState<{ lat: number; lng: number } | null>(null);
   const [mapReady, setMapReady] = useState(false); //지도 로드 완료 여부
 
+  // 버튼 관련
+  const [linkerCreateMode, setLinkerCreateMode] = useState(false); // 🔥 링커 생성 모드
+  const [showAddress, setShowAddress] = useState(false); // 🔥 주소 표시
+
   // 검색 관련
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -81,6 +85,12 @@ export default function MapPage(): React.ReactElement {
   const linkerMarkersRef = useRef<InstanceType<typeof window.kakao.maps.Marker>[]>([]);
   // 🔥 클러스터러 인스턴스를 저장할 ref 추가 (중복 이벤트 방지를 위해)
   const clustererRef = useRef<any>(null);
+  // 최신 상태를 ref로 보관
+  const linkerCreateModeRef = useRef(false);
+  // 상태가 바뀔 때마다 ref 갱신
+  useEffect(() => {
+    linkerCreateModeRef.current = linkerCreateMode;
+  }, [linkerCreateMode]);
 
   // AppLayout의 Outlet context에 상태 전달
   const outletContext = useOutletContext<{
@@ -318,6 +328,7 @@ export default function MapPage(): React.ReactElement {
 
   // 🔥 수정된 Kakao Map 로드 useEffect - 클러스터러 이벤트 중복 등록 방지
   useEffect(() => {
+    if (!mapRef.current) return;
     const script = document.createElement("script");
     script.id = "kakao-map-script";
     script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${
@@ -387,6 +398,7 @@ export default function MapPage(): React.ReactElement {
 
           // 🔥 지도 클릭 이벤트 핸들러
           const handleMapClick = (mouseEvent: kakao.maps.event.MouseEvent) => {
+            if (!linkerCreateModeRef.current) return;
             console.log("지도 클릭 시 이벤트");
             const latlng = mouseEvent.latLng;
             const geocoder = new window.kakao.maps.services.Geocoder();
@@ -564,6 +576,42 @@ export default function MapPage(): React.ReactElement {
     });
   };
 
+  // 내위치 버튼 핸들러
+  const handleMyLocation = () => {
+    if (!kakaoMapRef.current) return;
+
+    console.log("🐥 내 위치 버튼 클릭");
+
+    const map = kakaoMapRef.current;
+    const currentCenter = map.getCenter();
+    map.panTo(currentCenter); // 그냥 시각적 피드백
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+
+          console.log("📍 GPS 위치 획득:", lat, lng);
+
+          map.panTo(new (window as any).kakao.maps.LatLng(lat, lng));
+          map.setLevel(2);
+        },
+        (err) => {
+          console.warn("⚠️ 위치를 가져올 수 없습니다.", err);
+          alert("위치 정보를 가져올 수 없습니다. 다시 시도해보세요.");
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 5000,
+          maximumAge: 60000,
+        },
+      );
+    } else {
+      alert("이 브라우저는 위치 정보를 지원하지 않습니다.");
+    }
+  };
+
   const saveNewSpot = ({ alias, category }: { alias: string; category: string }) => {
     if (!createDraft) return;
     const { lat, lng } = createDraft;
@@ -630,9 +678,10 @@ export default function MapPage(): React.ReactElement {
   return (
     <MapWrapper>
       {/* ===== 헤더 ===== */}
+      {/* 검색창 열렸을 때 뒤로가기 헤더 */}
       {searchOpen && (
         <BackTitleHeader
-          title='검색'
+          title='링커 검색'
           onBack={() => {
             console.log("🔙 검색창 닫기");
             setSearchOpen(false);
@@ -640,6 +689,16 @@ export default function MapPage(): React.ReactElement {
             setSearchResults([]);
             searchMarkers.current.forEach((m) => m.setMap(null));
             searchMarkers.current = [];
+          }}
+        />
+      )}
+      {/* 링커 생성 모드일 때 헤더 */}
+      {linkerCreateMode && !searchOpen && (
+        <BackTitleHeader
+          title='링커 생성'
+          onBack={() => {
+            console.log("🔙 링커 생성 모드 종료");
+            setLinkerCreateMode(false);
           }}
         />
       )}
@@ -717,61 +776,53 @@ export default function MapPage(): React.ReactElement {
         {/* 지도 컨트롤 버튼들 (오른쪽 하단) */}
         {!searchOpen && (
           <div className='absolute bottom-5 right-4 flex flex-col gap-3 z-10'>
-            <CircleButton
-              imgSrc='/icons/mapicon/search.png'
-              alt='검색'
-              onClick={() => setSearchOpen(true)}
-            />
-            <CircleButton
-              imgSrc='/icons/mapicon/refresh.png'
-              alt='새로고침'
-              onClick={() => window.location.reload()}
-            />
-            <CircleButton
-              imgSrc='/icons/mapicon/location.png'
-              alt='내 위치'
-              onClick={() => {
-                if (!kakaoMapRef.current) return;
-
-                console.log("🐥 내 위치 버튼 클릭");
-
-                // 1️⃣ 기본 위치로 즉시 이동 (임시)
-                const map = kakaoMapRef.current;
-                const currentCenter = map.getCenter();
-                map.panTo(currentCenter); // 그냥 시각적 피드백을 위해 현재 위치 유지
-
-                // 2️⃣ 실제 위치 가져오기
-                if (navigator.geolocation) {
-                  navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                      const lat = pos.coords.latitude;
-                      const lng = pos.coords.longitude;
-
-                      console.log("📍 GPS 위치 획득:", lat, lng);
-
-                      // 지도 이동
-                      map.panTo(new (window as any).kakao.maps.LatLng(lat, lng));
-                      map.setLevel(2);
-                    },
-                    (err) => {
-                      console.warn("⚠️ 위치를 가져올 수 없습니다.", err);
-                      alert("위치 정보를 가져올 수 없습니다. 다시 시도해보세요.");
-                    },
-                    {
-                      enableHighAccuracy: false, // 네트워크 기반으로 빠르게 위치 가져오기
-                      timeout: 5000, // 최대 5초 대기
-                      maximumAge: 60000, // 1분 내 캐시 사용
-                    },
-                  );
-                } else {
-                  alert("이 브라우저는 위치 정보를 지원하지 않습니다.");
-                }
-              }}
-            />
+            {linkerCreateMode ? (
+              <>
+                {/* 링커 생성 모드일 때 버튼 */}
+                <CircleButton
+                  imgSrc='/icons/mapicon/search.png'
+                  alt='검색'
+                  onClick={() => setSearchOpen(true)}
+                />
+                <CircleButton
+                  imgSrc='/icons/mapicon/refresh.png'
+                  alt='새로고침'
+                  onClick={() => window.location.reload()}
+                />
+                <CircleButton
+                  imgSrc='/icons/mapicon/location.png'
+                  alt='내 위치'
+                  onClick={handleMyLocation}
+                />
+              </>
+            ) : (
+              <>
+                {/* 기본 버튼 리스트 */}
+                <CircleButton
+                  imgSrc='/icons/mapicon/linker2.png'
+                  alt='링커 생성 모드 진입'
+                  onClick={() => setLinkerCreateMode(true)}
+                />
+                <CircleButton
+                  imgSrc='/icons/mapicon/info.png'
+                  alt='주소 표시 토글'
+                  onClick={() => setShowAddress((prev) => !prev)}
+                />
+                <CircleButton
+                  imgSrc='/icons/mapicon/location.png'
+                  alt='내 위치'
+                  onClick={handleMyLocation}
+                />
+              </>
+            )}
           </div>
         )}
         {/* 🔥 주소 표시 컴포넌트 (테스트할때만 켜세요!!!!!! 중심이동할때마다 쿼리 보내서 위험) */}
-        {/* {kakaoMapRef.current && <AddressDisplay map={kakaoMapRef.current} />} */}
+        <AddressDisplay
+          map={kakaoMapRef.current}
+          isOpen={showAddress}
+          onClose={() => setShowAddress(false)}
+        />
       </div>
       {/* 나머지 모달들 (기존과 동일) */}
       <Sheet
