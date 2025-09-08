@@ -18,7 +18,7 @@ import {
   type LinkerPayload,
   type LinkerListItem,
   type LinkerDetail,
-} from "@/services/linkerService";
+} from "@/api/mapApi";
 import { useLocation, useOutletContext } from "react-router-dom";
 import ClusterMarkerList from "@/components/linker/ClustermarkerItem";
 import AddressDisplay from "@/components/map/AddressDisplay";
