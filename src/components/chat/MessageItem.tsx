@@ -15,7 +15,7 @@ export default function MessageItem({
   showAvatar: boolean;
   name?: string | null;
   avatar?: string | null;
-  isFirstOfBlock: boolean; // ✅ 추가
+  isFirstOfBlock: boolean;
 }) {
   const isMine = m.senderId === DEV_UID;
   const [imgFailed, setImgFailed] = useState(false);

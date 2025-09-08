@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import type { RoomResponseDTO } from "@/services/chat";
+import { formatTimeLabel, userProfileUrl, roomBackgroundUrl } from "@/utils/chat";
 
 function initials(name?: string | null) {
   const n = (name ?? "").trim();
@@ -7,12 +8,6 @@ function initials(name?: string | null) {
   const p = n.split(/\s+/);
   return p.length === 1 ? p[0]!.slice(0, 2) : `${p[0]![0] ?? ""}${p[1]![0] ?? ""}`;
 }
-const API_BASE = import.meta.env.VITE_API_SERVER as string;
-
-const profileUrl = (userId?: number | null) => (userId ? `/api/user/view/profile/${userId}` : ""); // 기존 그대로 둬도 되고,
-
-const roomBgUrl = (roomId?: number | null) =>
-  roomId ? `${API_BASE}/chat/view/background/${roomId}` : "";
 
 // participants에서 상대 id 추론 (필요 시)
 function partnerFromArray(arr: any[] | undefined, me?: number) {
@@ -53,15 +48,17 @@ export default function ChatListItem({
 
   const preview =
     (item as any).lastMessagePreview ?? (item as any).lastMessage ?? "대화를 시작해 보세요";
-  const when = (item as any).lastMessageDate ?? (item as any).lastMessageAt ?? "";
+
+  // ✅ 시간 포맷 적용
+  const rawWhen = (item as any).lastMessageDate ?? (item as any).lastMessageAt ?? "";
+  const when = formatTimeLabel(rawWhen);
 
   const partnerId = useMemo(
     () => (isDM ? extractPartnerId(item, currentUserId) : undefined),
     [isDM, item, currentUserId],
   );
-  const avatarSrc = isDM ? profileUrl(partnerId) : roomBgUrl((item as any).roomId);
+  const avatarSrc = isDM ? userProfileUrl(partnerId) : roomBackgroundUrl((item as any).roomId);
 
-  // ✅ onError에서 DOM 조작하지 않고 상태로 폴백 전환
   const [avatarError, setAvatarError] = useState(false);
 
   return (
@@ -81,7 +78,6 @@ export default function ChatListItem({
           onError={() => setAvatarError(true)}
         />
       ) : (
-        // 이니셜 폴백(문법 안전)
         <div className='w-11 h-11 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold text-gray-700'>
           {initials(title)}
         </div>
