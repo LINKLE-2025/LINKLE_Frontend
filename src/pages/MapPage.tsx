@@ -18,7 +18,7 @@ import {
   type LinkerPayload,
   type LinkerListItem,
   type LinkerDetail,
-} from "@/services/linkerService";
+} from "@/api/mapApi";
 import { useLocation, useOutletContext } from "react-router-dom";
 import ClusterMarkerList from "@/components/linker/ClustermarkerItem";
 import AddressDisplay from "@/components/map/AddressDisplay";
@@ -731,13 +731,40 @@ export default function MapPage(): React.ReactElement {
               imgSrc='/icons/mapicon/location.png'
               alt='내 위치'
               onClick={() => {
-                if (navigator.geolocation && kakaoMapRef.current) {
-                  navigator.geolocation.getCurrentPosition((position) => {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    kakaoMapRef.current?.panTo(new (window as any).kakao.maps.LatLng(lat, lng));
-                    kakaoMapRef.current?.setLevel(2);
-                  });
+                if (!kakaoMapRef.current) return;
+
+                console.log("🐥 내 위치 버튼 클릭");
+
+                // 1️⃣ 기본 위치로 즉시 이동 (임시)
+                const map = kakaoMapRef.current;
+                const currentCenter = map.getCenter();
+                map.panTo(currentCenter); // 그냥 시각적 피드백을 위해 현재 위치 유지
+
+                // 2️⃣ 실제 위치 가져오기
+                if (navigator.geolocation) {
+                  navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                      const lat = pos.coords.latitude;
+                      const lng = pos.coords.longitude;
+
+                      console.log("📍 GPS 위치 획득:", lat, lng);
+
+                      // 지도 이동
+                      map.panTo(new (window as any).kakao.maps.LatLng(lat, lng));
+                      map.setLevel(2);
+                    },
+                    (err) => {
+                      console.warn("⚠️ 위치를 가져올 수 없습니다.", err);
+                      alert("위치 정보를 가져올 수 없습니다. 다시 시도해보세요.");
+                    },
+                    {
+                      enableHighAccuracy: false, // 네트워크 기반으로 빠르게 위치 가져오기
+                      timeout: 5000, // 최대 5초 대기
+                      maximumAge: 60000, // 1분 내 캐시 사용
+                    },
+                  );
+                } else {
+                  alert("이 브라우저는 위치 정보를 지원하지 않습니다.");
                 }
               }}
             />
