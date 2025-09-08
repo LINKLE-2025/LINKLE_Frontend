@@ -22,6 +22,7 @@ import {
 import { useLocation, useOutletContext } from "react-router-dom";
 import ClusterMarkerList from "@/components/linker/ClustermarkerItem";
 import AddressDisplay from "@/components/map/AddressDisplay";
+import BackTitleHeader from "@/components/header/BackTitleHeader";
 
 type LayoutContext = { headerHeight: number; footerHeight: number };
 
@@ -80,6 +81,12 @@ export default function MapPage(): React.ReactElement {
   const linkerMarkersRef = useRef<InstanceType<typeof window.kakao.maps.Marker>[]>([]);
   // 🔥 클러스터러 인스턴스를 저장할 ref 추가 (중복 이벤트 방지를 위해)
   const clustererRef = useRef<any>(null);
+
+  // AppLayout의 Outlet context에 상태 전달
+  const outletContext = useOutletContext<{
+    headerHeight: number;
+    footerHeight: number;
+  }>();
 
   // 모달 관련
   const [linkerOpen, setLinkerOpen] = useState(false);
@@ -623,6 +630,20 @@ export default function MapPage(): React.ReactElement {
   return (
     <MapWrapper>
       {/* ===== 헤더 ===== */}
+      {searchOpen && (
+        <BackTitleHeader
+          title='검색'
+          onBack={() => {
+            console.log("🔙 검색창 닫기");
+            setSearchOpen(false);
+            setSearchQuery("");
+            setSearchResults([]);
+            searchMarkers.current.forEach((m) => m.setMap(null));
+            searchMarkers.current = [];
+          }}
+        />
+      )}
+
       {/* <div className='h-12 flex justify-between items-center px-4 bg-white shadow-md z-20'>
         {searchOpen ? (
           <button
@@ -676,7 +697,7 @@ export default function MapPage(): React.ReactElement {
 
         {/* 🔥 카테고리 토글 버튼 (커스텀 훅의 함수 사용) */}
         {!searchOpen && (
-          <div className='absolute top-16 left-4 z-10'>
+          <div className='absolute top-4 left-4 z-10'>
             <button
               className={`px-4 py-2 rounded-lg shadow transition-colors ${
                 categoryFilterOpen
@@ -695,7 +716,7 @@ export default function MapPage(): React.ReactElement {
 
         {/* 지도 컨트롤 버튼들 (오른쪽 하단) */}
         {!searchOpen && (
-          <div className='absolute bottom-50 right-4 flex flex-col gap-3 z-10'>
+          <div className='absolute bottom-5 right-4 flex flex-col gap-3 z-10'>
             <CircleButton
               imgSrc='/icons/mapicon/search.png'
               alt='검색'

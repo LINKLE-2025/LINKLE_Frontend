@@ -1,7 +1,7 @@
 import { useState } from "react";
 import AuthInput from "@/components/auth/AuthInput";
 import AuthFilledButton from "@/components/auth/AuthFilledButton";
-import axios from "axios";
+import { checkNickname } from "@/api/authApi";
 
 type Props = {
   value: string;
@@ -41,9 +41,9 @@ export default function NicknameStep({ value, onChange, onNext }: Props) {
   // 닉네임 중복 검사 요청
   const checkNicknameOnServer = async (nickname: string) => {
     try {
-      const response = await axios.get(`/api/auth/nickname/${encodeURIComponent(nickname)}`);
-      console.log("닉네임 사용 가능 여부: " + response.data.available);
-      if (response.data.available) {
+      const available = await checkNickname(nickname);
+      if (available) {
+        console.log("닉네임 사용 가능");
         return true;
       }
       setError("이미 사용 중인 닉네임입니다.");
