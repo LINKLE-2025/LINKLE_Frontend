@@ -8,7 +8,9 @@ import GenderStep from "@/components/auth/signupStep/GenderStep";
 import NicknameStep from "@/components/auth/signupStep/NicknameStep";
 import AgreeTermStep from "@/components/auth/signupStep/AgreeTermStep";
 import BackTitleHeader from "@/components/header/BackTitleHeader";
+import axios from "axios";
 
+// 각 단계별 안내 문구
 const stepContents: Record<number, { title: string; description: string }> = {
   1: {
     title: "이메일 주소 입력",
@@ -21,12 +23,13 @@ const stepContents: Record<number, { title: string; description: string }> = {
   },
   3: {
     title: "비밀번호 만들기",
-    description: "다른 사람이 추측할 수 없는 6자 이상의 문자 또는 숫자로 비밀번호를 만드세요.",
+    description:
+      "다른 사람이 추측할 수 없는 6자 이상의 영문 대소문자, 숫자 및 특수문자의 조합으로 비밀번호를 만드세요.",
   },
   4: {
     title: "이름 입력",
     description:
-      "친구들이 회원님을 찾을 수 있도록 이름을 추가하세요. 이름은 언제든 변경할 수 있습니다.",
+      "친구들이 회원님을 찾을 수 있도록 이름을 추가하세요. 이름은 언제든 변경할 수 있습니다. (한글, 영문 대소문자, 숫자 및 공백만 가능)",
   },
   5: {
     title: "생년월일 입력",
@@ -40,7 +43,8 @@ const stepContents: Record<number, { title: string; description: string }> = {
   },
   7: {
     title: "닉네임 만들기",
-    description: "회원님의 개성을 드러낼 수 있는 닉네임을 사용하세요.언제든지 변경할 수 있습니다.",
+    description:
+      "회원님의 개성을 드러낼 수 있는 닉네임을 사용하세요. 언제든지 변경할 수 있습니다. (4~20자의 숫자, 영문 소문자 및 언더스코어(_)만 가능)",
   },
   8: {
     title: "약관 동의",
@@ -48,10 +52,22 @@ const stepContents: Record<number, { title: string; description: string }> = {
   },
 };
 
+// 나이 그룹 변환 함수
+const getAgeGroup = (birth: string) => {
+  const year = new Date(birth).getFullYear();
+  const age = new Date().getFullYear() - year;
+
+  if (age < 30) return 20;
+  if (age < 40) return 30;
+  if (age < 50) return 40;
+  if (age < 60) return 50;
+  return 60;
+};
+
 export default function SignupPage() {
   const [step, setStep] = useState(1);
 
-  // ✅ 모든 입력값을 하나의 상태에서 관리
+  // 전체 폼 데이터 상태
   const [formData, setFormData] = useState({
     email: "",
     code: "",
@@ -63,20 +79,43 @@ export default function SignupPage() {
     agree: [false, false, false],
   });
 
-  const updateField = (field: keyof typeof formData, value: string | boolean) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleSubmit = () => {
-    console.log("최종 제출 데이터:", formData);
-    alert("회원가입 완료!");
-    // TODO: API 전송 로직
-  };
-
   // formData 변경 시 콘솔에 출력
   useEffect(() => {
     console.log(formData);
   }, [formData]);
+
+  // formData 업데이트 함수
+  const updateField = (field: keyof typeof formData, value: string | boolean | boolean[]) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // 최종 제출 처리 함수
+  const handleSubmit = async () => {
+    // 나이 그룹 변환
+    const ageGroup = getAgeGroup(formData.birth);
+
+    // 페이로드 설정
+    const payload = {
+      ...formData,
+      age: ageGroup,
+    };
+    console.log("최종 제출 데이터:", payload);
+
+    // 서버에 회원가입 요청
+    try {
+      const response = await axios.post("/api/auth/signup", payload);
+      if (response.data) {
+        console.log("회원가입 성공:", response.data);
+        alert("회원가입이 완료되었습니다.");
+        window.location.href = "/login"; // 로그인 페이지로 이동
+      } else {
+        alert("이미 사용 중인 이메일이거나 닉네임입니다.");
+      }
+    } catch (error) {
+      console.error("회원가입 오류:", error);
+      alert("회원가입에 실패했습니다.");
+    }
+  };
 
   return (
     <div className='flex flex-col items-center justify-center mx-auto w-full max-w-[630px] px-6'>
@@ -88,7 +127,7 @@ export default function SignupPage() {
       />
 
       {/* 안내 문구 */}
-      <div className='text-left max-w-sm'>
+      <div className='text-left w-full max-w-sm'>
         <h2 className='text-3xl sm:text-4xl sm:text-center font-bold mt-6 mb-3 sm:mb-14'>
           {stepContents[step].title}
         </h2>
@@ -107,6 +146,7 @@ export default function SignupPage() {
         {step === 2 && (
           <VerifyCodeStep
             value={formData.code}
+            email={formData.email}
             onChange={(v) => updateField("code", v)}
             onNext={() => setStep(3)}
           />
