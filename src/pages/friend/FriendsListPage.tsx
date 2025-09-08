@@ -6,6 +6,9 @@ import FriendItem from '../../components/friend/FriendItem';
 import { FriendResponse } from "@/types/friend";
 import { useOutletContext } from "react-router-dom";
 
+import { getFriends, getReceivedFriendRequests } from "@/api/friendApi";
+
+
 //로그인한 유저 아이디
 type OutletContextType = { loggedInUserId: number };
 function FriendsListPage() {
@@ -28,19 +31,22 @@ function FriendsListPage() {
 
   useEffect(() => {
     // 유저의 친구 목록 가져오기
-    fetch(`/api/friend/${loggedInUserId}`)
-      .then((res) => res.json())
-      .then((data: FriendResponse[]) => {
+    (async () => {
+      try {
+        const data = await getFriends(loggedInUserId);
         setFriendList(data);
-      })
-      .catch((err) => console.error(err));
-
-    // 받은 친구 요청 수 가져오기
-    fetch(`/api/friend/received?user_id2=${loggedInUserId}`)
-      .then((res) => res.json())
-      .then((data: FriendResponse[]) => setReceivedCount(data.length))
-      .catch((err) => console.error(err));
-
+      } catch (err) {
+        console.error("친구 목록 불러오기 실패:", err);
+      }
+    })();
+    (async () => {
+      try {
+        const data = await getReceivedFriendRequests(loggedInUserId);
+        setReceivedCount(data.length);
+      } catch (err) {
+        console.error("친구 요청 수 불러오기 실패:", err);
+      }
+    })();
   }, [loggedInUserId]);
 
   return (
@@ -93,6 +99,7 @@ function FriendsListPage() {
                 name={friend.name}
                 nickname={friend.nickname}
                 buttonType={friend.state === 'ACCEPTED' ? '메시지' : '친구 추가'}
+                friendId={friend.friendId}
               />
             ))}
           </div>

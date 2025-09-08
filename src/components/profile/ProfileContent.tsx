@@ -3,6 +3,7 @@ import { Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ProfileBarContent from '../../components/profile/ProfileBarContent';
 import { fr } from 'date-fns/locale';
+import { FriendResponse } from "@/types/friend";
 
 // 프로필 페이지의 주요 정보를 표시하는 컴포넌트
 interface FriendSummary {
@@ -22,6 +23,7 @@ interface ProfileContentProps {
   state?: string;
   isVerified?: boolean;
   friendList: FriendSummary[];
+  friendId?: number;
 }
 
 // ProfileContent 컴포넌트
@@ -35,9 +37,10 @@ function ProfileContent({
   state,
   isVerified = false,
   friendList,
+  friendId,
 }: ProfileContentProps) {
+
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  console.log(friendList)
   // 프로필 타입을 받아와 버튼을 각각 다르게 렌더링해줌
   const renderButton = () => {
     switch (profileType) {
@@ -103,6 +106,7 @@ function ProfileContent({
             userId={userId}
             profileType={profileType}
             isVerified={isVerified}
+            friendId={friendId}
           />
         </div>
       </div>

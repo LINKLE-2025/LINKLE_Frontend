@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { fetchFriendSearchResults } from "../services/friendService";
 import { FriendResponse, FriendSummaryWithProfileType } from "../types/friend";
 import { determineProfileTypes } from "../utils/determineProfileTypes";
+import { getFriends } from "@/api/friendApi";
 
 export const useFriendSearch = (currentUserId: number) => {
     const [searchQuery, setSearchQuery] = useState("");
@@ -14,8 +15,7 @@ export const useFriendSearch = (currentUserId: number) => {
     useEffect(() => {
         const loadFriends = async () => {
             try {
-                const res = await fetch(`/api/friend/${currentUserId}`);
-                const data: FriendResponse[] = await res.json();
+                const data = await getFriends(currentUserId);
                 setFriendList(data);
             } catch (err) {
                 console.error("친구 목록 불러오기 실패:", err);

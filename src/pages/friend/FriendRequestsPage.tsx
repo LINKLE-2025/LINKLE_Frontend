@@ -7,8 +7,13 @@ import EmptyState from '../../components/friend/EmptyState';
 import { UserResponseDTO } from '@/types/user';
 import { FriendResponse } from "@/types/friend";
 
-import { RECEIVED_REQUESTS, SENT_REQUESTS } from '../../constants/friendRequests';
+// layout에서 context로 받아오기 위해
 import { useOutletContext } from "react-router-dom";
+// api
+import { acceptFriendRequest, rejectFriendRequest, deleteFriend, getReceivedFriendRequests, getSentFriendRequests } from '@/api/friendApi';
+import { getUserProfile } from '@/api/profileApi';
+
+
 
 //로그인한 유저 아이디
 type OutletContextType = { loggedInUserId: number };
@@ -35,12 +40,9 @@ function FriendRequestsPage() {
 
   const handleAccept = async (friendId: number) => {
     try {
-      const res = await fetch(`/api/friend/${friendId}/reception`, {
-        method: "PUT"
-      });
-      if (res.ok) {
-        setReceivedRequests(prev => prev.filter(req => req.friendId !== friendId));
-      }
+      await acceptFriendRequest(friendId); // 성공하면 여기까지 옴
+      setReceivedRequests(prev => prev.filter(req => req.friendId !== friendId));
+      // 필요하면 sentRequests에도 추가하거나, 프로필 타입 업데이트 가능
     } catch (err) {
       console.error("친구 수락 실패:", err);
     }
@@ -48,48 +50,52 @@ function FriendRequestsPage() {
 
   const handleReject = async (friend: FriendResponse) => {
     try {
-      const res = await fetch(`/api/friend/refusal`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          friendId: friend.friendId,
-          userId1: friend.userId1,
-          userId2: friend.userId2,
-          state: friend.state
-        })
-      });
-      if (res.ok) {
-        setReceivedRequests(prev => prev.filter(req => req.friendId !== friend.friendId));
-      }
+      await rejectFriendRequest(friend);
+      setReceivedRequests(prev =>
+        prev.filter(req => req.friendId !== friend.friendId)
+      );
     } catch (err) {
       console.error("친구 거절 실패:", err);
     }
   };
 
-  
+  const handleCancel = async (friendId: number) => {
+    try {
+      await deleteFriend(friendId);
+      setSentRequests(prev => prev.filter(req => req.friendId !== friendId));
+    } catch (err) {
+      console.error("친구 요청 취소 실패:", err);
+    }
+  };
+
+
   const { loggedInUserId } = useOutletContext<OutletContextType>();
   // 
   const { userId: profileUserIdParam } = useParams<{ userId: string }>();
   const profileUserId = profileUserIdParam ? Number(profileUserIdParam) : loggedInUserId;
 
+  // ProfilePage.tsx (일부)
   useEffect(() => {
     if (!profileUserId) return;
 
-    fetch(`/api/user/${profileUserId}`)
-      .then((res) => res.json())
-      .then((data: UserResponseDTO) => setUser(data))
-      .catch((err) => console.error(err));
-
-    fetch(`/api/friend/received?user_id2=${profileUserId}`)
-      .then((res) => res.json())
-      .then((data: FriendResponse[]) => setReceivedRequests(data))
-      .catch((err) => console.error(err));
-
-    fetch(`/api/friend/sent?user_id1=${profileUserId}`)
-      .then((res) => res.json())
-      .then((data: FriendResponse[]) => setSentRequests(data))
-      .catch((err) => console.error(err));
+    (async () => {
+      try {
+        const [userData, received, sent] = await Promise.all([
+          getUserProfile(profileUserId),
+          getReceivedFriendRequests(profileUserId),
+          getSentFriendRequests(profileUserId),
+        ]);
+        // console.log("sent" + sent);
+        // console.log("received" + received);
+        setUser(userData);
+        setReceivedRequests(received);   // 추가
+        setSentRequests(sent);
+      } catch (err) {
+        console.error("프로필 관련 데이터 불러오기 실패:", err);
+      }
+    })();
   }, [profileUserId]);
+
 
   return (
     <div className="max-w-md mx-auto bg-gray-50 min-h-screen flex flex-col">
@@ -132,7 +138,7 @@ function FriendRequestsPage() {
                     type="received"
                     onAccept={handleAccept}
                     onReject={() => handleReject(request)}
-                    onCancel={() => handleReject(request)}
+                    onCancel={handleCancel}
                   />
                 ))}
               </div>
@@ -159,7 +165,7 @@ function FriendRequestsPage() {
                     type="sent"
                     onAccept={handleAccept}
                     onReject={() => handleReject(request)}
-                    onCancel={() => handleReject(request)}
+                    onCancel={handleCancel}
                   />
                 ))}
               </div>

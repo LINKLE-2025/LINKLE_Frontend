@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { openDm } from "@/services/chat";
 import { useOutletContext } from "react-router-dom";
 import { ProfileType, FriendResponse } from "@/types/friend";
-
+import { sendFriendRequest } from "@/api/friendApi";
 //로그인한 유저 아이디
 type OutletContextType = { loggedInUserId: number };
 
@@ -84,20 +84,18 @@ export default function FriendSearchPanel({
 
     const handleAddFriend = async (targetUserId: number) => {
         try {
-            const response = await fetch("/api/friend", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId1: loggedInUserId, userId2: targetUserId }),
-            });
-            if (!response.ok) throw new Error("친구 요청 실패");
+            const data = await sendFriendRequest(loggedInUserId, targetUserId);
 
             setSearchResults(prev =>
-                prev.map(user => (user.id === targetUserId ? { ...user, profileType: "wait" } : user))
+                prev.map(user =>
+                    user.id === targetUserId
+                        ? { ...user, profileType: data.state === "ACCEPTED" ? "friend" : "wait" }
+                        : user
+                )
             );
-            // const data = await response.json(); // 필요 시 로그
         } catch (err) {
-            console.error(err);
-            alert("친구 요청 중 오류가 발생했습니다.");
+            console.error("친구 요청 중 오류:", err);
+            alert("친구 요청 실패");
         }
     };
 
@@ -196,12 +194,13 @@ export default function FriendSearchPanel({
                             className="flex justify-between items-center py-2 border-b border-gray-200 px-2 gap-x-4"
                         >
                             <div className="flex items-center gap-3 flex-1">
-                                <img
-                                    src={`/api/user/view/profile/${user.id}`}
-                                    alt={`${user.name} 프로필`}
-                                    className="w-12 h-12 object-cover rounded-full cursor-pointer"
-                                    onClick={() => navigate(`/profile/${user.id}`)}
-                                />
+                                <Link to={`/profile`} state={{ userId: user.id }}>
+                                    <img
+                                        src={`/api/user/view/profile/${user.id}`}
+                                        alt={`${user.name} 프로필`}
+                                        className="w-12 h-12 object-cover rounded-full cursor-pointer"
+                                    />
+                                </Link>
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <span className="font-medium text-gray-900">{user.name}</span>

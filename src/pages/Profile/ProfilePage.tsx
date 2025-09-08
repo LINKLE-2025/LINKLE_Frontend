@@ -13,6 +13,10 @@ import { useLocation } from "react-router-dom";
 import { UserResponseDTO, UserParticipateLinkerDTO, ProfilePostDTO, ProfileLinkerCountDTO } from '@/types/user';
 import { useOutletContext } from "react-router-dom";
 
+// API 함수
+import { getUserProfile, getUserPosts, getLinkerStats, getLinkerParticipations } from "@/api/profileApi";
+import { getFriends } from "@/api/friendApi";
+
 //로그인한 유저 아이디
 type OutletContextType = { loggedInUserId: number };
 
@@ -25,7 +29,7 @@ const ProfilePage: React.FC = () => {
   const [participations, setParticipations] = useState<UserParticipateLinkerDTO[]>([]);
   // 친구 목록 저장
   const [friendList, setFriendList] = useState<FriendResponse[]>([]);
-  
+
   // 현재 보고 있는 프로필 userId
   const { userId: profileUserIdParam } = useParams<{ userId: string }>();
   // 포스트 목록 저장
@@ -34,10 +38,12 @@ const ProfilePage: React.FC = () => {
   const [linkerStats, setLinkerStats] = useState<ProfileLinkerCountDTO[]>([]);
   // 현재 URL의 상태를 확인하여 탭을 설정 (기본값은 posts)
   const location = useLocation();
-  const { type, friendId } = (location.state as { type?: string; friendId?: number }) || {};
+  const { type } = (location.state as { type?: string; friendId?: number }) || {};
 
   // state에서 userId 받기
   const state = location.state as { userId?: number } | undefined;
+  const friendId = location.state as { friendId?: number } | undefined;
+
   const { loggedInUserId } = useOutletContext<OutletContextType>();
 
   // URL에 userId가 없으면 본인 프로필로 설정
@@ -55,82 +61,53 @@ const ProfilePage: React.FC = () => {
     // userId가 없으면 요청하지 않음
     if (!profileUserId) return;
     // 유저 정보 불러오기
-    fetch(`/api/user/${profileUserId}`)
-      .then((res) => res.json())
-      .then((data: UserResponseDTO) => {
-        // console.log("user:", data);
+    (async () => {
+      try {
+        const data = await getUserProfile(profileUserId);
+        console.log("유저 정보:", data);
         setUser(data);
-      })
-      .catch((err) => console.error(err));
+      } catch (err) {
+        console.error("유저 정보 불러오기 실패:", err);
+      } finally {
+      }
+    })();
 
     // 포스트 목록 불러오기
-    fetch(`/api/post/user/${profileUserId}`)
-      .then((res) => res.json())
-      .then((data: ProfilePostDTO[]) => {
-        // console.log("posts:", data);
+    (async () => {
+      try {
+        const data = await getUserPosts(profileUserId);
         setPosts(data);
-      })
-      .catch((err) => console.error(err));
+      } catch (err) {
+        console.error("포스트 목록 불러오기 실패:", err);
+      }
+    })();
 
     // 링커 참여 내역 통계 불러오기
-    fetch("/api/user/linker/history", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: profileUserId }),
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const errorText = await res.text(); // 또는 res.json()
-          // console.error("링커 API 오류:", errorText);
-          throw new Error("링커 참여 내역 불러오기 실패");
-        }
-        return res.json();
-      })
-      .then((data: ProfileLinkerCountDTO[]) => {
-        if (!Array.isArray(data)) {
-          throw new Error("링커 참여 내역 응답 형식 오류");
-        }
+    (async () => {
+      try {
+        const data = await getLinkerStats(profileUserId);
         setLinkerStats(data);
-      })
-      .catch((err) => {
-        // console.error("참여 내역 요청 실패:", err);
-        setParticipations([]); // 안전하게 빈 배열로 fallback
-      });
+      } catch (err) {
+        console.error("링커 참여 통계 불러오기 실패:", err);
+      }
+    })();
 
     // 링커 참여 내역 불러오기
-    fetch("/api/user/linker/list", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: profileUserId }),
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const errorText = await res.text(); // 또는 res.json()
-          // console.error("링커 API 오류:", errorText);
-          throw new Error("링커 참여 내역 불러오기 실패");
-        }
-        return res.json();
-      })
-      .then((data: UserParticipateLinkerDTO[]) => {
-        if (!Array.isArray(data)) {
-          throw new Error("링커 참여 내역 응답 형식 오류");
-        }
-        setParticipations(data);
-      })
-      .catch((err) => {
-        // console.error("참여 내역 요청 실패:", err);
-        setParticipations([]); // 안전하게 빈 배열로 fallback
-      });
+    (async () => {
+      const data = await getLinkerParticipations(profileUserId);
+      setParticipations(data);
+    })();
+
     // 친구 목록 불러오기
-    // 현재 보고 있는 프로필 기준 아이디값
-    const targetUserId = profileUserId;
-    fetch(`/api/friend/${targetUserId}`)
-      .then((res) => res.json())
-      .then((data: FriendResponse[]) => {
-        // console.log("friendList:", data);
-        setFriendList(data);
-      })
-      .catch((err) => console.error(err));
+    (async () => {
+      try {
+        const res = await getFriends(profileUserId);
+        setFriendList(res);
+      } catch (err) {
+        console.error("친구 목록 불러오기 실패:", err);
+      }
+    })();
+
   }, [profileUserId, loggedInUserId]);
 
 
@@ -145,7 +122,7 @@ const ProfilePage: React.FC = () => {
         return <ParticipationTab participations={participations} />;
       // 링커 참여 통계 내역 리스트 전달
       case 'state':
-        return <StateTab linkerStats={linkerStats}/>;
+        return <StateTab linkerStats={linkerStats} />;
       // 기본은 post 탭으로 설정
       default:
         return <PostsTab posts={posts} />;
@@ -167,38 +144,40 @@ const ProfilePage: React.FC = () => {
     name: f.name,
     nickname: f.nickname,
   }));
-  
+
   const computedVerified = profileType === 'self'
     ? true
     : (user?.verified ?? false);
   return (
-    
-    <div>
-    <div>
-      {/* 프로필 헤더 / 바 */}
-      {user ? (
-        <>
-          <ProfileContent
-            userId={profileUserId}
-            profileType={profileType}
-            name={user.name}
-            nickname={user.nickname}
-            description={user.description}
-            createDate={user.createdDate}
-            isVerified={computedVerified}
-            friendList={friendListProcessed}
-          />
 
-          <ProfileBarContent
-            userId={profileUserId}
-            profileType={profileType}
-            isVerified={computedVerified}
-          />
-        </>
-      ) : (
-        <p>로딩중...</p>
-      )}
-    </div>
+    <div>
+      <div>
+        {/* 프로필 헤더 / 바 */}
+        {user ? (
+          <>
+            <ProfileContent
+              userId={profileUserId}
+              profileType={profileType}
+              name={user.name}
+              nickname={user.nickname}
+              description={user.description}
+              createDate={user.createdDate}
+              isVerified={computedVerified}
+              friendList={friendListProcessed}
+              friendId={friendId?.friendId}
+            />
+
+            {/* <ProfileBarContent
+              userId={profileUserId}
+              profileType={profileType}
+              isVerified={computedVerified}
+              friendId={friendId?.friendId}
+            /> */}
+          </>
+        ) : (
+          <p>로딩중...</p>
+        )}
+      </div>
       {/* 
       탭 버튼
       누를때마다 해당 컴포넌트로 이동을 위한 내용 전달
@@ -207,25 +186,22 @@ const ProfilePage: React.FC = () => {
       <div className="bg-white border-b py-1">
         <div className="flex">
           <button
-            className={`flex-1 py-3 flex items-center justify-center border-b-2 ${
-              activeTab === 'posts' ? 'border-blue-500' : 'border-transparent'
-            }`}
+            className={`flex-1 py-3 flex items-center justify-center border-b-2 ${activeTab === 'posts' ? 'border-blue-500' : 'border-transparent'
+              }`}
             onClick={() => setActiveTab('posts')}
           >
             <Grid className={`w-5 h-5 ${activeTab === 'posts' ? 'text-gray-900' : 'text-gray-400'}`} />
           </button>
           <button
-            className={`flex-1 py-3 flex items-center justify-center border-b-2 ${
-              activeTab === 'participation' ? 'border-blue-500' : 'border-transparent'
-            }`}
+            className={`flex-1 py-3 flex items-center justify-center border-b-2 ${activeTab === 'participation' ? 'border-blue-500' : 'border-transparent'
+              }`}
             onClick={() => setActiveTab('participation')}
           >
             <MapPin className={`w-5 h-5 ${activeTab === 'participation' ? 'text-gray-900' : 'text-gray-400'}`} />
           </button>
           <button
-            className={`flex-1 py-3 flex items-center justify-center border-b-2 ${
-              activeTab === 'state' ? 'border-blue-500' : 'border-transparent'
-            }`}
+            className={`flex-1 py-3 flex items-center justify-center border-b-2 ${activeTab === 'state' ? 'border-blue-500' : 'border-transparent'
+              }`}
             onClick={() => setActiveTab('state')}
           >
             <Menu className={`w-5 h-5 ${activeTab === 'state' ? 'text-gray-900' : 'text-gray-400'}`} />

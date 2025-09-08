@@ -15,7 +15,7 @@ export function determineProfileType(
       (f.userId1 === loggedInUserId && f.userId2 === profileUserId) ||
       (f.userId2 === loggedInUserId && f.userId1 === profileUserId)
   );
-  console.log("friendList:", friendList);
+  
   if (!relation) return "stranger";
 
   if (relation.state === "ACCEPTED") {
