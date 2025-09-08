@@ -9,7 +9,6 @@ import LinkerCreateModal from "../components/linker/LinkerCreateModal";
 import type { SearchResult } from "../components/search/SearchPanel";
 import LinkerDetailModal from "../components/linker/LinkerDetailModal";
 import { Sheet } from "react-modal-sheet";
-// 🔥 새로 추가: CategoryFilter 컴포넌트와 커스텀 훅
 import CategoryFilter from "../components/category/CategoryFilter";
 import { useCategoryFilter } from "../hooks/useCategoryFilter";
 import {
@@ -79,6 +78,8 @@ export default function MapPage(): React.ReactElement {
   const searchMarkers = useRef<InstanceType<typeof window.kakao.maps.Marker>[]>([]);
   const draftMarkerRef = useRef<InstanceType<typeof window.kakao.maps.Marker> | null>(null);
   const linkerMarkersRef = useRef<InstanceType<typeof window.kakao.maps.Marker>[]>([]);
+  // 🔥 클러스터러 인스턴스를 저장할 ref 추가 (중복 이벤트 방지를 위해)
+  const clustererRef = useRef<any>(null);
 
   // 모달 관련
   const [linkerOpen, setLinkerOpen] = useState(false);
@@ -99,7 +100,6 @@ export default function MapPage(): React.ReactElement {
   // 클러스터 리스트 상태
   const [clusterMarkers, setClusterMarkers] = useState<any[]>([]);
   const [showClusterList, setShowClusterList] = useState(false);
-  const clusterEventRegistered = useRef(false); // 중복 등록 방지
 
   // ===== 3. 🔥 마커용 아이콘 상수 (지도에 표시되는 마커용) =====
   const CATEGORY_ICONS: Record<number, string> = {
@@ -144,9 +144,10 @@ export default function MapPage(): React.ReactElement {
     })();
   }
 
-  // loadExistingLinkers 함수 - selectedCategories 상태를 사용
+  // 🔥 수정된 loadExistingLinkers 함수 - 클러스터러 업데이트만 담당하도록 변경
   const loadExistingLinkers = async (
     map: kakao.maps.Map,
+    clusterer: any, // 클러스터러 인스턴스를 매개변수로 받음
     onOpenDetailById: (linkerId: number) => void,
   ) => {
     try {
@@ -160,6 +161,9 @@ export default function MapPage(): React.ReactElement {
       // 기존 마커 제거
       linkerMarkersRef.current.forEach((m) => m.setMap(null));
       linkerMarkersRef.current = [];
+
+      // 🔥 클러스터러에서 기존 마커들 제거
+      clusterer.clear();
 
       // 🔥 커스텀 훅의 hasSelection 사용
       if (!hasSelection) {
@@ -217,6 +221,8 @@ export default function MapPage(): React.ReactElement {
             zIndex: 3,
             clickable: true,
           });
+
+          // 🔥 마커에 데이터 저장 (클러스터 클릭 시 사용)
           marker.data = {
             linkerId: m.linkerId,
             name: m.name,
@@ -226,6 +232,7 @@ export default function MapPage(): React.ReactElement {
             lng,
           };
 
+          // 🔥 개별 마커 클릭 이벤트 등록
           if (typeof linkerId === "number") {
             kakao.maps.event.addListener(marker, "click", () => {
               console.log(`🎯 마커 클릭됨: ${m.name} (링커 ID: ${linkerId})`);
@@ -240,6 +247,9 @@ export default function MapPage(): React.ReactElement {
           console.error(`❌ 마커 생성 실패 (${m.name}):`, markerError);
         }
       });
+
+      // 🔥 클러스터러에 새로운 마커들 추가
+      clusterer.addMarkers(linkerMarkersRef.current);
 
       console.log(`🎯 최종 결과: ${createdMarkerCount}개 마커가 지도에 표시되었습니다.`);
     } catch (e) {
@@ -271,8 +281,10 @@ export default function MapPage(): React.ReactElement {
   useEffect(() => {
     console.log("🔄 카테고리 필터가 변경됨, 마커 다시 로드");
     console.log(`선택된 카테고리 수: ${selectedCount}, 전체 선택 여부: ${isAllSelected}`);
-    if (kakaoMapRef.current) {
-      loadExistingLinkers(kakaoMapRef.current, onOpenDetailById);
+
+    // 🔥 지도와 클러스터러가 모두 준비된 경우에만 실행
+    if (kakaoMapRef.current && clustererRef.current) {
+      loadExistingLinkers(kakaoMapRef.current, clustererRef.current, onOpenDetailById);
     }
   }, [selectedCategories, selectedCount, hasSelection, isAllSelected]); // 🔥 커스텀 훅의 값들을 의존성으로 사용
 
@@ -280,8 +292,9 @@ export default function MapPage(): React.ReactElement {
   const handleSaveLinker = async (payload: LinkerPayload) => {
     try {
       await saveLinker(payload);
-      if (kakaoMapRef.current) {
-        await loadExistingLinkers(kakaoMapRef.current, onOpenDetailById);
+      // 🔥 지도와 클러스터러가 모두 준비된 경우에만 실행
+      if (kakaoMapRef.current && clustererRef.current) {
+        await loadExistingLinkers(kakaoMapRef.current, clustererRef.current, onOpenDetailById);
       }
     } catch (e) {
       console.error(e);
@@ -296,7 +309,7 @@ export default function MapPage(): React.ReactElement {
     }
   };
 
-  // Kakao Map 로드 (변경없음)
+  // 🔥 수정된 Kakao Map 로드 useEffect - 클러스터러 이벤트 중복 등록 방지
   useEffect(() => {
     const script = document.createElement("script");
     script.id = "kakao-map-script";
@@ -320,6 +333,36 @@ export default function MapPage(): React.ReactElement {
           const map = new window.kakao.maps.Map(container, options);
           kakaoMapRef.current = map;
 
+          // 🔥 클러스터러 생성 및 ref에 저장 (한 번만 생성)
+          const clusterer = new (window.kakao.maps as any).MarkerClusterer({
+            map,
+            averageCenter: true,
+            minLevel: 1, // 클러스터가 적용될 최소 지도 레벨
+            disableClickZoom: true, // 클러스터 클릭 시 확대 비활성화 (직접 제어하기 위해)
+          });
+          clustererRef.current = clusterer;
+
+          // 🔥 클러스터 클릭 이벤트 등록 (한 번만 등록)
+          window.kakao.maps.event.addListener(clusterer, "clusterclick", (cluster: any) => {
+            console.log("🔥 클러스터 클릭 이벤트 발생!"); // 디버그 로그 추가
+
+            const level = (map as any).getLevel();
+            const clusterData = cluster.getMarkers().map((m: any) => ({
+              marker: m,
+              ...m.data, // 마커에 넣어둔 원본 데이터
+            }));
+
+            // 줌 레벨이 3보다 클 때는 확대, 그 외에는 리스트 표시
+            if (level > 3) {
+              console.log("📍 클러스터 확대 실행");
+              (map as any).setLevel(level - 1, { anchor: cluster.getCenter() });
+            } else {
+              console.log("📋 클러스터 리스트 표시", clusterData.length, "개 마커");
+              setClusterMarkers(clusterData);
+              setShowClusterList(true);
+            }
+          });
+
           // idle 이벤트는 지도가 완전히 로드되고 유휴 상태가 되었을 때 발생
           let isInitialLoad = true;
 
@@ -327,7 +370,7 @@ export default function MapPage(): React.ReactElement {
             if (isInitialLoad && hasSelection) {
               isInitialLoad = false;
               console.log("🗺️ 지도 로드 완료, 링커 로드 시작");
-              loadExistingLinkers(map, onOpenDetailById);
+              loadExistingLinkers(map, clusterer, onOpenDetailById);
             }
           });
 
@@ -335,6 +378,7 @@ export default function MapPage(): React.ReactElement {
           // 포스트에서 링커 바로가기 기능에서 사용
           setMapReady(true);
 
+          // 🔥 지도 클릭 이벤트 핸들러
           const handleMapClick = (mouseEvent: kakao.maps.event.MouseEvent) => {
             console.log("지도 클릭 시 이벤트");
             const latlng = mouseEvent.latLng;
@@ -366,6 +410,7 @@ export default function MapPage(): React.ReactElement {
 
           window.kakao.maps.event.addListener(map, "click", handleMapClick as any);
 
+          // 🔥 사용자 위치 표시
           if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((pos) => {
               const myLat = pos.coords.latitude;
@@ -393,35 +438,6 @@ export default function MapPage(): React.ReactElement {
               });
             });
           }
-          const clusterer = new (window.kakao.maps as any).MarkerClusterer({
-            map,
-            averageCenter: true,
-            minLevel: 2,
-          });
-
-          // 기존 마커를 clusterer에 넣을 수 있도록 loadExistingLinkers 수정
-          loadExistingLinkers(map, onOpenDetailById).then(() => {
-            clusterer.addMarkers(linkerMarkersRef.current);
-          });
-
-          // 클러스터 클릭 이벤트
-          if (!clusterer.__clusterclickRegistered) {
-            window.kakao.maps.event.addListener(clusterer, "clusterclick", (cluster: any) => {
-              const level = (map as any).getLevel();
-              const clusterData = cluster.getMarkers().map((m: any) => ({
-                marker: m,
-                ...m.data, // 마커에 넣어둔 원본 데이터
-              }));
-
-              if (level > 3) {
-                (map as any).setLevel(level - 1, { anchor: cluster.getCenter() });
-              } else {
-                setClusterMarkers(clusterData);
-                setShowClusterList(true);
-              }
-            });
-            clusterer.__clusterclickRegistered = true; // 플래그 설정
-          }
         };
 
         if (navigator.geolocation) {
@@ -438,9 +454,8 @@ export default function MapPage(): React.ReactElement {
         }
       });
     };
-  }, []);
+  }, []); // 🔥 의존성 배열을 비워서 한 번만 실행되도록 함
 
-  // 나머지 함수들 (기존과 동일 - 생략)
   const markers = useMemo(
     () =>
       Object.entries(spots).map(([spotId, s]) => ({

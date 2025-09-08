@@ -37,6 +37,9 @@ export interface LinkerDetail {
   phone?: string | null;
 }
 
+// ✅ API BASE 경로 (환경변수에서 가져오기)
+const API_BASE = import.meta.env.VITE_API_BASE;
+
 // 링커 저장
 export async function saveLinker(payload: LinkerPayload) {
   const safePayload = {
@@ -46,29 +49,39 @@ export async function saveLinker(payload: LinkerPayload) {
     addressName: payload.addressName ?? "",
   };
 
-  const res = await fetch("/api/linker", {
+  const res = await fetch(`${API_BASE}/linker`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(safePayload),
     credentials: "include",
   });
 
-  if (!res.ok) throw new Error("POST /api/linker 실패");
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`POST /linker 실패: ${res.status} ${res.statusText}, body=${text}`);
+  }
   return res;
 }
 
 // 링커 목록 조회
 export async function fetchLinkers(): Promise<LinkerListItem[]> {
-  const res = await fetch("/api/linker", {
+  const res = await fetch(`${API_BASE}/linker`, {
     credentials: "include",
   });
-  if (!res.ok) throw new Error("GET /api/linker 실패");
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`GET /linker 실패: ${res.status} ${res.statusText}, body=${text}`);
+  }
+
   return res.json();
 }
 
 // 링커 상세 조회
 export async function fetchLinkerDetail(linkerId: number): Promise<LinkerDetail> {
-  const res = await fetch(`/api/linker/${linkerId}`, { credentials: "include" });
+  const res = await fetch(`${API_BASE}/linker/${linkerId}`, {
+    credentials: "include",
+  });
 
   if (!res.ok) {
     let serverMsg = "";
