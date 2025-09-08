@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import AuthInput from "@/components/auth/AuthInput";
 import AuthFilledButton from "@/components/auth/AuthFilledButton";
 import AuthOutlinedButton from "../AuthOutlinedButton";
-import axios from "axios";
+import { sendEmailCode, verifyEmailCode } from "@/api/authApi";
 
 type Props = {
   value: string;
@@ -47,17 +47,15 @@ export default function VerifyCodeStep({ value, email, onChange, onNext }: Props
   const handleSendCode = () => {
     setSuccess("인증 코드를 다시 전송했습니다.");
     console.log("인증 코드 재전송 요청");
-    sendVerificationCode(email);
+    sendEmailCodeOnServer(email);
   };
 
   // 서버에 인증코드 검증 요청
   const verifyCodeOnServer = async (email: string, code: string) => {
     try {
-      const response = await axios.post(
-        `/api/auth/email/${encodeURIComponent(email)}/code/${code}`,
-      );
-      console.log("인증 코드 검증 결과: " + response.data);
-      if (response.data) {
+      const valid = await verifyEmailCode(email, code);
+      console.log("인증 코드 검증 결과: " + valid);
+      if (valid) {
         return true;
       }
       setError("인증번호가 올바르지 않습니다.");
@@ -70,9 +68,9 @@ export default function VerifyCodeStep({ value, email, onChange, onNext }: Props
   };
 
   // 서버에 인증 코드 발송 요청
-  const sendVerificationCode = async (email: string) => {
+  const sendEmailCodeOnServer = async (email: string) => {
     try {
-      await axios.post(`/api/auth/email/${encodeURIComponent(email)}`);
+      await sendEmailCode(email);
       console.log("인증 코드가 이메일로 발송되었습니다.");
       return true;
     } catch (error) {
