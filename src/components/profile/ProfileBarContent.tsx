@@ -17,6 +17,7 @@ function ProfileContent({
   profileType,
   isVerified = false,
 }: ProfileContentProps) {
+  console.log(profileType)
   // ActionMenu 훅 사용
   // openMenu: 액션 시트 열기 함수
   // ActionMenu: 렌더링할 액션 시트 컴포넌트
@@ -87,6 +88,7 @@ function ProfileContent({
   };
 
   const renderButton = () => {
+    console.log("profile" + profileType);
     switch (profileType) {
       case 'self':
         return (
@@ -113,19 +115,8 @@ function ProfileContent({
     <div className="relative">
       {/* 버튼을 상단 오른쪽으로 */}
       <div className="absolute top-2 right-2">
-        <button
-          onClick={onEditProfile}
-          className="p-2 text-black"
-        >
-          ⋯
-        </button>
+        {renderButton()}
       </div>
-
-      {/* 나머지 프로필 내용 */}
-      <div className="flex flex-col items-center">
-        {/* 프로필 이미지, 이름, 닉네임 등 */}
-      </div>
-
       {ActionMenu}
     </div>
   );

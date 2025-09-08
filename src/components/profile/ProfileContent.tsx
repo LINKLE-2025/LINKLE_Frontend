@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ProfileBarContent from '../../components/profile/ProfileBarContent';
+import { fr } from 'date-fns/locale';
 
 // 프로필 페이지의 주요 정보를 표시하는 컴포넌트
 interface FriendSummary {
@@ -18,6 +19,7 @@ interface ProfileContentProps {
   nickname: string;
   description: string;
   createDate: string;
+  state?: string;
   isVerified?: boolean;
   friendList: FriendSummary[];
 }
@@ -30,11 +32,12 @@ function ProfileContent({
   nickname,
   description,
   createDate,
+  state,
   isVerified = false,
   friendList,
 }: ProfileContentProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-
+  console.log(friendList)
   // 프로필 타입을 받아와 버튼을 각각 다르게 렌더링해줌
   const renderButton = () => {
     switch (profileType) {
@@ -44,6 +47,7 @@ function ProfileContent({
           <Link
             to="/friend"
             className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg border flex items-center"
+            state={{ friendList }}
           >
             <Users className="w-4 h-4 mr-1" />
             친구 목록

@@ -1,6 +1,14 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { openDm } from "@/services/chat";
+import { fr } from "date-fns/locale";
+
+interface FriendSummary {
+  id: number;
+  name: string;
+  nickname: string;
+}
+
 
 interface FriendItemProps {
   id: number; // 대상 유저 ID

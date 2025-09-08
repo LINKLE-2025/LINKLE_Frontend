@@ -128,60 +128,64 @@ function ProfilePage() {
   const computedVerified = profileType === 'self' ? true : (user?.verified ?? false);
 
   return (
-    <div>
+    <div className="min-h-[100dvh] pb-[calc(5rem+env(safe-area-inset-bottom))] bg-gray-50">
       <div>
-        {/* 프로필 헤더 / 바 */}
-        {user ? (
-          <>
-            <ProfileContent
+        <div>
+          {/* 프로필 헤더 / 바 */}
+          {user ? (
+            <>
+              <ProfileContent
+                userId={profileUserId}
+                profileType={profileType}
+                name={user.name}
+                nickname={user.nickname}
+                description={user.description}
+                createDate={user.createdDate}
+                isVerified={computedVerified}
+                friendList={friendListProcessed}
+              />
+
+              {/* <ProfileBarContent
               userId={profileUserId}
               profileType={profileType}
-              name={user.name}
-              nickname={user.nickname}
-              description={user.description}
-              createDate={user.createdDate}
               isVerified={computedVerified}
-              friendList={friendListProcessed}
-            />
-
-            <ProfileBarContent
-              userId={profileUserId}
-              profileType={profileType}
-              isVerified={computedVerified}
-            />
-          </>
-        ) : (
-          <p>로딩중...</p>
-        )}
-      </div>
-
-      {/* 탭 버튼 */}
-      <div className="bg-white border-b py-1">
-        <div className="flex">
-          <button
-            className={`flex-1 py-3 flex items-center justify-center border-b-2 ${activeTab === 'posts' ? 'border-blue-500' : 'border-transparent'}`}
-            onClick={() => setActiveTab('posts')}
-          >
-            <Grid className={`w-5 h-5 ${activeTab === 'posts' ? 'text-gray-900' : 'text-gray-400'}`} />
-          </button>
-          <button
-            className={`flex-1 py-3 flex items-center justify-center border-b-2 ${activeTab === 'participation' ? 'border-blue-500' : 'border-transparent'}`}
-            onClick={() => setActiveTab('participation')}
-          >
-            <MapPin className={`w-5 h-5 ${activeTab === 'participation' ? 'text-gray-900' : 'text-gray-400'}`} />
-          </button>
-          <button
-            className={`flex-1 py-3 flex items-center justify-center border-b-2 ${activeTab === 'state' ? 'border-blue-500' : 'border-transparent'}`}
-            onClick={() => setActiveTab('state')}
-          >
-            <Menu className={`w-5 h-5 ${activeTab === 'state' ? 'text-gray-900' : 'text-gray-400'}`} />
-          </button>
+            /> */}
+            </>
+          ) : (
+            <p>로딩중...</p>
+          )}
         </div>
-      </div>
 
-      {/* 탭 내용 */}
-      <div className="flex1">
-        {renderTabContent()}
+        {/* 탭 버튼 */}
+        <div className="sticky top-0 z-20 bg-white border-b">
+          <div className="bg-white border-b py-1">
+            <div className="flex">
+              <button
+                className={`flex-1 py-3 flex items-center justify-center border-b-2 ${activeTab === 'posts' ? 'border-blue-500' : 'border-transparent'}`}
+                onClick={() => setActiveTab('posts')}
+              >
+                <Grid className={`w-5 h-5 ${activeTab === 'posts' ? 'text-gray-900' : 'text-gray-400'}`} />
+              </button>
+              <button
+                className={`flex-1 py-3 flex items-center justify-center border-b-2 ${activeTab === 'participation' ? 'border-blue-500' : 'border-transparent'}`}
+                onClick={() => setActiveTab('participation')}
+              >
+                <MapPin className={`w-5 h-5 ${activeTab === 'participation' ? 'text-gray-900' : 'text-gray-400'}`} />
+              </button>
+              <button
+                className={`flex-1 py-3 flex items-center justify-center border-b-2 ${activeTab === 'state' ? 'border-blue-500' : 'border-transparent'}`}
+                onClick={() => setActiveTab('state')}
+              >
+                <Menu className={`w-5 h-5 ${activeTab === 'state' ? 'text-gray-900' : 'text-gray-400'}`} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 탭 내용 */}
+        <div className="flex1">
+          {renderTabContent()}
+        </div>
       </div>
     </div>
   );
