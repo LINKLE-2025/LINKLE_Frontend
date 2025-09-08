@@ -22,6 +22,7 @@ import {
 import { useLocation, useOutletContext } from "react-router-dom";
 import ClusterMarkerList from "@/components/linker/ClustermarkerItem";
 import AddressDisplay from "@/components/map/AddressDisplay";
+import BackTitleHeader from "@/components/header/BackTitleHeader";
 
 type LayoutContext = { headerHeight: number; footerHeight: number };
 
@@ -629,6 +630,20 @@ export default function MapPage(): React.ReactElement {
   return (
     <MapWrapper>
       {/* ===== 헤더 ===== */}
+      {searchOpen && (
+        <BackTitleHeader
+          title='검색'
+          onBack={() => {
+            console.log("🔙 검색창 닫기");
+            setSearchOpen(false);
+            setSearchQuery("");
+            setSearchResults([]);
+            searchMarkers.current.forEach((m) => m.setMap(null));
+            searchMarkers.current = [];
+          }}
+        />
+      )}
+
       {/* <div className='h-12 flex justify-between items-center px-4 bg-white shadow-md z-20'>
         {searchOpen ? (
           <button
