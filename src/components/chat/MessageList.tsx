@@ -1,12 +1,18 @@
 import type { MessageResponseDTO, MemberResponseDTO } from "../../types/chat";
-import { resolveImageUrl } from "../../utils/chat";
 import MessageItem from "./MessageItem";
 import { useEffect, useCallback } from "react";
+
+const API_BASE = import.meta.env.VITE_API_SERVER as string;
+
+function userProfileUrl(userId?: number | null) {
+  return typeof userId === "number" && userId > 0
+    ? `${API_BASE}/api/user/view/profile/${userId}`
+    : "";
+}
 
 export default function MessageList({
   msgs,
   peerName,
-  peerAvatar,
   bottomRef,
   membersById = {},
   isDM = false,
@@ -18,7 +24,6 @@ export default function MessageList({
 }: {
   msgs: MessageResponseDTO[];
   peerName?: string | null;
-  peerAvatar?: string | null;
   bottomRef: React.RefObject<HTMLDivElement | null>;
   membersById?: Record<number, MemberResponseDTO>;
   isDM?: boolean;
@@ -62,15 +67,16 @@ export default function MessageList({
         const prev = msgs[i - 1];
         const isMine = m.senderId === devUid;
 
-        // “메시지 블록의 첫 번째” 판단 (내/상대 공통)
+        // 블록 첫 메시지 판단
         const isFirstOfBlock = !prev || prev.senderId !== m.senderId;
 
-        // 아바타/닉 계산
+        // 이름 계산
         const member = m.senderId != null ? membersById[m.senderId] : undefined;
         const name =
           m.senderName ?? member?.name ?? (isMine ? "나" : isDM ? (peerName ?? "상대") : "상대");
-        const avatar =
-          m.senderImage ?? resolveImageUrl(member?.image) ?? (isDM ? (peerAvatar ?? null) : null);
+
+        // 아바타: userId 기반 서버 엔드포인트 사용
+        const avatar = userProfileUrl(m.senderId);
 
         return (
           <MessageItem
