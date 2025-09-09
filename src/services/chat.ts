@@ -1,67 +1,30 @@
-import type { RoomType } from "@/types/chat";
+// src/services/chat.ts
+import * as chatApi from "@/api/chatApi";
 
-export interface RoomResponseDTO {
-  roomId: number;
-  roomType: RoomType;
-  roomName?: string | null;
-  friendName?: string | null;
-  lastMessage?: string | null;
-  lastMessageAt?: string | null;
-  unreadCount?: number | null;
+/** 채팅방 목록: UI에서 쓰던 시그니처 유지 */
+export const fetchRooms = () => chatApi.getRoomList();
 
-  //DM 전용 필드
-  dmPartnerId?: number | null;
-  dmPartnerName?: string | null;
+/** 단일 채팅방 정보 */
+export const fetchRoom = (roomId: number) => chatApi.getRoom(roomId);
 
-  // fallback 용 (ex. 그룹 아바타 URL)
-  avatarUrl?: string | null;
-}
+/** 메시지 목록 조회 */
+export const fetchMessages = (roomId: number, params?: { beforeId?: number; size?: number }) =>
+  chatApi.getRoomMessages(roomId, params);
 
-const API_BASE = import.meta.env.VITE_API_SERVER as string;
-const DEV_UID = String(import.meta.env.VITE_DEV_USER_ID ?? "2");
+/** 메시지 전송 */
+export const sendMessage = (roomId: number, content: string) =>
+  chatApi.sendMessage(roomId, { content });
 
-/** 공통 fetch 래퍼 */
-async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      "x-user-id": DEV_UID,
-      ...(init?.headers || {}),
-    },
-    credentials: "include",
-  });
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-  return res.json() as Promise<T>;
-}
+/** 읽음 처리 */
+export const markRead = (roomId: number, lastMessageId: number) =>
+  chatApi.markRead(roomId, lastMessageId);
 
-/** 채팅방 목록 */
-export async function fetchRooms(): Promise<RoomResponseDTO[]> {
-  const data = await api<any>("/chat/room");
-  const raw: any[] = Array.isArray(data) ? data : (data?.content ?? []);
-  return raw.map((r) => ({
-    roomId: r.roomId ?? r.id,
-    roomType: r.roomType ?? "DM",
-    roomName: r.roomName ?? r.name ?? null,
-    friendName: r.friendName ?? r.dmPartnerName ?? null,
-    lastMessage: r.lastMessage ?? r.lastMessagePreview ?? null,
-    lastMessageAt: r.lastMessageAt ?? r.lastMessageDate ?? null,
-    unreadCount: r.unreadCount ?? r.unread ?? 0,
+/** DM 방 생성 */
+export const createDmRoom = (targetUserId: number) => chatApi.createDmRoom(targetUserId);
 
-    // ✅ DM 전용 값 매핑
-    dmPartnerId: r.dmPartnerId ?? null,
-    dmPartnerName: r.dmPartnerName ?? null,
+/** 그룹 방 생성 */
+export const createGroupRoom = (payload: { name: string; memberIds: number[] }) =>
+  chatApi.createGroupRoom(payload);
 
-    // 그룹/클래스 전용 fallback 아바타
-    avatarUrl: r.avatarUrl ?? r.dmPartnerProfileImageUrl ?? null,
-  }));
-}
-
-/** DM 방 열기(있으면 재사용) */
-export async function openDm(targetUserId: number): Promise<RoomResponseDTO> {
-  return api<RoomResponseDTO>("/chat/room/dm", {
-    method: "POST",
-    body: JSON.stringify({ targetUserId }),
-  });
-}
+/** DM 방 열기 */
+export const openDm = (targetUserId: number) => chatApi.createDmRoom(targetUserId);
