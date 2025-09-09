@@ -26,7 +26,6 @@ function ProfileContent({
   // ActionMenu: 렌더링할 액션 시트 컴포넌트
   // confirm: 확인 모달 함수
   const { open: openMenu, confirm, ActionMenu } = useActionMenu();
-  console.log("profileBar에서 받은 friendId:", friendId);
 
   // 프로필 편집 또는 친구 관리 버튼 클릭 시 실행되는 함수
   // 각 버튼 클릭 시 다른 액션 시트를 보여줌
@@ -81,7 +80,6 @@ function ProfileContent({
           onClick: async () => {
             try {
               await deleteFriend(friendId!);
-              console.log("친구 삭제 완료:", friendId);
             } catch (err) {
               console.error("친구 삭제 실패:", err);
             }

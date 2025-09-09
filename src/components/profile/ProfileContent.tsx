@@ -24,6 +24,9 @@ interface ProfileContentProps {
   isVerified?: boolean;
   friendList: FriendSummary[];
   friendId?: number;
+  gender?: string;
+  image?: string | null;
+  background?: string | null;
 }
 
 // ProfileContent 컴포넌트
@@ -38,9 +41,23 @@ function ProfileContent({
   isVerified = false,
   friendList,
   friendId,
+  gender,
+  image,
+  background
 }: ProfileContentProps) {
-
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const isDefaultImage = image === 'public.png' || !image;
+  const isDefaultBackground = background === 'public.png' || !background;
+
+  const profileImageSrc = isDefaultImage
+    ? gender === '남성'
+      ? '/icons/public/Man.png'
+      : '/icons/public/Woman.png'
+    : `/api/user/view/profile/${userId}`;
+
+  const profileBackgroundSrc = isDefaultBackground
+    ? '/icons/public/Background.png'
+    : `/api/user/view/background/${userId}`;
   // 프로필 타입을 받아와 버튼을 각각 다르게 렌더링해줌
   const renderButton = () => {
     switch (profileType) {
@@ -89,17 +106,31 @@ function ProfileContent({
     (today.getTime() - new Date(createDate).getTime()) / (1000 * 60 * 60 * 24)
   );
 
+
+
   return (
     <div className="relative">
       {/* 배경 이미지 */}
-      <div className="h-60 bg-gradient-to-r from-blue-300 to-green-300 relative overflow-hidden">
-        <img
+      <div className="h-60 bg-gradient-to-r relative overflow-hidden">
+        {/* <img
           src={`/api/user/view/background/${userId}`}
           alt="background"
           className="w-full h-60 object-cover cursor-pointer"
           onClick={() => setPreviewImage(`/api/user/view/background/${userId}`)}
+        /> */}
+        <img
+          src={profileBackgroundSrc}
+          alt="background"
+          className={`w-full h-60 object-cover cursor-pointer ${background ? '' : 'opacity-80'
+            }`}
+          onClick={() =>
+            setPreviewImage(
+              background
+                ? `/api/user/view/background/${userId}`
+                : '/icons/public/Background.png' // 기본 배경 이미지 경로
+            )
+          }
         />
-
         {/* 버튼 (배경 위로 올리기) */}
         <div className="absolute top-0 right-2 z-20">
           <ProfileBarContent
@@ -107,6 +138,7 @@ function ProfileContent({
             profileType={profileType}
             isVerified={isVerified}
             friendId={friendId}
+
           />
         </div>
       </div>
@@ -114,12 +146,15 @@ function ProfileContent({
       {/* 프로필 정보 */}
       <div className="bg-white px-4 mt-3 rounded-t-3xl relative z-10">
         <div className="flex items-center space-x-3 mb-4">
+
           <img
-            src={`/api/user/view/profile/${userId}`}
+            src={profileImageSrc}
             alt={`${name} 프로필`}
-            className="w-12 h-12 object-cover rounded-full cursor-pointer"
-            onClick={() => setPreviewImage(`/api/user/view/profile/${userId}`)}
+            className={`w-12 h-12 object-cover rounded-full cursor-pointer ${isDefaultImage ? 'opacity-40 bg-blue-100' : ''
+              }`}
+            onClick={() => setPreviewImage(profileImageSrc)}
           />
+
           <div className="flex-1">
             <div className="flex items-start space-x-2">
               <div className="flex flex-col">

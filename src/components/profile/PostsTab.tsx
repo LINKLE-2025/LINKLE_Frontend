@@ -21,7 +21,7 @@ function PostsTab({ posts }: PostsTabProps) {
           <p className="text-gray-400 text-xs">링커에 참여하고 나만의 추억을 기록해보세요</p>
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-1">
           {posts.map((post) => (
             <div key={post.postId} className="aspect-square overflow-hidden">
               <img

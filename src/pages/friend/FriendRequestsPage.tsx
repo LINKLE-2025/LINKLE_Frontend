@@ -85,8 +85,6 @@ function FriendRequestsPage() {
           getReceivedFriendRequests(profileUserId),
           getSentFriendRequests(profileUserId),
         ]);
-        // console.log("sent" + sent);
-        // console.log("received" + received);
         setUser(userData);
         setReceivedRequests(received);   // 추가
         setSentRequests(sent);
@@ -134,6 +132,8 @@ function FriendRequestsPage() {
                     friendId={request.friendId}
                     name={request.name}
                     nickname={request.nickname}
+                    gender={request.gender ?? "남성"}
+                    image={request.imageUrl}
                     avatar="bg-blue-500"
                     type="received"
                     onAccept={handleAccept}
@@ -161,6 +161,7 @@ function FriendRequestsPage() {
                     friendId={request.friendId}
                     name={request.name}
                     nickname={request.nickname}
+                    gender={request.gender ?? "남성"}
                     avatar="bg-blue-500"
                     type="sent"
                     onAccept={handleAccept}
