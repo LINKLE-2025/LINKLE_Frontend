@@ -26,27 +26,32 @@ export default function NicknameStep({ value, onChange, onNext }: Props) {
       return;
     }
 
+    // 중복 검사 요청
+    const isNicknameExists = await checkNicknameOnServer(value);
+    if (isNicknameExists) {
+      setError("이미 사용 중인 닉네임입니다.");
+      return;
+    }
+
+
     // 형식 검사 통과
     setError("");
     console.log("닉네임:", value);
 
-    // 중복 검사 요청
-    const isNicknameAvailable = await checkNicknameOnServer(value);
-    if (!isNicknameAvailable) return;
-
-    console.log("닉네임 사용 가능, 다음 단계로 이동");
+    console.log("닉네임 확인 완료, 다음 단계로 이동");
     onNext();
   };
 
   // 닉네임 중복 검사 요청
   const checkNicknameOnServer = async (nickname: string) => {
     try {
-      const available = await checkNickname(nickname);
-      if (available) {
-        console.log("닉네임 사용 가능");
+      const { exists } = await checkNickname(nickname);
+      console.log("닉네임 중복 검사 결과: " + exists);
+      if (exists) {
+        console.log("닉네임 사용 중");
         return true;
       }
-      setError("이미 사용 중인 닉네임입니다.");
+      console.log("닉네임 사용 가능");
       return false;
     } catch (error) {
       console.error("닉네임 중복 검사 오류: ", error);
