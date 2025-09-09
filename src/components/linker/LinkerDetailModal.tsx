@@ -130,6 +130,7 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
       onClose={onClose}
       snapPoints={[0.92, 0.78, 0.6]}
       initialSnap={3}
+      style={{ bottom: footerHeight }}
       detent='content-height'
       style={{ bottom: footerHeight }}
     >
