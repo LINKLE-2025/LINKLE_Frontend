@@ -80,6 +80,7 @@ export default function PostCreatePage(): React.ReactElement {
         onClickLinker={goToLinkerOnMap}
         onSubmit={handleSubmit}
         footerOffset={footerHeight}
+        showDeleteButton={false}
       />
     </div>
   );
