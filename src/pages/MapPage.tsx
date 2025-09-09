@@ -24,6 +24,7 @@ import ClusterMarkerList from "@/components/linker/ClustermarkerItem";
 import AddressDisplay from "@/components/map/AddressDisplay";
 import BackTitleHeader from "@/components/header/BackTitleHeader";
 import LinkerListModal from "@/components/linker/ListLinkerDetail";
+import { on } from "events";
 
 type LayoutContext = { headerHeight: number; footerHeight: number };
 
@@ -591,6 +592,7 @@ export default function MapPage(): React.ReactElement {
     setSearchOpen(false);
   };
 
+  // 검색 결과 클릭 시 해당 위치로 이동
   const handleResultClick = (item: SearchResult) => {
     // 검색 결과 클릭 로직 (기존과 동일)
     if (!kakaoMapRef.current) return;
@@ -695,6 +697,7 @@ export default function MapPage(): React.ReactElement {
     });
   };
 
+  // 검색 후 링커 생성 모달열기
   const handleOpenModal = (item: SearchResult) => {
     console.log("검색 클릭 item:", item);
     setLinkerInitial({
@@ -929,7 +932,22 @@ export default function MapPage(): React.ReactElement {
         }))}
         title='검색된 링커'
         onClose={() => setListModalOpen(false)}
-        onItemClick={(linkerId) => onOpenDetailById(linkerId)}
+        onItemClick={({ linkerId, lat, lng }) => {
+          // 리스트 모달 닫고
+          setListModalOpen(false);
+          // 검색 결과 모달도 닫고
+          setSearchOpen(false);
+          // 지도 이동하고
+          setTimeout(() => {
+            handleResultClick({
+              name: "",
+              address: "",
+              lat,
+              lng,
+            });
+            onOpenDetailById(linkerId);
+          }, 250);
+        }}
       />
     </MapWrapper>
   );

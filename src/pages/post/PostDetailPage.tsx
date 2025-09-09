@@ -1,3 +1,5 @@
+//
+
 import React, { useEffect, useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import PostForm, { LinkerLite } from "@/components/post/PostForm";
@@ -10,6 +12,8 @@ type PostDTO = {
   createdDate?: string;
   userId: number;
   linker: LinkerLite;
+  name: string;
+  userNickname: string;
 };
 
 export default function PostDetailPage(): React.ReactElement {
@@ -25,6 +29,7 @@ export default function PostDetailPage(): React.ReactElement {
 
   const currentUserId = 1; // TODO: 로그인 연동 시 교체
   const isMine = post?.userId === currentUserId;
+
 
   useEffect(() => {
     if (!postId) return;
@@ -77,7 +82,14 @@ export default function PostDetailPage(): React.ReactElement {
   return (
     <div className='flex flex-col min-h-screen w-full'>
       {/* 헤더 */}
-      <div className='h-12 flex items-center justify-center relative bg-white border-b'>
+      <div
+        className="
+          sticky top-0 z-20
+          flex items-center justify-center relative
+          bg-white border-b
+          h-12 pt-[env(safe-area-inset-top)]
+        "
+      >
         <button
           className='absolute left-3 text-[22px]'
           onClick={() => (isEditing ? setIsEditing(false) : navigate(-1))}
@@ -119,6 +131,7 @@ export default function PostDetailPage(): React.ReactElement {
         readOnly={!(isMine && isEditing)}
         showDeleteButton={isMine}
         footerOffset={footerHeight}
+        authorName={post.name}
       />
     </div>
   );
