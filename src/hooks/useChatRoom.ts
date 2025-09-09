@@ -2,20 +2,33 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Client, IFrame } from "@stomp/stompjs";
 import type { MemberResponseDTO, MessageResponseDTO, RoomResponseDTO } from "../types/chat";
 import { resolveImageUrl } from "../utils/chat";
+import apiClient from "../api/apiClient";
 
-const API_BASE = import.meta.env.VITE_API_SERVER as string;
 const WS_URL = import.meta.env.VITE_WS_URL as string;
 const DEV_UID = String(import.meta.env.VITE_DEV_USER_ID ?? "2");
 
 const PAGE_SIZE = 30 as const;
 
-async function fetchJSON<T>(url: string): Promise<T> {
-  const r = await fetch(url, {
-    headers: { "x-user-id": DEV_UID, Accept: "application/json" },
-    credentials: "include",
+async function getRoom(roomId: number) {
+  const { data } = await apiClient.get<RoomResponseDTO>(`/chat/room/${roomId}`, {
+    headers: { "x-user-id": DEV_UID },
   });
-  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
-  return r.json();
+  return data;
+}
+
+async function getMessages(roomId: number, size = PAGE_SIZE) {
+  const { data } = await apiClient.get<MessageResponseDTO[]>(`/chat/room/${roomId}/messages`, {
+    params: { size },
+    headers: { "x-user-id": DEV_UID },
+  });
+  return data;
+}
+
+async function getMembers(roomId: number) {
+  const { data } = await apiClient.get<MemberResponseDTO[]>(`/chat/room/${roomId}/members`, {
+    headers: { "x-user-id": DEV_UID },
+  });
+  return data;
 }
 
 export type PeerInfo = { name: string; avatar?: string | null } | null;
@@ -32,7 +45,6 @@ export function useChatRoom(roomId: number) {
   const [status, setStatus] = useState<SocketStatus>("connecting");
   const [membersById, setMembersById] = useState<Record<number, MemberResponseDTO>>({});
 
-  // 페이지네이션 상태
   const [hasMore, setHasMore] = useState(true);
   const [loadingOlder, setLoadingOlder] = useState(false);
 
@@ -52,20 +64,12 @@ export function useChatRoom(roomId: number) {
     if (!roomId) return;
 
     (async () => {
-      const [r, m] = await Promise.all([
-        fetchJSON<RoomResponseDTO>(`${API_BASE}/chat/room/${roomId}`),
-        fetchJSON<MessageResponseDTO[]>(
-          `${API_BASE}/chat/room/${roomId}/messages?size=${PAGE_SIZE}`,
-        ),
-      ]);
-
+      const [r, m] = await Promise.all([getRoom(roomId), getMessages(roomId, PAGE_SIZE)]);
       setRoom(r);
 
       if (r.roomType !== "DM") {
         try {
-          const members = await fetchJSON<MemberResponseDTO[]>(
-            `${API_BASE}/chat/room/${roomId}/members`,
-          );
+          const members = await getMembers(roomId);
           const map: Record<number, MemberResponseDTO> = {};
           members.forEach((u) => (map[u.userId] = u));
           setMembersById(map);
@@ -83,7 +87,6 @@ export function useChatRoom(roomId: number) {
         setPeer({ name: r.roomName ?? "그룹 채팅", avatar: null });
       }
 
-      // 상태는 항상 "오름차순"
       const initial = (m ?? [])
         .map((x) => ({ ...x, content: x.content ?? (x as any).text ?? "" }))
         .sort(byCreatedAsc);
@@ -108,11 +111,9 @@ export function useChatRoom(roomId: number) {
           senderName: raw.senderName ?? raw.sender?.name ?? null,
           senderImage: resolveImageUrl(raw.senderImage ?? raw.sender?.image) ?? null,
         };
-        // 중복 방지 + 오름차순 유지
         setMsgs((prev) => {
           if (prev.some((x) => x.messageId === evt.messageId)) return prev;
-          const next = [...prev, evt].sort(byCreatedAsc);
-          return next;
+          return [...prev, evt].sort(byCreatedAsc);
         });
       });
     };
@@ -152,10 +153,7 @@ export function useChatRoom(roomId: number) {
     if (msgs.length === 0) return;
 
     setLoadingOlder(true);
-
-    const oldest = msgs[0]; // 오름차순이므로 맨 앞이 가장 과거
-    const beforeDate = oldest.createdDate;
-    const beforeId = oldest.messageId;
+    const oldest = msgs[0];
 
     const scroller =
       listContainerRef.current ?? document.scrollingElement ?? document.documentElement;
@@ -163,26 +161,28 @@ export function useChatRoom(roomId: number) {
     const prevScrollTop = scroller.scrollTop;
 
     try {
-      // 서버가 모르는 파라미터는 무시하므로 둘 다 붙입니다.
-      const url =
-        `${API_BASE}/chat/room/${roomId}/messages?size=${PAGE_SIZE}` +
-        `&beforeDate=${encodeURIComponent(beforeDate)}` +
-        `&beforeId=${encodeURIComponent(String(beforeId))}`;
-
-      const older = await fetchJSON<MessageResponseDTO[]>(url);
+      const { data: older } = await apiClient.get<MessageResponseDTO[]>(
+        `/chat/room/${roomId}/messages`,
+        {
+          params: {
+            size: PAGE_SIZE,
+            beforeId: oldest.messageId,
+          },
+          headers: { "x-user-id": DEV_UID },
+        },
+      );
 
       setMsgs((prev) => {
         const ids = new Set(prev.map((x) => x.messageId));
         const toPrepend = older
           .map((x) => ({ ...x, content: x.content ?? (x as any).text ?? "" }))
           .filter((x) => !ids.has(x.messageId))
-          .sort(byCreatedAsc); // 앞에 붙일 것도 오름차순
-        return [...toPrepend, ...prev]; // 과거를 "앞"에 붙임
+          .sort(byCreatedAsc);
+        return [...toPrepend, ...prev];
       });
 
       setHasMore(older.length === PAGE_SIZE);
 
-      // 스크롤 위치 보정 (사용자는 같은 위치 유지)
       requestAnimationFrame(() => {
         const newScrollHeight = scroller.scrollHeight;
         scroller.scrollTop = newScrollHeight - prevScrollHeight + prevScrollTop;

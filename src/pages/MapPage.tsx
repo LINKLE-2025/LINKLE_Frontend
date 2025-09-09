@@ -302,11 +302,12 @@ export default function MapPage(): React.ReactElement {
     // 🔹 한 번 열고 나면 state 제거(뒤로가기해도 다시 안 열리게)
     try {
       window.history.replaceState({}, document.title);
-    } catch {}
+    } catch { }
   }, [mapReady, location.state]);
 
   // ===== 5. 🔥 카테고리 필터 변경시 마커 다시 로드 (selectedCategories 의존성) =====
   useEffect(() => {
+    if (!mapReady) return;
     console.log("🔄 카테고리 필터가 변경됨, 마커 다시 로드");
     console.log(`선택된 카테고리 수: ${selectedCount}, 전체 선택 여부: ${isAllSelected}`);
 
@@ -342,9 +343,8 @@ export default function MapPage(): React.ReactElement {
     if (!mapRef.current) return;
     const script = document.createElement("script");
     script.id = "kakao-map-script";
-    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${
-      import.meta.env.VITE_KAKAO_MAP_KEY ?? "YOUR_KEY"
-    }&autoload=false&libraries=services,clusterer`; // 사용할 서비스 명시
+    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${import.meta.env.VITE_KAKAO_MAP_KEY ?? "YOUR_KEY"
+      }&autoload=false&libraries=services,clusterer`; // 사용할 서비스 명시
     script.async = true;
     document.head.appendChild(script);
 
@@ -395,7 +395,7 @@ export default function MapPage(): React.ReactElement {
           // idle 이벤트는 지도가 완전히 로드되고 유휴 상태가 되었을 때 발생
           let isInitialLoad = true;
 
-          kakao.maps.event.addListener(map, "idle", () => {
+          kakao.maps.event.addListener(map, "tilesloaded", () => {
             if (isInitialLoad && hasSelection) {
               isInitialLoad = false;
               console.log("🗺️ 지도 로드 완료, 링커 로드 시작");
@@ -519,21 +519,21 @@ export default function MapPage(): React.ReactElement {
           setSearchResults((prev) =>
             page === 1
               ? data.map((d) => ({
+                name: d.place_name,
+                address: d.address_name,
+                // 🔹 카카오 API에서는 y가 위도, x가 경도
+                lat: parseFloat(d.y), // y = 위도(latitude)
+                lng: parseFloat(d.x), // x = 경도(longitude)
+              }))
+              : [
+                ...prev,
+                ...data.map((d) => ({
                   name: d.place_name,
                   address: d.address_name,
-                  // 🔹 카카오 API에서는 y가 위도, x가 경도
                   lat: parseFloat(d.y), // y = 위도(latitude)
                   lng: parseFloat(d.x), // x = 경도(longitude)
-                }))
-              : [
-                  ...prev,
-                  ...data.map((d) => ({
-                    name: d.place_name,
-                    address: d.address_name,
-                    lat: parseFloat(d.y), // y = 위도(latitude)
-                    lng: parseFloat(d.x), // x = 경도(longitude)
-                  })),
-                ],
+                })),
+              ],
           );
 
           if (page === 1) {
@@ -792,11 +792,10 @@ export default function MapPage(): React.ReactElement {
         {!searchOpen && (
           <div className='absolute top-4 left-4 z-10'>
             <button
-              className={`px-4 py-2 rounded-lg shadow transition-colors ${
-                categoryFilterOpen
-                  ? "bg-yellow-500 hover:bg-yellow-600 text-white"
-                  : "bg-blue-500 hover:bg-blue-600 text-white"
-              }`}
+              className={`px-4 py-2 rounded-lg shadow transition-colors ${categoryFilterOpen
+                ? "bg-yellow-500 hover:bg-yellow-600 text-white"
+                : "bg-blue-500 hover:bg-blue-600 text-white"
+                }`}
               onClick={() => {
                 console.log("⭐ 카테고리 필터 토글");
                 setCategoryFilterOpen(!categoryFilterOpen);
