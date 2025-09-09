@@ -250,7 +250,7 @@ export default function MapPage(): React.ReactElement {
             title: m.name,
             position: new kakao.maps.LatLng(lat, lng),
             image: markerImage,
-            zIndex: 3,
+            zIndex: -1,
             clickable: true,
           });
 
@@ -372,6 +372,7 @@ export default function MapPage(): React.ReactElement {
             averageCenter: true,
             minLevel: 1, // 클러스터가 적용될 최소 지도 레벨
             disableClickZoom: true, // 클러스터 클릭 시 확대 비활성화 (직접 제어하기 위해)
+
           });
           clustererRef.current = clusterer;
 
