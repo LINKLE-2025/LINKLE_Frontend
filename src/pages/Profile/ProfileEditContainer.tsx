@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import ProfileForm from "@/components/profile/ProfileEditForm";
-import { getUserProfile, patchUserProfile, type ProfileDTO } from "@/types/user";
+import { type ProfileDTO } from "@/types/user";
 import { Link } from "react-router-dom";
+import { patchUserProfile, getUserProfile } from "@/api/profileApi";
 
 export default function ProfileEditContainer({ userId }: { userId: number }) {
   // 프로필 데이터 초기 상태

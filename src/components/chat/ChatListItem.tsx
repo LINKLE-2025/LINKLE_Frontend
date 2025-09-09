@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import type { RoomResponseDTO } from "@/services/chat";
+import type { RoomResponseDTO } from "@/types/chat";
 import { formatTimeLabel, userProfileUrl, roomBackgroundUrl } from "@/utils/chat";
 
 function initials(name?: string | null) {
@@ -49,7 +49,7 @@ export default function ChatListItem({
   const preview =
     (item as any).lastMessagePreview ?? (item as any).lastMessage ?? "대화를 시작해 보세요";
 
-  // ✅ 시간 포맷 적용
+  // 시간 포맷 적용
   const rawWhen = (item as any).lastMessageDate ?? (item as any).lastMessageAt ?? "";
   const when = formatTimeLabel(rawWhen);
 

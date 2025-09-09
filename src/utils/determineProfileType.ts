@@ -10,11 +10,12 @@ export function determineProfileType(
   }
 
   const relation = friendList.find(
+
     (f) =>
       (f.userId1 === loggedInUserId && f.userId2 === profileUserId) ||
       (f.userId2 === loggedInUserId && f.userId1 === profileUserId)
   );
-
+  
   if (!relation) return "stranger";
 
   if (relation.state === "ACCEPTED") {

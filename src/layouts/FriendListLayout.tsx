@@ -4,12 +4,13 @@ import { Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 export default function FriendLayout() {
+  const loggedInUserId = 1;
   return (
     <div className='flex flex-col min-h-[100dvh] text-black'>
-      <main 
+      <main
         className='flex-col items-center justify-center text-center'
-        >
-        <Outlet />
+      >
+        <Outlet context={{ loggedInUserId }} />
       </main>
       <MainFooter />
     </div>

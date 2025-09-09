@@ -1,14 +1,8 @@
-import type { MessageResponseDTO, MemberResponseDTO } from "../../types/chat";
-import MessageItem from "./MessageItem";
+// src/components/chat/MessageList.tsx
+import type { MessageResponseDTO, MemberResponseDTO } from "@/types/chat";
 import { useEffect, useCallback } from "react";
-
-const API_BASE = import.meta.env.VITE_API_SERVER as string;
-
-function userProfileUrl(userId?: number | null) {
-  return typeof userId === "number" && userId > 0
-    ? `${API_BASE}/api/user/view/profile/${userId}`
-    : "";
-}
+import MessageItem from "./MessageItem";
+import { userProfileUrl } from "@/utils/chat";
 
 export default function MessageList({
   msgs,
@@ -31,7 +25,7 @@ export default function MessageList({
   listContainerRef: React.RefObject<HTMLDivElement | null>;
   hasMore: boolean;
   loadingOlder: boolean;
-  loadOlder: () => void;
+  loadOlder: () => Promise<void> | void;
 }) {
   const devUid = Number(import.meta.env.VITE_DEV_USER_ID ?? "2");
 
@@ -67,15 +61,12 @@ export default function MessageList({
         const prev = msgs[i - 1];
         const isMine = m.senderId === devUid;
 
-        // 블록 첫 메시지 판단
         const isFirstOfBlock = !prev || prev.senderId !== m.senderId;
 
-        // 이름 계산
         const member = m.senderId != null ? membersById[m.senderId] : undefined;
         const name =
           m.senderName ?? member?.name ?? (isMine ? "나" : isDM ? (peerName ?? "상대") : "상대");
 
-        // 아바타: userId 기반 서버 엔드포인트 사용
         const avatar = userProfileUrl(m.senderId);
 
         return (
@@ -83,7 +74,7 @@ export default function MessageList({
             key={m.messageId}
             m={m}
             isFirstOfBlock={isFirstOfBlock}
-            showAvatar={!isMine && isFirstOfBlock} // 상대 첫 메시지에만 아바타
+            showAvatar={!isMine && isFirstOfBlock}
             name={name}
             avatar={avatar}
           />
