@@ -179,7 +179,7 @@ const ProfilePage = () => {
           profileType={profileType}
           name={user.name}
           nickname={user.nickname}
-          description={user.description}
+          memo={user.memo}
           createDate={user.createdDate}
           isVerified={computedVerified}
           friendList={friendListProcessed}

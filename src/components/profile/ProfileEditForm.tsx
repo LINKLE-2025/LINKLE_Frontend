@@ -92,8 +92,8 @@ function ProfileForm({ profileData, updateField }: ProfileFormProps) {
 
         <ProfileInputRow
           label="소개"
-          value={profileData.intro}
-          onChange={(v) => updateField("intro", v)}
+          value={profileData.memo}
+          onChange={(v) => updateField("memo", v)}
         />
 
         <ProfileInputRow

@@ -16,7 +16,7 @@ export type ProfileDTO = {
   password?: string;
   nickname: string;
   gender: string;
-  intro: string;
+  memo: string;
   email: string;
 };
 
@@ -26,8 +26,7 @@ export type UserResponseDTO = {
   name: string;
   nickname: string;
   gender: string;
-  intro: string;
-  description: string;
+  memo: string;
   createdDate: string;
   verified: boolean;
   email: string;

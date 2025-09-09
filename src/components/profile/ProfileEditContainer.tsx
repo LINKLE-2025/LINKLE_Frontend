@@ -14,7 +14,7 @@ export default function ProfileEditContainer({ userId }: { userId: number }) {
     password: "",
     nickname: "",
     gender: "",
-    intro: "",
+    memo: "",
     email: "",
   });
   const location = useLocation();
@@ -38,7 +38,7 @@ export default function ProfileEditContainer({ userId }: { userId: number }) {
         name: data.name,
         nickname: data.nickname,
         gender: data.gender,
-        intro: data.intro,
+        memo: data.memo,
         email: data.email,
       });
     });
