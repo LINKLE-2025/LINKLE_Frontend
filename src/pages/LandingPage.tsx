@@ -14,7 +14,7 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className='flex flex-col items-center justify-center mx-auto w-full max-w-[630px] px-5'>
+    <div className='flex flex-col items-center justify-center mx-auto w-full max-w-[630px] px-5 animate-fadeIn'>
       {/* 로고 */}
       <figure className='flex flex-col items-center'>
         <img

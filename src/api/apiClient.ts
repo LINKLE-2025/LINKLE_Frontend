@@ -17,6 +17,10 @@ apiClient.interceptors.response.use(
 
     // 401 Unauthorized 발생 시
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // ✅ /auth/me 는 refresh 시도하지 않고 바로 reject
+      if (originalRequest.url?.includes("/auth/me")) {
+        return Promise.reject(error);
+      }
       if (isRefreshing) {
         // 이미 갱신 중이면, Promise 대기 후 다시 시도
         return new Promise((resolve, reject) => {
@@ -43,7 +47,7 @@ apiClient.interceptors.response.use(
         isRefreshing = false;
         refreshSubscribers.forEach((cb) => cb(false));
         refreshSubscribers = [];
-        window.location.href = "/login";
+        window.location.href = "/login"; // 로그인 페이지로 리다이렉트
         return Promise.reject(refreshError);
       }
     }
