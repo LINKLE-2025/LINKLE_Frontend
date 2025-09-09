@@ -21,6 +21,22 @@ export default defineConfig(({ mode }) => {
         devOptions: {
           enabled: true,
         },
+        workbox: {
+          // workbox 콘솔창 로그 제거 및 캐싱 설정 (성능 개선용)
+          runtimeCaching: [
+            {
+              urlPattern: /^https:\/\/(?:[a-z0-9-]+\.)?daumcdn\.net\//,
+              handler: "StaleWhileRevalidate",
+              options: {
+                cacheName: "daum-tiles",
+                expiration: {
+                  maxEntries: 200,
+                  maxAgeSeconds: 60 * 60 * 24 * 7, // 7일동안 유지
+                },
+              },
+            },
+          ],
+        },
         manifest: {
           id: "/",
           name: "LINKLE",

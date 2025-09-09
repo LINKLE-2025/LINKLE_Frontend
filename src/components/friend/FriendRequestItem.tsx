@@ -81,7 +81,7 @@ function FriendRequestItem({
         ) : (
           <button
             className="px-4 py-2 text-sm rounded-lg bg-gray-200 text-gray-700"
-            onClick={() => onReject?.(friendId)}
+            onClick={() => onCancel?.(friendId)}
           >
             취소
           </button>

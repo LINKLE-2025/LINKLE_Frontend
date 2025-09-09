@@ -8,5 +8,8 @@
   },
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.preferences.tsconfig": "tsconfig.app.json",
-  "typescript.enablePromptUseWorkspaceTsdk": true
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  }
 }
