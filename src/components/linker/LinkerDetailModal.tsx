@@ -110,10 +110,20 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
     });
   };
 
+
   // 만료일자: createdDate 기준 +30일
   const expireDate = detail?.createdDate
     ? dayjs(detail.createdDate).add(30, "day")
     : null;
+
+  const CreateChatRoom = () => {
+    if (!detail) return;
+    navigate("/chat/room/create", {
+      state: { linker: detail },
+    });
+  };
+
+
   return (
     <Sheet
       isOpen={open}
@@ -154,6 +164,7 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
                     <button
                       className='h-10 w-10 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center'
                       title='채팅방생성'
+                      onClick={CreateChatRoom}
                     >
                       <img src='/icons/mapicon/chat.png' alt='' />
                     </button>
