@@ -12,22 +12,27 @@ export default function LandingRedirect() {
         const checkLogin = async () => {
             try {
                 await apiClient.get("/auth/me");
+                console.log("✅ 로그인 성공");
                 setLoggedIn(true);
-            } catch {
+            } catch (err) {
+                console.warn("❌ 로그인 실패", err);
                 setLoggedIn(false);
             } finally {
-                // 최소 1초 동안 로딩 화면을 유지
-                setTimeout(() => setLoading(false), 700);
+                console.log("🔥 finally 실행됨");
+                setTimeout(() => {
+                    console.log("⏳ setLoading(false) 실행");
+                    setLoading(false);
+                }, 1000);
             }
         };
 
         checkLogin();
     }, []);
 
-
     if (loading) {
         return <FullScreenLoader />; // ✅ 스플래시 화면
     }
+
 
     return loggedIn ? <Navigate to="/map" replace /> : <LandingPage />;
 }

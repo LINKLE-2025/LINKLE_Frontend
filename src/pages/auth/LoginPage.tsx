@@ -65,21 +65,21 @@ export default function LoginPage() {
   };
 
   // 각종 테스트 버튼 클릭 처리 함수
-  const handleTestClick = async () => {
-    console.log("각종 테스트 버튼 클릭됨");
-    // 현재 로그인한 사용자 정보 조회
-    try {
-      const loginUserId = await getCurrentUserId();
-      console.log("현재 로그인한 사용자 ID:", loginUserId);
-      alert("로그인 유저 ID: " + loginUserId);
-    } catch (e: any) {
-      console.error("사용자 정보 조회 오류:", e.response?.data.message || e);
-      alert(e.response?.data.message || e);
-    }
-  };
+  // const handleTestClick = async () => {
+  //   console.log("각종 테스트 버튼 클릭됨");
+  //   // 현재 로그인한 사용자 정보 조회
+  //   try {
+  //     const loginUserId = await getCurrentUserId();
+  //     console.log("현재 로그인한 사용자 ID:", loginUserId);
+  //     alert("로그인 유저 ID: " + loginUserId);
+  //   } catch (e: any) {
+  //     console.error("사용자 정보 조회 오류:", e.response?.data.message || e);
+  //     alert(e.response?.data.message || e);
+  //   }
+  // };
 
   return (
-    <div className='flex flex-col items-center justify-center mx-auto w-full max-w-[630px] px-6'>
+    <div className='flex flex-col items-center justify-center mx-auto w-full max-w-[630px] px-6 animate-fadeIn'>
       {/* 로고 */}
       <figure className='flex flex-col items-center mb-3'>
         <img
@@ -96,11 +96,11 @@ export default function LoginPage() {
       </figure>
 
       {/* 테스트 버튼 */}
-      <AuthFilledButton type='button'
+      {/* <AuthFilledButton type='button'
         className='mt-2 mb-5'
         onClick={handleTestClick}>
         각종 테스트
-      </AuthFilledButton>
+      </AuthFilledButton> */}
 
       {/* 로그인 폼 */}
       <form

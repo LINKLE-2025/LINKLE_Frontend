@@ -1,6 +1,5 @@
 import RandomPastelBackground from "../background/RandomPastelBackground";
 
-// src/components/common/FullScreenLoader.tsx
 export default function FullScreenLoader() {
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-b from-white to-gray-100 z-50">
