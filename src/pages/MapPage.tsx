@@ -307,6 +307,7 @@ export default function MapPage(): React.ReactElement {
 
   // ===== 5. 🔥 카테고리 필터 변경시 마커 다시 로드 (selectedCategories 의존성) =====
   useEffect(() => {
+    if (!mapReady) return;
     console.log("🔄 카테고리 필터가 변경됨, 마커 다시 로드");
     console.log(`선택된 카테고리 수: ${selectedCount}, 전체 선택 여부: ${isAllSelected}`);
 
@@ -792,8 +793,8 @@ export default function MapPage(): React.ReactElement {
           <div className='absolute top-4 left-4 z-10'>
             <button
               className={`px-4 py-2 rounded-lg shadow transition-colors ${categoryFilterOpen
-                  ? "bg-yellow-500 hover:bg-yellow-600 text-white"
-                  : "bg-blue-500 hover:bg-blue-600 text-white"
+                ? "bg-yellow-500 hover:bg-yellow-600 text-white"
+                : "bg-blue-500 hover:bg-blue-600 text-white"
                 }`}
               onClick={() => {
                 console.log("⭐ 카테고리 필터 토글");
