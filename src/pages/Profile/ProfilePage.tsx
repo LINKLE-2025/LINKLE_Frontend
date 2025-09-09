@@ -1,192 +1,238 @@
-import React, { useState, useEffect, useMemo } from 'react';
+// src/pages/ProfilePage.tsx
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useLocation, useOutletContext } from "react-router-dom";
-import { Grid, MapPin, Menu } from 'lucide-react';
+import { Grid, MapPin, Menu } from "lucide-react";
+
+import ProfileContent from "@/components/profile/ProfileContent";
+import PostsTab from "@/components/profile/PostsTab";
+import ParticipationTab from "@/components/profile/ParticipationTab";
+import StateTab from "@/components/profile/StateTab";
+
 import { determineProfileType } from "@/utils/determineProfileType";
-import { ProfileType, FriendResponse } from "@/types/friend";
+import type { ProfileType, FriendResponse } from "@/types/friend";
+import { useFriendSearch } from "@/hooks/useFriendSearch";
+import type {
+  UserResponseDTO,
+  UserParticipateLinkerDTO,
+  ProfilePostDTO,
+  ProfileLinkerCountDTO,
+} from "@/types/user";
 
-import ProfileContent from '../../components/profile/ProfileContent';
-import PostsTab from '../../components/profile/PostsTab';
-import ParticipationTab from '../../components/profile/ParticipationTab';
-import StateTab from '../../components/profile/StateTab';
-
-import { UserResponseDTO, UserParticipateLinkerDTO, ProfilePostDTO, ProfileLinkerCountDTO } from '@/types/user';
-
-// API 함수
-import { getUserProfile, getUserPosts, getLinkerStats, getLinkerParticipations } from "@/api/profileApi";
+import {
+  getUserProfile,
+  getUserPosts,
+  getLinkerStats,
+  getLinkerParticipations,
+} from "@/api/profileApi";
 import { getFriends } from "@/api/friendApi";
 
+// Context에서 로그인 유저 ID 받아오기
 type OutletContextType = { loggedInUserId: number };
 
+// 카테고리 이름 + 아이콘 매핑
+const ACTIVITIES = [
+  "식사", "카페", "음악", "영화", "독서", "운동",
+  "음주", "학습", "쇼핑", "병원", "게임", "여행",
+];
+
+const CATEGORY_ICONS = [
+  "/icons/profile/meal.png",       // 1
+  "/icons/profile/cafe.png",       // 2
+  "/icons/profile/music.png",      // 3
+  "/icons/profile/movie.png",      // 4
+  "/icons/profile/reading.png",    // 5
+  "/icons/profile/exercise.png",   // 6
+  "/icons/profile/drinking.png",   // 7
+  "/icons/profile/learning.png",   // 8
+  "/icons/profile/shopping.png",   // 9
+  "/icons/profile/hospital.png",   // 10
+  "/icons/profile/game.png",       // 11
+  "/icons/profile/travel.png",     // 12
+];
+
+const COLORS = [
+  "#F9877A",
+  "#F9D77A",
+  "#E47AF9",
+  "#7A8BF9",
+  "#7AB1F9",
+  "#C8F97A",
+  "#F9F97A",
+  "#F9AB7A",
+  "#7AF97A",
+  "#7AECF9",
+  "#A07AF9",
+  "#F97AAD",
+];
+
 const ProfilePage = () => {
-  const [activeTab, setActiveTab] = useState<'posts' | 'participation' | 'state'>('posts');
+  const [activeTab, setActiveTab] = useState<"posts" | "participation" | "state">("posts");
+
+  // 상태 관리
   const [user, setUser] = useState<UserResponseDTO | null>(null);
+  const [posts, setPosts] = useState<ProfilePostDTO[]>([]);
   const [participations, setParticipations] = useState<UserParticipateLinkerDTO[]>([]);
   const [friendList, setFriendList] = useState<FriendResponse[]>([]);
-  const [posts, setPosts] = useState<ProfilePostDTO[]>([]);
   const [linkerStats, setLinkerStats] = useState<ProfileLinkerCountDTO[]>([]);
 
+  // 파라미터 & 라우팅 상태
   const { userId: profileUserIdParam } = useParams<{ userId: string }>();
+  const { loggedInUserId } = useOutletContext<OutletContextType>();
   const location = useLocation();
-  // const { type } = (location.state as { type?: string; friendId?: number }) || {};
-  const state = location.state as { userId?: number } | undefined;
-  // const friendId = location.state as { friendId?: number } | undefined;
-  // const { gender } = (location.state as { gender?: string }) || {};
 
-  const { type, friendId, gender } = (location.state as {
+  const { results, setResults } = useFriendSearch(loggedInUserId);
+
+  const state = location.state as {
     type?: string;
     friendId?: number;
     gender?: string;
-  }) || {};
+    userId?: number;
+    profileType?: ProfileType;
+  } | undefined;
 
-  const { loggedInUserId } = useOutletContext<OutletContextType>();
-  const profileUserId = state?.userId ?? loggedInUserId;
+  const { type, friendId, gender } = state || {};
 
-  const getFriendUserId = (friend: FriendResponse, loggedInUserId: number): number => {
-    return friend.userId1 === loggedInUserId ? friend.userId2 : friend.userId1;
-  };
+  // 프로필 주인 ID
+  const profileUserId = profileUserIdParam
+    ? Number(profileUserIdParam)
+    : state?.userId ?? loggedInUserId;
 
+  // 데이터 패칭
   useEffect(() => {
     if (!profileUserId) return;
 
     (async () => {
       try {
-        const data = await getUserProfile(profileUserId);
-        setUser(data);
+        const [userData, postData, statsData, participationData, friendsData] =
+          await Promise.all([
+            getUserProfile(profileUserId),
+            getUserPosts(profileUserId),
+            getLinkerStats(profileUserId),
+            getLinkerParticipations(profileUserId),
+            getFriends(profileUserId),
+          ]);
+
+        setUser(userData);
+        setPosts(postData);
+        setLinkerStats(statsData);
+        setParticipations(participationData);
+        setFriendList(friendsData);
       } catch (err) {
-        console.error("유저 정보 불러오기 실패:", err);
+        console.error("프로필 데이터 불러오기 실패:", err);
       }
     })();
+  }, [profileUserId]);
 
-    (async () => {
-      try {
-        const data = await getUserPosts(profileUserId);
-        setPosts(data);
-      } catch (err) {
-        console.error("포스트 목록 불러오기 실패:", err);
-      }
-    })();
+  // 프로필 타입 결정
+  const profileType: ProfileType = useMemo(() => {
+    if (state?.profileType) return state.profileType;
+    if (type === "sent" || type === "received") return "wait";
+    return determineProfileType(loggedInUserId, profileUserId, friendList);
+  }, [loggedInUserId, profileUserId, friendList, type, state?.profileType]);
 
-    (async () => {
-      try {
-        const data = await getLinkerStats(profileUserId);
-        setLinkerStats(data);
-      } catch (err) {
-        console.error("링커 참여 통계 불러오기 실패:", err);
-      }
-    })();
+  const friendListProcessed = useMemo(
+    () =>
+      friendList.map((f) => ({
+        friendUserId: f.userId1 === loggedInUserId ? f.userId2 : f.userId1,
+        name: f.name,
+        nickname: f.nickname,
+      })),
+    [friendList, loggedInUserId]
+  );
 
-    (async () => {
-      const data = await getLinkerParticipations(profileUserId);
-      setParticipations(data);
-    })();
+  const computedVerified = profileType === "self" ? true : user?.verified ?? false;
 
-    (async () => {
-      try {
-        const res = await getFriends(profileUserId);
-        setFriendList(res);
-      } catch (err) {
-        console.error("친구 목록 불러오기 실패:", err);
-      }
-    })();
-
-  }, [profileUserId, loggedInUserId]);
-
+  // 탭 렌더링
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'posts':
+      case "posts":
         return <PostsTab posts={posts} />;
-      case 'participation':
-        return <ParticipationTab participations={participations} />;
-      case 'state':
-        return <StateTab linkerStats={linkerStats} />;
+      case "participation":
+        return (
+          <ParticipationTab
+            participations={participations}
+            activities={ACTIVITIES}
+            icons={CATEGORY_ICONS}
+            colors={COLORS}
+          />
+        );
+      case "state":
+        return (
+          <StateTab
+            linkerStats={linkerStats}
+            activities={ACTIVITIES}
+            icons={CATEGORY_ICONS}
+            colors={COLORS}
+          />
+        );
       default:
-        return <PostsTab posts={posts} />;
+        return null;
     }
   };
 
-  let profileType: ProfileType = useMemo(
-    () => determineProfileType(loggedInUserId, profileUserId, friendList),
-    [loggedInUserId, profileUserId, friendList]
-  );
-
-  if (type === "sent" || type === "received") {
-    profileType = "wait";
-  }
-
-  const friendListProcessed = friendList.map(f => ({
-    id: f.userId1 === loggedInUserId ? f.userId2 : f.userId1,
-    name: f.name,
-    nickname: f.nickname,
-  }));
-
-  const computedVerified = profileType === 'self'
-    ? true
-    : (user?.verified ?? false);
-
   return (
     <div>
-      <div>
-        {user ? (
-          <>
-            <ProfileContent
-              userId={profileUserId}
-              profileType={profileType}
-              name={user.name}
-              nickname={user.nickname}
-              description={user.description}
-              createDate={user.createdDate}
-              isVerified={computedVerified}
-              friendList={friendListProcessed}
-              friendId={friendId}
-              gender={user.gender ?? gender}
-              image={user.image}
-              background={user.background}
-            />
-          </>
-        ) : (
-          <p>로딩중...</p>
-        )}
-      </div>
+      {/* 프로필 상단 */}
+      {user ? (
+        <ProfileContent
+          userId={profileUserId}
+          profileType={profileType}
+          name={user.name}
+          nickname={user.nickname}
+          description={user.description}
+          createDate={user.createdDate}
+          isVerified={computedVerified}
+          friendList={friendListProcessed}
+          friendId={friendId}
+          gender={user.gender ?? gender}
+          image={user.image}
+          background={user.background}
+          searchResults={results}
+          loggedInUserId={loggedInUserId}
+          setSearchResults={setResults}
+        />
+      ) : (
+        <p className="p-4 text-gray-500">로딩중...</p>
+      )}
 
-      <div className="bg-white border-b py-1 sticky top-0 z-10">
+      {/* 탭 선택 */}
+      <div className="bg-white border-b pt-1 sticky top-0 z-10">
         <div className="flex">
           <button
-            className={`flex-1 py-3 flex items-center justify-center border-b-2 ${activeTab === 'posts' ? 'border-blue-500' : 'border-transparent'
+            className={`flex-1 py-3 flex items-center justify-center border-b-2 ${activeTab === "posts" ? "border-black-500" : "border-transparent"
               }`}
-            onClick={() => setActiveTab('posts')}
+            onClick={() => setActiveTab("posts")}
           >
             <Grid
-              className={`w-5 h-5 ${activeTab === 'posts' ? 'text-gray-900' : 'text-gray-400'
+              className={`w-5 h-5 ${activeTab === "posts" ? "text-gray-900" : "text-gray-400"
                 }`}
             />
           </button>
           <button
-            className={`flex-1 py-3 flex items-center justify-center border-b-2 ${activeTab === 'participation' ? 'border-blue-500' : 'border-transparent'
+            className={`flex-1 py-3 flex items-center justify-center border-b-2 ${activeTab === "participation" ? "border-black-500" : "border-transparent"
               }`}
-            onClick={() => setActiveTab('participation')}
+            onClick={() => setActiveTab("participation")}
           >
             <MapPin
-              className={`w-5 h-5 ${activeTab === 'participation' ? 'text-gray-900' : 'text-gray-400'
+              className={`w-5 h-5 ${activeTab === "participation" ? "text-gray-900" : "text-gray-400"
                 }`}
             />
           </button>
           <button
-            className={`flex-1 py-3 flex items-center justify-center border-b-2 ${activeTab === 'state' ? 'border-blue-500' : 'border-transparent'
+            className={`flex-1 py-3 flex items-center justify-center border-b-2 ${activeTab === "state" ? "border-black-500" : "border-transparent"
               }`}
-            onClick={() => setActiveTab('state')}
+            onClick={() => setActiveTab("state")}
           >
             <Menu
-              className={`w-5 h-5 ${activeTab === 'state' ? 'text-gray-900' : 'text-gray-400'
+              className={`w-5 h-5 ${activeTab === "state" ? "text-gray-900" : "text-gray-400"
                 }`}
             />
           </button>
         </div>
       </div>
 
-
-      <div className="flex1 mb-24">
-        {renderTabContent()}
-      </div>
+      {/* 탭 컨텐츠 */}
+      <div className="flex-1 mb-24">{renderTabContent()}</div>
     </div>
   );
 };

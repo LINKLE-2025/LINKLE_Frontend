@@ -12,6 +12,7 @@ export type ActionItem =
     label: string;
     type: "link";
     href: string; // 내부 라우트 or 외부 링크
+    state?: any;
     icon?: React.ReactNode;
     danger?: boolean;
   }
@@ -100,7 +101,7 @@ export function useActionMenu() {
         if (/^https?:\/\//i.test(action.href)) {
           window.location.href = action.href;
         } else {
-          navigate(action.href);
+          navigate(action.href, { state: action.state });
         }
         close({ pickedId: action.id });
         return;

@@ -4,7 +4,7 @@ import { Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 export default function FriendLayout() {
-  const loggedInUserId = 1;
+  const loggedInUserId = 466;
   return (
     <div className='flex flex-col min-h-[100dvh] text-black'>
       <main

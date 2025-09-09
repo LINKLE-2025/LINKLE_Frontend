@@ -1,18 +1,10 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { openDm } from "@/services/chat";
-import { fr } from "date-fns/locale";
-
-interface FriendSummary {
-  id: number;
-  name: string;
-  nickname: string;
-  friendId: number;
-}
-
+import { getProfileImageSrc } from '@/utils/profileUtils';
 
 interface FriendItemProps {
-  id: number; // 대상 유저 ID
+  targetUserId: number; // 대상 유저 ID
   name: string;
   nickname: string;
   buttonType: "메시지" | "친구 추가" | "수락 대기중" | "취소";
@@ -23,27 +15,38 @@ interface FriendItemProps {
 
 const DEV_UID = Number(import.meta.env.VITE_DEV_USER_ID ?? "1");
 
-function FriendItem({ id, name, nickname, buttonType, friendId, image, gender }: FriendItemProps) {
-  const isDefaultImage = image === 'public.png' || !image;
+function FriendItem({ targetUserId, name, nickname, buttonType, friendId, image, gender }: FriendItemProps) {
+  const { isDefault } = getProfileImageSrc(
+    targetUserId, undefined, gender, true
+  );
 
-  const profileImageSrc = isDefaultImage
-    ? gender === '남성'
-      ? '/icons/public/Man.png'
-      : '/icons/public/Woman.png'
-    : `/api/user/view/profile/${id}`;
+  const hasValidImage =
+    image !== null &&
+    image !== undefined &&
+    image !== "" &&
+    image !== "public.png";
+
+  const profileImageSrc = hasValidImage
+    ? `/api/user/view/profile/${targetUserId}?v=${Date.now()}`
+    : gender === "남성"
+      ? "/icons/public/Man.png"
+      : "/icons/public/Woman.png";
 
 
+
+
+  console.log("adad" + profileImageSrc);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const handleMessage = async () => {
     if (loading) return;
-    if (id === DEV_UID) {
+    if (targetUserId === DEV_UID) {
       alert("자기 자신에게는 DM을 보낼 수 없습니다.");
       return;
     }
     setLoading(true);
     try {
-      const room = await openDm(id);
+      const room = await openDm(targetUserId);
       navigate(`/chat/room/${room.roomId}`);
     } catch (e) {
       console.error(e);
@@ -53,14 +56,15 @@ function FriendItem({ id, name, nickname, buttonType, friendId, image, gender }:
     }
   };
 
+
   return (
     <div className="flex items-center justify-between px-4 py-3">
       <div className="flex items-center space-x-3">
-        <Link to={`/profile`} state={{ userId: id, friendId: friendId, gender: gender }}>
+        <Link to={`/profile`} state={{ userId: targetUserId, friendId: friendId, gender: gender }}>
           <img
             src={profileImageSrc}
             alt={`${name} 프로필`}
-            className={`w-12 h-12 object-cover rounded-full cursor-pointer ${isDefaultImage ? 'opacity-20 bg-blue-100' : ''
+            className={`w-12 h-12 object-cover rounded-full cursor-pointer ${isDefault ? 'opacity-80 bg-blue-100' : ''
               }`}
           />
         </Link>

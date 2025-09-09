@@ -1,21 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ProfileBarContent from '../../components/profile/ProfileBarContent';
-import { fr } from 'date-fns/locale';
-import { FriendResponse } from "@/types/friend";
+import { FriendSummaryWithProfileType, ProfileType } from "@/types/friend";
+import { getProfileImageSrc } from '@/utils/profileUtils';
+import { sendFriendRequest } from '@/api/friendApi';
 
-// 프로필 페이지의 주요 정보를 표시하는 컴포넌트
 interface FriendSummary {
-  id: number;
+  friendUserId: number;
   name: string;
   nickname: string;
 }
 
-// ProfileContent 컴포넌트의 props 타입 정의
 interface ProfileContentProps {
   userId: number;
-  profileType: 'self' | 'friend' | 'stranger' | 'wait';
+  profileType: ProfileType;
   name: string;
   nickname: string;
   description: string;
@@ -27,9 +26,11 @@ interface ProfileContentProps {
   gender?: string;
   image?: string | null;
   background?: string | null;
+  searchResults: FriendSummaryWithProfileType[];
+  loggedInUserId: number;
+  setSearchResults: React.Dispatch<React.SetStateAction<FriendSummaryWithProfileType[]>>;
 }
 
-// ProfileContent 컴포넌트
 function ProfileContent({
   userId,
   profileType,
@@ -37,31 +38,55 @@ function ProfileContent({
   nickname,
   description,
   createDate,
-  state,
   isVerified = false,
   friendList,
   friendId,
   gender,
   image,
-  background
+  background,
+  loggedInUserId,
+  setSearchResults,
 }: ProfileContentProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const isDefaultImage = image === 'public.png' || !image;
-  const isDefaultBackground = background === 'public.png' || !background;
 
-  const profileImageSrc = isDefaultImage
-    ? gender === '남성'
-      ? '/icons/public/Man.png'
-      : '/icons/public/Woman.png'
-    : `/api/user/view/profile/${userId}`;
+  // 🔥 profileType을 로컬 상태로 관리
+  const [currentType, setCurrentType] = useState<ProfileType>(profileType);
+
+  // 부모에서 내려오는 profileType이 바뀌면 동기화
+  useEffect(() => {
+    setCurrentType(profileType);
+  }, [profileType]);
+
+  const isDefaultBackground = background === 'public.png' || !background;
+  const { src: profileImageSrc, isDefault } = getProfileImageSrc(userId, image, gender, true);
+
+  const handleAddFriend = async (targetUserId: number) => {
+    try {
+      const data = await sendFriendRequest(loggedInUserId, targetUserId);
+
+      // 현재 프로필의 상태도 업데이트
+      setCurrentType(data.state === "ACCEPTED" ? "friend" : "wait");
+
+      // 검색 결과 리스트도 업데이트
+      setSearchResults(prev =>
+        prev.map(user =>
+          user.friendUserid === targetUserId
+            ? { ...user, profileType: data.state === "ACCEPTED" ? "friend" : "wait" }
+            : user
+        )
+      );
+    } catch (err) {
+      console.error("친구 요청 중 오류:", err);
+      alert("친구 요청 실패");
+    }
+  };
 
   const profileBackgroundSrc = isDefaultBackground
     ? '/icons/public/Background.png'
-    : `/api/user/view/background/${userId}`;
-  // 프로필 타입을 받아와 버튼을 각각 다르게 렌더링해줌
+    : `/api/user/view/background/${userId}?v=${Date.now()}`;
+
   const renderButton = () => {
-    switch (profileType) {
-      // 본인일때 친구 목록 버튼
+    switch (currentType) {
       case 'self':
         return (
           <Link
@@ -73,21 +98,21 @@ function ProfileContent({
             친구 목록
           </Link>
         );
-      // 아무 관계가 아닐때 친구 추가 버튼
       case 'stranger':
         return (
-          <button className="px-4 py-2 bg-blue-500 text-white text-sm rounded-lg">
+          <button
+            className="px-4 py-2 bg-blue-500 text-white text-sm rounded-lg"
+            onClick={() => handleAddFriend(userId)}
+          >
             친구 추가
           </button>
         );
-      // 친구일때 메시지 버튼
       case 'friend':
         return (
           <button className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg">
             메시지
           </button>
         );
-      // 친구 요청을 기다리는 중일때 수락 대기 중 버튼
       case 'wait':
         return (
           <button className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg">
@@ -99,46 +124,36 @@ function ProfileContent({
     }
   };
 
-  // 프로필 기본 구성 정보
-  // 활동 날짜와 오늘의 날짜를 계산하기 위한 로직
   const today = new Date();
   const daysSinceJoin = Math.floor(
     (today.getTime() - new Date(createDate).getTime()) / (1000 * 60 * 60 * 24)
   );
 
-
-
   return (
     <div className="relative">
       {/* 배경 이미지 */}
       <div className="h-60 bg-gradient-to-r relative overflow-hidden">
-        {/* <img
-          src={`/api/user/view/background/${userId}`}
-          alt="background"
-          className="w-full h-60 object-cover cursor-pointer"
-          onClick={() => setPreviewImage(`/api/user/view/background/${userId}`)}
-        /> */}
         <img
           src={profileBackgroundSrc}
           alt="background"
-          className={`w-full h-60 object-cover cursor-pointer ${background ? '' : 'opacity-80'
-            }`}
+          className={`w-full h-60 object-cover cursor-pointer ${background ? '' : 'opacity-80'}`}
           onClick={() =>
             setPreviewImage(
               background
                 ? `/api/user/view/background/${userId}`
-                : '/icons/public/Background.png' // 기본 배경 이미지 경로
+                : '/icons/public/Background.png'
             )
           }
         />
-        {/* 버튼 (배경 위로 올리기) */}
         <div className="absolute top-0 right-2 z-20">
           <ProfileBarContent
             userId={userId}
-            profileType={profileType}
+            profileType={currentType}
             isVerified={isVerified}
             friendId={friendId}
-
+            gender={gender}
+            image={image}
+            background={background}
           />
         </div>
       </div>
@@ -146,15 +161,12 @@ function ProfileContent({
       {/* 프로필 정보 */}
       <div className="bg-white px-4 mt-3 rounded-t-3xl relative z-10">
         <div className="flex items-center space-x-3 mb-4">
-
           <img
             src={profileImageSrc}
             alt={`${name} 프로필`}
-            className={`w-12 h-12 object-cover rounded-full cursor-pointer ${isDefaultImage ? 'opacity-40 bg-blue-100' : ''
-              }`}
+            className={`w-12 h-12 object-cover rounded-full cursor-pointer ${isDefault ? 'opacity-40 bg-blue-100' : ''}`}
             onClick={() => setPreviewImage(profileImageSrc)}
           />
-
           <div className="flex-1">
             <div className="flex items-start space-x-2">
               <div className="flex flex-col">
@@ -171,9 +183,7 @@ function ProfileContent({
           {renderButton()}
         </div>
 
-        <div className="text-gray-900 text-base mb-2 whitespace-pre-line">
-          {description}
-        </div>
+        <div className="text-gray-900 text-base mb-2 whitespace-pre-line">{description}</div>
 
         <div className="space-y-1 text-xs text-gray-500">
           <div className="flex items-center space-x-2">
