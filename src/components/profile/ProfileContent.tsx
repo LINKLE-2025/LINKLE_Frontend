@@ -17,7 +17,7 @@ interface ProfileContentProps {
   profileType: ProfileType;
   name: string;
   nickname: string;
-  description: string;
+  memo: string;
   createDate: string;
   state?: string;
   isVerified?: boolean;
@@ -36,7 +36,7 @@ function ProfileContent({
   profileType,
   name,
   nickname,
-  description,
+  memo,
   createDate,
   isVerified = false,
   friendList,
@@ -183,7 +183,9 @@ function ProfileContent({
           {renderButton()}
         </div>
 
-        <div className="text-gray-900 text-base mb-2 whitespace-pre-line">{description}</div>
+        <div className="text-left text-gray-900 text-base mb-2 whitespace-pre-line">
+          {memo}
+        </div>
 
         <div className="space-y-1 text-xs text-gray-500">
           <div className="flex items-center space-x-2">

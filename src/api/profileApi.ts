@@ -22,9 +22,8 @@ export const patchUserProfile = async (
     password?: string;
     nickname?: string;
     gender?: string;
-    intro?: string;
-    email?: string;
     memo?: string;
+    email?: string;
     accountNumber?: string;
   },
   files: { profile?: File | null; background?: File | null }
