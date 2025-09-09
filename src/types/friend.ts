@@ -6,18 +6,20 @@ export interface FriendResponse {
   userId: number;
   name: string;
   nickname: string;
-  imageUrl?: string;
+  image?: string;
   userId1: number;
   userId2: number;
   state: "REQUESTED" | "ACCEPTED";
+  gender?: string;
 }
 
 // UI 전용 타입 (요약)
 export interface FriendSummary {
-  id: number;
+  friendUserid: number;
   name: string;
   nickname: string;
-  imageUrl?: string;
+  image?: string;
+  gender?: string;
 }
 export interface FriendSummaryWithProfileType extends FriendSummary {
   profileType: ProfileType;

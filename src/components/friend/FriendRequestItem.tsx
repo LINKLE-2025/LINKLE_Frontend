@@ -1,6 +1,5 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
-
+import { getProfileImageSrc } from '@/utils/profileUtils';
 
 // 친구 요청을 받거나 보낸 리스트를 보여줌
 // Friend Request 정보를 담아 준다.
@@ -10,6 +9,8 @@ interface FriendRequestItemProps {
   name: string;
   nickname: string;
   avatar: string;
+  gender: string;
+  image?: string | null;
   type: 'received' | 'sent';
   // 수락/거절/취소를 할때 함수를 활용하여 각각 fetch 요청 처리
   onAccept?: (id: number) => void;
@@ -25,10 +26,14 @@ function FriendRequestItem({
   nickname,
   avatar,
   type,
+  gender,
   onAccept,
   onReject,
   onCancel,
+  image
 }: FriendRequestItemProps) {
+  const { src: profileImageSrc, isDefault } = getProfileImageSrc(id, image, gender);
+
   return (
     // 친구 리스트에서 각 친구 항목을 표시해주는 영역
     <div className="flex items-center justify-between px-4 py-3">
@@ -37,22 +42,15 @@ function FriendRequestItem({
         {/* 각 ID값을 활용해 해당 프로필로 이동 */}
         <Link
           to={`/profile`}
-          state={{ userId: id, type, friendId }}
+          state={{ userId: id, type, friendId, gender }}
         >
           {/* 프로필 이지미를 보여줌 */}
           <img
-            src={`/api/user/view/profile/${id}`}
+            src={profileImageSrc}
             alt={`${name} 프로필`}
-            className="w-12 h-12 object-cover rounded-full"
-            // 예외 처리 이미지 로드 실패시 실행 시켜주는 함수
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-              // 회색 기본 프로필 아이콘을 DOM에 추가해 준다.
-              e.currentTarget.insertAdjacentHTML(
-                "afterend",
-                '<svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5.121 17.804A9.953 9.953 0 0112 15c2.485 0 4.735.896 6.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>'
-              );
-            }}
+            className={`w-12 h-12 object-cover rounded-full cursor-pointer ${isDefault ? 'opacity-20 bg-blue-100' : ''
+              }`}
+
           />
         </Link>
         {/* 친구 이름과 닉네임을 보여줌 */}

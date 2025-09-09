@@ -1,38 +1,52 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { openDm } from "@/services/chat";
-import { fr } from "date-fns/locale";
-
-interface FriendSummary {
-  id: number;
-  name: string;
-  nickname: string;
-  friendId: number;
-}
-
+import { getProfileImageSrc } from '@/utils/profileUtils';
 
 interface FriendItemProps {
-  id: number; // 대상 유저 ID
+  targetUserId: number; // 대상 유저 ID
   name: string;
   nickname: string;
   buttonType: "메시지" | "친구 추가" | "수락 대기중" | "취소";
   friendId?: number; // 친구 관계 ID (친구 요청 수락/거절/삭제 등에 필요)
+  image?: string | null;
+  gender?: string;
 }
 
 const DEV_UID = Number(import.meta.env.VITE_DEV_USER_ID ?? "1");
 
-function FriendItem({ id, name, nickname, buttonType, friendId }: FriendItemProps) {
+function FriendItem({ targetUserId, name, nickname, buttonType, friendId, image, gender }: FriendItemProps) {
+  const { isDefault } = getProfileImageSrc(
+    targetUserId, undefined, gender, true
+  );
+
+  const hasValidImage =
+    image !== null &&
+    image !== undefined &&
+    image !== "" &&
+    image !== "public.png";
+
+  const profileImageSrc = hasValidImage
+    ? `/api/user/view/profile/${targetUserId}?v=${Date.now()}`
+    : gender === "남성"
+      ? "/icons/public/Man.png"
+      : "/icons/public/Woman.png";
+
+
+
+
+  console.log("adad" + profileImageSrc);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const handleMessage = async () => {
     if (loading) return;
-    if (id === DEV_UID) {
+    if (targetUserId === DEV_UID) {
       alert("자기 자신에게는 DM을 보낼 수 없습니다.");
       return;
     }
     setLoading(true);
     try {
-      const room = await openDm(id);
+      const room = await openDm(targetUserId);
       navigate(`/chat/room/${room.roomId}`);
     } catch (e) {
       console.error(e);
@@ -42,26 +56,21 @@ function FriendItem({ id, name, nickname, buttonType, friendId }: FriendItemProp
     }
   };
 
+
   return (
     <div className="flex items-center justify-between px-4 py-3">
       <div className="flex items-center space-x-3">
-        <Link to={`/profile`} state={{ userId: id, friendId: friendId }}>
+        <Link to={`/profile`} state={{ userId: targetUserId, friendId: friendId, gender: gender }}>
           <img
-            src={`/api/user/view/profile/${id}`}
+            src={profileImageSrc}
             alt={`${name} 프로필`}
-            className="w-12 h-12 object-cover rounded-full"
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-              e.currentTarget.insertAdjacentHTML(
-                "afterend",
-                '<svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A9.953 9.953 0 0112 15c2.485 0 4.735.896 6.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>',
-              );
-            }}
+            className={`w-12 h-12 object-cover rounded-full cursor-pointer ${isDefault ? 'opacity-80 bg-blue-100' : ''
+              }`}
           />
         </Link>
         <div>
-          <h3 className="font-medium text-gray-900">{name}</h3>
-          <p className="text-sm text-gray-500">@{nickname}</p>
+          <h3 className='font-medium text-gray-900'>{name}</h3>
+          <p className='text-sm text-gray-500'>@{nickname}</p>
         </div>
       </div>
 
@@ -69,12 +78,12 @@ function FriendItem({ id, name, nickname, buttonType, friendId }: FriendItemProp
         <button
           onClick={handleMessage}
           disabled={loading}
-          className="px-4 py-2 text-sm rounded-lg bg-blue-500 text-white disabled:opacity-60"
+          className='px-4 py-2 text-sm rounded-lg bg-blue-500 text-white disabled:opacity-60'
         >
           {loading ? "여는 중…" : "메시지"}
         </button>
       ) : (
-        <button className="px-4 py-2 text-sm rounded-lg bg-blue-500 text-white">
+        <button className='px-4 py-2 text-sm rounded-lg bg-blue-500 text-white'>
           {buttonType}
         </button>
       )}

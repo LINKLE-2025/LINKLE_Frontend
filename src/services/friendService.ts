@@ -5,7 +5,6 @@ export const fetchFriendSearchResults = async (
     query: string,
     currentUserId: number
 ): Promise<FriendResponse[]> => {
-    // console.log('Fetching friend search results for query:', query, 'and currentUserId:', currentUserId);
     const res = await fetch(
         `/api/search/user?word=${encodeURIComponent(query)}&currentUserId=${currentUserId}`
     );

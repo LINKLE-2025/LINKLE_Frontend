@@ -14,8 +14,9 @@ import AuthLayout from "./layouts/AuthLayout";
 import ProfileLayout from "./layouts/ProfileLayout";
 import FriendListLayout from "./layouts/FriendListLayout";
 
-import ChatRoom from "./pages/chat/ChatRoom";
-import ChatPage from "./pages/chat/ChatPage";
+import ChatRoomPage from "./pages/chat/ChatRoomPage";
+import ChatListPage from "./pages/chat/ChatListPage";
+import RoomCreatePage from "./pages/chat/RoomCreatePage";
 
 import PointPage from "./pages/pointPage";
 import AppLayout from "./layouts/AppLayout";
@@ -44,9 +45,9 @@ export default function App() {
       </Route>
       {/* 프로필 관련 레이아웃 */}
       <Route element={<ProfileLayout />}>
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/profileEdit" element={<ProfileEditPage />} />
-        <Route path="/profileEdit/:userId" element={<ProfileEditPage />} />
+        <Route path='/profile' element={<ProfilePage />} />
+        <Route path='/profileEdit' element={<ProfileEditPage />} />
+        <Route path='/profileEdit/:userId' element={<ProfileEditPage />} />
       </Route>
 
       {/* 친구 목록 관련 레이아웃 */}
@@ -61,8 +62,9 @@ export default function App() {
 
       {/* 채팅 관련 레이아웃 */}
       <Route element={<AppLayout />}>
-        <Route path='/chat' element={<ChatPage />} />
-        <Route path='/chat/room/:roomId' element={<ChatRoom />} />
+        <Route path='/chat' element={<ChatListPage />} />
+        <Route path='/chat/room/:roomId' element={<ChatRoomPage />} />
+        <Route path='/chat/room/create' element={<RoomCreatePage />} />
       </Route>
 
       <Route path='/point' element={<PointPage />} />

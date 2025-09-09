@@ -1,9 +1,8 @@
 import { useParams } from "react-router-dom";
-import ProfileEditContainer from "./ProfileEditContainer";
+import ProfileEditContainer from "../../components/profile/ProfileEditContainer";
 
 export default function ProfileEditPage() {
   const { userId } = useParams<{ userId: string }>();
-  console.log("Editing profile for userId:", userId);
   if (!userId) return <div>잘못된 접근입니다</div>;
 
   return (

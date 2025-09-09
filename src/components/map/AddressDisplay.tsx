@@ -1,6 +1,7 @@
 // src/components/map/AddressDisplay.tsx
 import { useEffect, useState } from "react";
 import { Sheet } from "react-modal-sheet";
+import { useNavigate, useOutletContext } from "react-router-dom";
 
 declare global {
   interface Window {
@@ -12,16 +13,28 @@ interface AddressDisplayProps {
   map: any; // kakao.maps.Map 객체
   isOpen: boolean; // 부모에서 Sheet 열기/닫기 제어
   onClose: () => void;
+  activeLinkers: any[]; // 활성 링커 목록
 }
 
-export default function AddressDisplay({ map, isOpen, onClose }: AddressDisplayProps) {
+export default function AddressDisplay({
+  map,
+  isOpen,
+  onClose,
+  activeLinkers,
+}: AddressDisplayProps) {
   const [address, setAddress] = useState("");
+
+  type LayoutContext = { headerHeight: number; footerHeight: number };
+  const { footerHeight } = useOutletContext<LayoutContext>();
+
 
   useEffect(() => {
     if (!map || !isOpen) return;
 
     const { kakao } = window;
     const geocoder = new kakao.maps.services.Geocoder();
+
+
 
     function searchAddrFromCoords(coords: any, callback: any) {
       geocoder.coord2Address(coords.getLng(), coords.getLat(), callback);
@@ -64,7 +77,7 @@ export default function AddressDisplay({ map, isOpen, onClose }: AddressDisplayP
           const region = normalizeRegion(words[0]); // 시/도 통일
           const district = words[1] ?? ""; // 시/군/구
           const addressDetail = `${region} ${district}`; // 최종 address
-
+          console.log("footerHeight", footerHeight);
           setAddress(addressDetail);
           console.log("주소 표시 컴포넌트: 지도 중심 좌표 변경 감지, 주소 갱신");
         }
@@ -77,43 +90,46 @@ export default function AddressDisplay({ map, isOpen, onClose }: AddressDisplayP
     updateAddress();
 
     return () => {
-      // 이벤트 제거, 활성화 안 되어있을 때는 사용하지 않도록 막아둠.
+      // 이벤트 제거
       (window.kakao.maps.event as any).removeListener(map, "idle", updateAddress);
     };
   }, [map, isOpen]);
 
-  const copyAddress = () => {
-    navigator.clipboard.writeText(address).then(() => {
-      alert("주소가 복사되었습니다!");
-    });
-  };
+  const linkerCount = activeLinkers.filter(
+    (linker) => linker.addressDetail === address
+  ).length;
 
   return (
     <Sheet
       isOpen={isOpen}
       onClose={onClose}
-      snapPoints={[0.4, 0.2, 0]}
-      initialSnap={0}
+      snapPoints={[0.6, 0.3, 0]}
+      initialSnap={1}
+      style={{ bottom: footerHeight }}
       {...({
         onSpringEnd: (snapIndex: number) => {
           if (snapIndex === 0) onClose();
         },
-      } as any)}
+      } as any)
+      }
     >
-      <Sheet.Container style={{ zIndex: 1500, boxShadow: "none" }}>
+      <Sheet.Container style={{ zIndex: 1, boxShadow: "none" }}>
         <Sheet.Header />
         <Sheet.Content>
-          <div className='flex flex-col gap-3 p-4'>
-            <div className='text-sm font-medium text-center'>
-              {address ? ` ${address}` : "주소를 불러오는 중..."}
+          <div className="flex items-center gap-3 p-4 border">
+            <img
+              src="/icons/mapicon/linker.png"
+              alt="Pin Icon"
+              className="w-10 h-10 rounded-full" // 이미지 크기와 모서리 둥글게
+            />
+            <div className="flex flex-col">
+              <span className="text-sm font-medium">{address ? address : "주소를 불러오는 중..."}</span>
+              <span className="text-xs text-gray-500">{linkerCount}개의 링커 활성화 됨</span>
             </div>
-            <div className='text-sm font-medium text-gray-400 text-center border-b'>링커 개수</div>
           </div>
-          <button className='text-blue-500 text-xs self-center' onClick={copyAddress}>
-            아랫부분 그 지역 링커 뜨면되나
-          </button>
         </Sheet.Content>
       </Sheet.Container>
-    </Sheet>
+
+    </Sheet >
   );
 }

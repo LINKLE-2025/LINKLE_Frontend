@@ -12,7 +12,7 @@ function MainFooter() {
           <Search className='w-6 h-6 text-gray-900' />
         </Link>
         <button className='p-3'>
-          <Mic className='w-6 h-6 text-gray-400' />
+          <Mic className='w-6 h-6 text-gray-900' />
         </button>
         <Link to='/chat' className='p-3'>
           <MessageSquare className='w-6 h-6 text-gray-900' />

@@ -15,7 +15,7 @@ interface LinkerListModalProps {
   linkers: LinkerItem[];
   title?: string; // 모달 제목 (기본값: "검색된 링커")
   onClose: () => void;
-  onItemClick: (linkerId: number) => void;
+  onItemClick: (payload: { linkerId: number; lat: number; lng: number }) => void;
 }
 
 // 카테고리 이름 매핑
@@ -83,7 +83,7 @@ const LinkerListModal: React.FC<LinkerListModalProps> = ({
                     key={item.linkerId}
                     onClick={() => {
                       console.log(`검색 리스트 클릭: ${item.name} (링커 ID: ${item.linkerId})`);
-                      onItemClick(item.linkerId);
+                      onItemClick({ linkerId: item.linkerId, lat: item.lat, lng: item.lng });
                       onClose();
                     }}
                     className='w-full p-4 bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200 text-left'
