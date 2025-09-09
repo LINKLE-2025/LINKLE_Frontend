@@ -66,6 +66,6 @@ export function userProfileUrl(userId?: number | null): string {
 // 방 배경 이미지 URL
 export function roomBackgroundUrl(roomId?: number | null): string {
   return typeof roomId === "number" && roomId > 0
-    ? `${API_BASE}/chat/view/background/${roomId}`
+    ? `${API_BASE}/api/chat/view/background/${roomId}`
     : "";
 }

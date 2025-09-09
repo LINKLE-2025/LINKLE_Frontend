@@ -49,7 +49,7 @@ function FriendItem({ id, name, nickname, buttonType, friendId }: FriendItemProp
           <img
             src={`/api/user/view/profile/${id}`}
             alt={`${name} 프로필`}
-            className="w-12 h-12 object-cover rounded-full"
+            className='w-12 h-12 object-cover rounded-full'
             onError={(e) => {
               e.currentTarget.style.display = "none";
               e.currentTarget.insertAdjacentHTML(
@@ -60,8 +60,8 @@ function FriendItem({ id, name, nickname, buttonType, friendId }: FriendItemProp
           />
         </Link>
         <div>
-          <h3 className="font-medium text-gray-900">{name}</h3>
-          <p className="text-sm text-gray-500">@{nickname}</p>
+          <h3 className='font-medium text-gray-900'>{name}</h3>
+          <p className='text-sm text-gray-500'>@{nickname}</p>
         </div>
       </div>
 
@@ -69,12 +69,12 @@ function FriendItem({ id, name, nickname, buttonType, friendId }: FriendItemProp
         <button
           onClick={handleMessage}
           disabled={loading}
-          className="px-4 py-2 text-sm rounded-lg bg-blue-500 text-white disabled:opacity-60"
+          className='px-4 py-2 text-sm rounded-lg bg-blue-500 text-white disabled:opacity-60'
         >
           {loading ? "여는 중…" : "메시지"}
         </button>
       ) : (
-        <button className="px-4 py-2 text-sm rounded-lg bg-blue-500 text-white">
+        <button className='px-4 py-2 text-sm rounded-lg bg-blue-500 text-white'>
           {buttonType}
         </button>
       )}

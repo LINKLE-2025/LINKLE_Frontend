@@ -1,5 +1,6 @@
+// src/components/chat/ChatWindow.tsx
 import { useState } from "react";
-import { useChatRoom } from "../../hooks/useChatRoom";
+import { useChatRoom } from "@/hooks/useChatRoom";
 import MessageList from "./MessageList";
 import ChatInput from "./ChatInput";
 
@@ -28,7 +29,6 @@ export default function ChatWindow({ roomId }: { roomId: number }) {
       <MessageList
         msgs={msgs}
         peerName={peer?.name ?? null}
-        peerAvatar={peer?.avatar ?? null}
         bottomRef={bottomRef}
         membersById={membersById}
         isDM={isDM}
