@@ -8,20 +8,22 @@ import { Camera, Users, Crown, CircleDollarSign, Calendar } from "lucide-react";
 type LinkerDetail = { linkerId: number; name: string };
 type RoomType = "LIGHT" | "CLASS";
 
-const COLORS = [
-  { code: 1, hex: "#F8A89F", label: "red" },
-  { code: 2, hex: "#F6BF9E", label: "orange" },
-  { code: 3, hex: "#F6DE9E", label: "yellow" },
-  { code: 4, hex: "#9EF79E", label: "green" },
-  { code: 5, hex: "#9FC6F8", label: "blue" },
-  { code: 6, hex: "#B99EF7", label: "purple" },
+type ColorItem = { key: string; hex: string; label: string };
+
+const COLORS: ColorItem[] = [
+  { key: "color/red.png", hex: "#F8A89F", label: "red" },
+  { key: "color/orange.png", hex: "#F6BF9E", label: "orange" },
+  { key: "color/yellow.png", hex: "#F6DE9E", label: "yellow" },
+  { key: "color/green.png", hex: "#9EF79E", label: "green" },
+  { key: "color/blue.png", hex: "#9FC6F8", label: "blue" },
+  { key: "color/purple.png", hex: "#B99EF7", label: "purple" },
 ];
 
 export default function RoomCreatePage() {
   const navigate = useNavigate();
   const linker: LinkerDetail | null = (useLocation().state as any)?.linker ?? null;
 
-  const [themeColor, setThemeColor] = useState<number>(1);
+  const [themeColor, setThemeColor] = useState<string>(COLORS[0].key);
   const [roomType, setRoomType] = useState<RoomType>("LIGHT");
   const [roomName, setRoomName] = useState("");
   const [memo, setMemo] = useState("");
@@ -96,8 +98,13 @@ export default function RoomCreatePage() {
     // 푸터와 자연스럽게 이어지도록 바닥 여백만 약간 확보
     <main className='w-full max-w-md mx-auto px-2 sm:px-0 pb-8'>
       {/* 프리뷰 박스: 정사각형 */}
-      <div className='mt-4 w-full aspect-square rounded-2xl bg-gray-100 flex items-center justify-center overflow-hidden'>
-        {/* 필요하면 이미지 넣을 곳 */}
+      <div className="mt-6 mx-auto w-1/2 aspect-square rounded-2xl flex items-center justify-center">
+        <img
+          src={`/api/chat/view/color/${COLORS.find(c => c.key === themeColor)?.label}`}
+          alt='preview'
+          className='w-full h-full object-cover'
+          draggable={false}
+        />
       </div>
 
       {/* 팔레트 + 카메라 */}
@@ -105,11 +112,11 @@ export default function RoomCreatePage() {
         <div className='text-xs text-gray-600 text-left mb-1'>채팅방 테마 선택</div>
         <div className='flex items-center gap-3'>
           {COLORS.map((c) => {
-            const isActive = themeColor === c.code;
+            const isActive = themeColor === c.key;
             return (
               <button
-                key={c.code}
-                onClick={() => setThemeColor(c.code)}
+                key={c.key}
+                onClick={() => setThemeColor(c.key)}
                 aria-label={c.label}
                 className='group relative w-8 h-8 rounded-full border-2 bg-white transition'
                 style={
@@ -121,14 +128,13 @@ export default function RoomCreatePage() {
                 }
               >
                 <span
-                  className={`absolute inset-[1.5px] rounded-full transition-colors duration-150 ${isActive
-                    ? "bg-[var(--fill)]"
-                    : "bg-transparent [@media(hover:hover)]:group-hover:bg-[var(--hover)]"
+                  className={`absolute inset-[1.5px] rounded-full transition-colors duration-150 ${isActive ? "bg-[var(--fill)]" : "bg-transparent [@media(hover:hover)]:group-hover:bg-[var(--hover)]"
                     }`}
                 />
               </button>
             );
           })}
+
 
           <button
             type='button'
