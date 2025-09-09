@@ -56,11 +56,16 @@ export default {
         },
       },
       animation: {
-        fadeIn: "fadeIn 1s ease-in-out",
+        fadeIn: "fadeIn 0.85s ease-in-out",
+        fadeInShort: "fadeIn 0.6s ease-in-out",
         blob: "blob 7s infinite",
       },
       keyframes: {
         fadeIn: {
+          "0%": { opacity: 0 },
+          "100%": { opacity: 1 },
+        },
+        fadeInShort: {
           "0%": { opacity: 0 },
           "100%": { opacity: 1 },
         },

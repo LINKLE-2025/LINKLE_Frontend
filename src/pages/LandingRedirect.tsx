@@ -18,9 +18,7 @@ export default function LandingRedirect() {
                 console.warn("❌ 로그인 실패", err);
                 setLoggedIn(false);
             } finally {
-                console.log("🔥 finally 실행됨");
                 setTimeout(() => {
-                    console.log("⏳ setLoading(false) 실행");
                     setLoading(false);
                 }, 1000);
             }
@@ -29,8 +27,8 @@ export default function LandingRedirect() {
         checkLogin();
     }, []);
 
-    if (loggedIn !== null && loading) {
-        return <FullScreenLoader />; // ✅ 스플래시 화면
+    if (loading) {
+        return <FullScreenLoader />;
     }
 
 

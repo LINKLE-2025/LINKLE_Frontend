@@ -4,6 +4,7 @@ import VerifyCodeStep from "@/components/auth/signupStep/VerifyCodeStep";
 import PasswordStep from "@/components/auth/signupStep/PasswordStep";
 import BackTitleHeader from "@/components/header/BackTitleHeader";
 import { Link } from "react-router-dom";
+import { resetPassword } from "@/api/authApi";
 
 // 각 단계별 안내 문구
 const stepContents: Record<number, { title: string; description: string }> = {
@@ -22,7 +23,7 @@ const stepContents: Record<number, { title: string; description: string }> = {
     },
 };
 
-export default function ForgotPasswordPage() {
+export default function PasswordResetPage() {
     const [step, setStep] = useState(1);
 
     // 전체 폼 데이터 상태
@@ -52,18 +53,18 @@ export default function ForgotPasswordPage() {
         console.log("최종 제출 데이터:", payload);
 
         // 서버에 비밀번호 재설정 요청
-        // try {
-        //     if (await signup(payload)) {
-        //         console.log("회원가입 성공: ", payload);
-        //         alert("회원가입이 완료되었습니다.");
-        //         window.location.href = "/login"; // 로그인 페이지로 이동
-        //     } else {
-        //         alert("이미 사용 중인 이메일이거나 닉네임입니다.");
-        //     }
-        // } catch (error) {
-        //     console.error("회원가입 오류:", error);
-        //     alert("회원가입에 실패했습니다.");
-        // }
+        try {
+            if (await resetPassword(payload)) {
+                console.log("비밀번호 재설정 성공: ", payload);
+                alert("비밀번호가 재설정되었습니다.");
+                window.location.href = "/login"; // 로그인 페이지로 이동
+            } else {
+                alert("비밀번호 재설정에 실패했습니다.");
+            }
+        } catch (error) {
+            console.error("비밀번호 재설정 오류:", error);
+            alert("비밀번호 재설정 중 오류가 발생했습니다.");
+        }
     };
 
     return (
@@ -112,7 +113,7 @@ export default function ForgotPasswordPage() {
             {/* 로그인 이동 링크 */}
             <div className='text-base sm:mb-10'>
                 <Link to='/login' className='text-base font-bold text-linkleGray hover:text-black'>
-                    로그인 페이지로 돌아가기
+                    로그인으로 돌아가기
                 </Link>
             </div>
         </div>

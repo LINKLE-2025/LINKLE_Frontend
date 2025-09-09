@@ -23,7 +23,9 @@ import AppLayout from "./layouts/AppLayout";
 import PostDetailPage from "./pages/post/PostDetailPage";
 import useSilentRefresh from "./hooks/useSilentRefresh";
 import LandingRedirect from "./pages/LandingRedirect";
-import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
+import ErrorPage from "./pages/ErrorPage";
+import TestPage from "./pages/TestPage";
+import PasswordResetPage from "./pages/auth/PasswordResetPage";
 
 export default function App() {
   // Silent Refresh Hook 적용 -> Refresh Token을 이용해 Access Token 재발급
@@ -36,7 +38,10 @@ export default function App() {
         <Route path='/' element={<LandingRedirect />} />
         <Route path='/login' element={<LoginPage />} />
         <Route path='/signup' element={<SignUpPage />} />
-        <Route path='/forgot-password' element={<ForgotPasswordPage />} />
+        <Route path='/password/reset' element={<PasswordResetPage />} />
+
+
+        <Route path="/test" element={<TestPage />} />
       </Route>
 
       {/* 어플리케이션 레이아웃 */}
@@ -71,6 +76,9 @@ export default function App() {
 
       <Route path='/point' element={<PointPage />} />
       <Route path='/post/:postId' element={<PostDetailPage />} />
+
+      {/* 동적 에러 페이지 */}
+      <Route path="/error/:type" element={<ErrorPage />} />
     </Routes>
   );
 };

@@ -25,7 +25,7 @@ export default function AuthLayout() {
       {/* Header */}
       {location.pathname === "/signup" ? (
         <></>
-      ) : location.pathname === "/forgot-password" ? (
+      ) : location.pathname === "/password/reset" ? (
         <></>
       ) : (
         <MainHeader className='bg-white/60' />

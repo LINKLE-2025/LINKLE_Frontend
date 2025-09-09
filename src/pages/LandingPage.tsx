@@ -3,18 +3,8 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 
 export default function LandingPage() {
-  useEffect(() => {
-    fetch("/api/test")
-      .then((res) => {
-        if (!res.ok) throw new Error("API 실패");
-        return res.json();
-      })
-      .then((data) => console.log("API 응답:", data))
-      .catch((err) => console.error(err));
-  }, []);
-
   return (
-    <div className='flex flex-col items-center justify-center mx-auto w-full max-w-[630px] px-5 animate-fadeIn'>
+    <div className='flex flex-col items-center justify-center mx-auto w-full max-w-[630px] px-5'>
       {/* 로고 */}
       <figure className='flex flex-col items-center'>
         <img
