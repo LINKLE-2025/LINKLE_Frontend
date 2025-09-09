@@ -48,13 +48,14 @@ export const checkNickname = async (nickname: string) => {
 // 현재 로그인한 사용자 ID 조회
 export const getCurrentUserId = async () => {
   const res = await apiClient.get(`/auth/me`);
+  // console.log(res.data);
   return res.data.userId;
 };
 
 // 현재 로그인한 사용자 정보 조회
 export const getCurrentUserInfo = async () => {
   const res = await apiClient.get(`/auth/me`);
-  console.log(res.data);
+  // console.log(res.data);
   return res.data;
 };
 
