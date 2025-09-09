@@ -50,8 +50,8 @@ export default function RoomCreatePage() {
       const payload: any = {
         roomType,
         roomName: roomName.trim(),
-        description: memo.trim(),
-        memo: (memo || ".").trim(),
+        description: description.trim(),
+        memo: memo.trim(),
         themeColor,
         linkerId: linker?.linkerId,
       };
@@ -74,9 +74,9 @@ export default function RoomCreatePage() {
     const bigint = parseInt(
       h.length === 3
         ? h
-            .split("")
-            .map((c) => c + c)
-            .join("")
+          .split("")
+          .map((c) => c + c)
+          .join("")
         : h,
       16,
     );
@@ -121,11 +121,10 @@ export default function RoomCreatePage() {
                 }
               >
                 <span
-                  className={`absolute inset-[1.5px] rounded-full transition-colors duration-150 ${
-                    isActive
-                      ? "bg-[var(--fill)]"
-                      : "bg-transparent [@media(hover:hover)]:group-hover:bg-[var(--hover)]"
-                  }`}
+                  className={`absolute inset-[1.5px] rounded-full transition-colors duration-150 ${isActive
+                    ? "bg-[var(--fill)]"
+                    : "bg-transparent [@media(hover:hover)]:group-hover:bg-[var(--hover)]"
+                    }`}
                 />
               </button>
             );
@@ -188,7 +187,7 @@ export default function RoomCreatePage() {
               "flex items-center justify-center gap-3",
               "bg-white text-gray-900 shadow-sm",
               "hover:bg-gray-50",
-              roomType === "LIGHT" ? "border-black ring-2 ring-black" : "border-gray-300",
+              roomType === "LIGHT" ? "ring-1 ring-black" : "border-gray-300",
             ].join(" ")}
           >
             <Users className='w-5 h-5' />
@@ -203,7 +202,7 @@ export default function RoomCreatePage() {
               "flex items-center justify-center gap-3",
               "bg-white text-gray-900 shadow-sm",
               "hover:bg-gray-50",
-              roomType === "CLASS" ? "border-black ring-2 ring-black" : "border-gray-300",
+              roomType === "CLASS" ? "ring-1 ring-black" : "border-gray-300",
             ].join(" ")}
           >
             <Crown className='w-5 h-5' />
@@ -244,7 +243,7 @@ export default function RoomCreatePage() {
                 onChange={(e) => setStartDate(e.target.value)}
                 className='flex-1 bg-transparent outline-none border-0 focus:ring-0 text-[15px]'
               />
-              <Calendar className='w-4 h-4 text-gray-500' />
+
             </label>
           </div>
         </div>
