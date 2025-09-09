@@ -18,6 +18,7 @@ export interface SearchPanelProps {
   hasNextPage: boolean;
   currentPage: number;
   onOpenModal: (item: SearchResult) => void; // 🔹 추가
+  onOpenLinkerList: (item: SearchResult) => void; // 링커 리스트 모달 열기
 }
 
 export default function SearchPanel({
@@ -30,6 +31,7 @@ export default function SearchPanel({
   hasNextPage,
   currentPage,
   onOpenModal,
+  onOpenLinkerList,
 }: SearchPanelProps) {
   return (
     <div className='flex flex-col h-full bg-white'>
@@ -76,6 +78,16 @@ export default function SearchPanel({
                 <div className='font-medium text-lg'>{item.name}</div>
                 <div className='text-sm text-gray-500'>{item.address}</div>
               </div>
+              {/* 이미 불러온 링커 중에서 목록 매칭/열기 */}
+              <img
+                src='/icons/mapicon/linkerList.png'
+                alt='링커 리스트'
+                className='w-12 h-12 cursor-pointer'
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenLinkerList(item); // 🔥 여러 개 리스트 모달 열기
+                }}
+              />
               <img
                 src='/icons/mapicon/linker.png'
                 alt='링커 추가'
