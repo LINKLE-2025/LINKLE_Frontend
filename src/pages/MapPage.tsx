@@ -68,6 +68,8 @@ export default function MapPage(): React.ReactElement {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [createDraft, setCreateDraft] = useState<{ lat: number; lng: number } | null>(null);
   const [mapReady, setMapReady] = useState(false); //지도 로드 완료 여부
+  const [activeLinkers, setActiveLinkers] = useState<any[]>([]);  // 활성 링커 목록
+
 
   // 버튼 관련
   const [linkerCreateMode, setLinkerCreateMode] = useState(false); // 🔥 링커 생성 모드
@@ -178,9 +180,11 @@ export default function MapPage(): React.ReactElement {
     try {
       console.log("🔄 링커 데이터 불러오는 중...");
       const items = await fetchLinkers();
-
       // 상태 필터링 추가
       const activeItems = items.filter((m) => m.state === "ACTIVATED");
+      setActiveLinkers(activeItems);  // 부모 컴포넌트에 활성 링커 목록 저장
+
+
       console.log("불러온 링커 목록:", activeItems);
 
       setLinkers(activeItems);
@@ -509,7 +513,7 @@ export default function MapPage(): React.ReactElement {
 
     const ps = new window.kakao.maps.services.Places();
     const center = kakaoMapRef.current.getCenter();
-    const options = { location: center, radius: 2000, page };
+    const options = { location: center, radius: 2000, page };  // 반경 2km
 
     ps.keywordSearch(
       searchQuery,
@@ -850,13 +854,14 @@ export default function MapPage(): React.ReactElement {
             )}
           </div>
         )}
-        {/* 🔥 주소 표시 컴포넌트 (테스트할때만 켜세요!!!!!! 중심이동할때마다 쿼리 보내서 위험) */}
-        <AddressDisplay
-          map={kakaoMapRef.current}
-          isOpen={showAddress}
-          onClose={() => setShowAddress(false)}
-        />
       </div>
+      {/* 🔥 주소 표시 컴포넌트 */}
+      <AddressDisplay
+        map={kakaoMapRef.current}
+        isOpen={showAddress}
+        onClose={() => setShowAddress(false)}
+        activeLinkers={activeLinkers}
+      />
       {/* 나머지 모달들 (기존과 동일) */}
       <Sheet
         isOpen={searchOpen}

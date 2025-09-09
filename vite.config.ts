@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => {
               options: {
                 cacheName: "daum-tiles",
                 expiration: {
-                  maxEntries: 200,
+                  maxEntries: 50,
                   maxAgeSeconds: 60 * 60 * 24 * 7, // 7일동안 유지
                 },
               },

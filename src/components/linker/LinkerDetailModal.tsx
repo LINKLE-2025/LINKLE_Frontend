@@ -111,9 +111,10 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
       onClose={onClose}
       snapPoints={[0.92, 0.78, 0.6]}
       initialSnap={3}
+      style={{ bottom: footerHeight }}
       detent='content-height'
     >
-      <Sheet.Container style={{ bottom: footerHeight, zIndex: 1500, boxShadow: "none" }}>
+      <Sheet.Container style={{ zIndex: 1500, boxShadow: "none" }}>
         <Sheet.Header>
           <div className='mx-auto my-2 h-1.5 w-12 rounded-full bg-gray-300' />
         </Sheet.Header>
