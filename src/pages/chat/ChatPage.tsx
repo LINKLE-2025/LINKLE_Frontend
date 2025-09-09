@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import SegmentTabs, { TAB_DM, TAB_GROUP } from "@/components/chat/SegmentTabs";
 import ChatListItem from "@/components/chat/ChatListItem";
 import { fetchRooms } from "@/services/chat";
+import type { RoomResponseDTO } from "@/types/chat";
 
 function SkeletonList() {
   return (
@@ -25,6 +26,7 @@ function SkeletonList() {
     </div>
   );
 }
+
 function EmptyState({ tab }: { tab: string }) {
   return (
     <div className='text-center text-sm text-gray-500 py-16'>
@@ -36,9 +38,10 @@ function EmptyState({ tab }: { tab: string }) {
 export default function ChatPage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
-  const tab = params.get("tab") === TAB_GROUP ? TAB_GROUP : TAB_DM;
+  const tabParam = params.get("tab");
+  const tab = tabParam === TAB_GROUP ? TAB_GROUP : TAB_DM;
 
-  const { data, isLoading, isError, error, refetch } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery<RoomResponseDTO[]>({
     queryKey: ["chatRooms"],
     queryFn: fetchRooms,
     staleTime: 10_000,
@@ -94,7 +97,6 @@ export default function ChatPage() {
         </div>
       )}
 
-      {/* 플로팅 버튼: 친구 목록 등으로 이동해서 DM 시작 */}
       <button
         onClick={() => navigate("/friend")}
         className='fixed bottom-24 right-6 sm:right-[calc(50%-16rem)] w-12 h-12 rounded-full shadow-lg bg-black text-white text-xl flex items-center justify-center'
