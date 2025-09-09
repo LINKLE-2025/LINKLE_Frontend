@@ -1,5 +1,4 @@
 import { Routes, Route } from "react-router-dom";
-import LandingPage from "./pages/LandingPage";
 import MapPage from "./pages/MapPage";
 import LoginPage from "./pages/auth/LoginPage";
 import SignUpPage from "./pages/auth/SignupPage";
@@ -22,14 +21,18 @@ import RoomCreatePage from "./pages/chat/RoomCreatePage";
 import PointPage from "./pages/pointPage";
 import AppLayout from "./layouts/AppLayout";
 import PostDetailPage from "./pages/post/PostDetailPage";
-import LinkerDetail from "./components/linker/LinkerDetailModal";
+import useSilentRefresh from "./hooks/useSilentRefresh";
+import LandingRedirect from "./pages/LandingRedirect";
 
-const App = () => {
+export default function App() {
+  // Silent Refresh Hook 적용 -> Refresh Token을 이용해 Access Token 재발급
+  useSilentRefresh();
+
   return (
     <Routes>
       {/* 로그인 및 회원가입 레이아웃 */}
       <Route element={<AuthLayout />}>
-        <Route path='/' element={<LandingPage />} />
+        <Route path='/' element={<LandingRedirect />} />
         <Route path='/login' element={<LoginPage />} />
         <Route path='/signup' element={<SignUpPage />} />
       </Route>
@@ -69,5 +72,3 @@ const App = () => {
     </Routes>
   );
 };
-
-export default App;

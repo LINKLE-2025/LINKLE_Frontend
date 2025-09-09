@@ -56,9 +56,14 @@ export default {
         },
       },
       animation: {
+        fadeIn: "fadeIn 1s ease-in-out",
         blob: "blob 7s infinite",
       },
       keyframes: {
+        fadeIn: {
+          "0%": { opacity: 0 },
+          "100%": { opacity: 1 },
+        },
         blob: {
           "0%": {
             transform: "translate(0px, 0px) scale(1)",
