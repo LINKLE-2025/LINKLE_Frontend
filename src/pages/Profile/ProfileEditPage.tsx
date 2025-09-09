@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import ProfileEditContainer from "./ProfileEditContainer";
+import ProfileEditContainer from "../../components/profile/ProfileEditContainer";
 
 export default function ProfileEditPage() {
   const { userId } = useParams<{ userId: string }>();

@@ -9,17 +9,17 @@ export function determineProfileTypes(
 ): FriendSummaryWithProfileType[] {
   return searchResults.map(
     (user): FriendSummaryWithProfileType => ({
-      id: user.userId,         // FriendSummaryWithProfileType.id 로 매핑
+      friendUserid: user.userId,         // FriendSummaryWithProfileType.id 로 매핑
       name: user.name,
       nickname: user.nickname,
-      imageUrl: user.imageUrl,
+      image: user.image,
       gender: user.gender,
       profileType:
         user.state === "ACCEPTED"
           ? "friend"
           : user.state === "REQUESTED"
-          ? "wait"
-          : determineProfileType(currentUserId, user.userId, friendList),
+            ? "wait"
+            : determineProfileType(currentUserId, user.userId, friendList),
     })
   );
 }
