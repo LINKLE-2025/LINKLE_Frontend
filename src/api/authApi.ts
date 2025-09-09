@@ -45,17 +45,24 @@ export const checkNickname = async (nickname: string) => {
   return res.data;
 };
 
+// 비밀번호 재설정
+export const resetPassword = async (data: { email: string; code: string; password: string }) => {
+  const res = await apiClient.post(`/auth/password/reset`, data);
+  return res.data;
+};
+
 // 현재 로그인한 사용자 ID 조회
 export const getCurrentUserId = async () => {
   const res = await apiClient.get(`/auth/me`);
-  // console.log(res.data);
   return res.data.userId;
 };
 
 // 현재 로그인한 사용자 정보 조회
+// 다음과 같이 사용하세요~ 필요한 것만 가져오면 됨
+// const { userId } = await getCurrentUserInfo();
+// const { userId, name, nickname, age, gender, image } = await getCurrentUserInfo();
 export const getCurrentUserInfo = async () => {
   const res = await apiClient.get(`/auth/me`);
-  // console.log(res.data);
   return res.data;
 };
 

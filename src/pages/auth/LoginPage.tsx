@@ -138,7 +138,7 @@ export default function LoginPage() {
 
       {/* 비밀번호 찾기 링크 */}
       <div className='text-base mb-7'>
-        <Link to='/forgot-password' className='font-semibold text-linkleGray hover:text-black'>
+        <Link to='/password/reset' className='font-semibold text-linkleGray hover:text-black'>
           비밀번호를 잊으셨나요?
         </Link>
       </div>

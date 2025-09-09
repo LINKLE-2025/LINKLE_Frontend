@@ -10,14 +10,14 @@ export default function FullScreenLoader() {
                 <img
                     src="/logos/linkle-icon.svg"
                     alt="LINKLE 심볼"
-                    className="w-2/3 sm:w-1/3 mb-6"
+                    className="w-7/12 sm:w-4/12 mb-6 sm:mb-7"
                 />
 
                 {/* 브랜드 텍스트 로고 */}
                 <img
                     src="/logos/logo_text.svg"
                     alt="LINKLE 로고 텍스트"
-                    className="w-[55vw] sm:w-[25vw] h-auto mb-4"
+                    className="w-[55vw] sm:w-[20vw] h-auto mb-4"
                 />
 
                 {/* 로딩 메시지 */}
