@@ -1,3 +1,5 @@
+//app/src/layouts/AppLayout.tsx
+
 import RandomPastelBackground from "@/components/background/RandomPastelBackground";
 import MainFooter from "@/components/footer/MainFooter";
 import TeamNameFooter from "@/components/footer/TeamNameFooter";

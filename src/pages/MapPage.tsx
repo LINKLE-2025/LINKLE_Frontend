@@ -24,6 +24,7 @@ import ClusterMarkerList from "@/components/linker/ClustermarkerItem";
 import AddressDisplay from "@/components/map/AddressDisplay";
 import BackTitleHeader from "@/components/header/BackTitleHeader";
 import LinkerListModal from "@/components/linker/ListLinkerDetail";
+import { on } from "events";
 
 type LayoutContext = { headerHeight: number; footerHeight: number };
 
@@ -68,6 +69,8 @@ export default function MapPage(): React.ReactElement {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [createDraft, setCreateDraft] = useState<{ lat: number; lng: number } | null>(null);
   const [mapReady, setMapReady] = useState(false); //지도 로드 완료 여부
+  const [activeLinkers, setActiveLinkers] = useState<any[]>([]);  // 활성 링커 목록
+
 
   // 버튼 관련
   const [linkerCreateMode, setLinkerCreateMode] = useState(false); // 🔥 링커 생성 모드
@@ -178,9 +181,11 @@ export default function MapPage(): React.ReactElement {
     try {
       console.log("🔄 링커 데이터 불러오는 중...");
       const items = await fetchLinkers();
-
       // 상태 필터링 추가
       const activeItems = items.filter((m) => m.state === "ACTIVATED");
+      setActiveLinkers(activeItems);  // 부모 컴포넌트에 활성 링커 목록 저장
+
+
       console.log("불러온 링커 목록:", activeItems);
 
       setLinkers(activeItems);
@@ -246,7 +251,7 @@ export default function MapPage(): React.ReactElement {
             title: m.name,
             position: new kakao.maps.LatLng(lat, lng),
             image: markerImage,
-            zIndex: 3,
+            zIndex: -1,
             clickable: true,
           });
 
@@ -368,6 +373,7 @@ export default function MapPage(): React.ReactElement {
             averageCenter: true,
             minLevel: 1, // 클러스터가 적용될 최소 지도 레벨
             disableClickZoom: true, // 클러스터 클릭 시 확대 비활성화 (직접 제어하기 위해)
+
           });
           clustererRef.current = clusterer;
 
@@ -509,7 +515,7 @@ export default function MapPage(): React.ReactElement {
 
     const ps = new window.kakao.maps.services.Places();
     const center = kakaoMapRef.current.getCenter();
-    const options = { location: center, radius: 2000, page };
+    const options = { location: center, radius: 2000, page };  // 반경 2km
 
     ps.keywordSearch(
       searchQuery,
@@ -591,6 +597,7 @@ export default function MapPage(): React.ReactElement {
     setSearchOpen(false);
   };
 
+  // 검색 결과 클릭 시 해당 위치로 이동
   const handleResultClick = (item: SearchResult) => {
     // 검색 결과 클릭 로직 (기존과 동일)
     if (!kakaoMapRef.current) return;
@@ -695,6 +702,7 @@ export default function MapPage(): React.ReactElement {
     });
   };
 
+  // 검색 후 링커 생성 모달열기
   const handleOpenModal = (item: SearchResult) => {
     console.log("검색 클릭 item:", item);
     setLinkerInitial({
@@ -850,13 +858,14 @@ export default function MapPage(): React.ReactElement {
             )}
           </div>
         )}
-        {/* 🔥 주소 표시 컴포넌트 (테스트할때만 켜세요!!!!!! 중심이동할때마다 쿼리 보내서 위험) */}
-        <AddressDisplay
-          map={kakaoMapRef.current}
-          isOpen={showAddress}
-          onClose={() => setShowAddress(false)}
-        />
       </div>
+      {/* 🔥 주소 표시 컴포넌트 */}
+      <AddressDisplay
+        map={kakaoMapRef.current}
+        isOpen={showAddress}
+        onClose={() => setShowAddress(false)}
+        activeLinkers={activeLinkers}
+      />
       {/* 나머지 모달들 (기존과 동일) */}
       <Sheet
         isOpen={searchOpen}
@@ -929,7 +938,22 @@ export default function MapPage(): React.ReactElement {
         }))}
         title='검색된 링커'
         onClose={() => setListModalOpen(false)}
-        onItemClick={(linkerId) => onOpenDetailById(linkerId)}
+        onItemClick={({ linkerId, lat, lng }) => {
+          // 리스트 모달 닫고
+          setListModalOpen(false);
+          // 검색 결과 모달도 닫고
+          setSearchOpen(false);
+          // 지도 이동하고
+          setTimeout(() => {
+            handleResultClick({
+              name: "",
+              address: "",
+              lat,
+              lng,
+            });
+            onOpenDetailById(linkerId);
+          }, 250);
+        }}
       />
     </MapWrapper>
   );
