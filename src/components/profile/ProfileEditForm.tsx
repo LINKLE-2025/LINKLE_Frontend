@@ -1,9 +1,55 @@
-import React from "react";
 import type { ProfileDTO } from "@/types/user";
 
 interface ProfileFormProps {
   profileData: ProfileDTO;
   updateField: (field: keyof ProfileDTO, value: string) => void;
+}
+
+interface ProfileInputRowProps {
+  label: string;
+  type?: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  as?: "input" | "select";
+  options?: string[];
+}
+
+function ProfileInputRow({
+  label,
+  type = "text",
+  value,
+  onChange,
+  placeholder,
+  as = "input",
+  options = [],
+}: ProfileInputRowProps) {
+  return (
+    <div className="flex justify-between items-center border-b pb-2">
+      <label className="text-gray-500 text-sm">{label}</label>
+      {as === "select" ? (
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="text-right text-sm text-gray-800 focus:outline-none w-2/3 bg-transparent"
+        >
+          {options.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <input
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="text-right text-sm text-gray-800 focus:outline-none w-2/3"
+          placeholder={placeholder}
+        />
+      )}
+    </div>
+  );
 }
 
 function ProfileForm({ profileData, updateField }: ProfileFormProps) {
@@ -16,77 +62,60 @@ function ProfileForm({ profileData, updateField }: ProfileFormProps) {
 
       {/* 입력 필드 목록 */}
       <div className="space-y-4">
-        {/* 이름 */}
-        <div className="flex justify-between items-center border-b pb-2">
-          <span className="text-gray-500 text-sm">이름</span>
-          <input
-            type="text"
-            value={profileData.name}
-            onChange={(e) => updateField("name", e.target.value)}
-            className="text-right text-sm text-gray-800 focus:outline-none w-2/3"
-          />
-        </div>
+        <ProfileInputRow
+          label="이름"
+          value={profileData.name}
+          onChange={(v) => updateField("name", v)}
+        />
 
-        {/* 비밀번호 */}
-        <div className="flex justify-between items-center border-b pb-2">
-          <span className="text-gray-500 text-sm">비밀번호</span>
-          <input
-            type="password"
-            value={profileData.password ?? ""}
-            onChange={(e) => updateField("password", e.target.value)}
-            className="text-right text-sm text-gray-800 focus:outline-none w-2/3"
-            placeholder="********"
-          />
-        </div>
+        <ProfileInputRow
+          label="비밀번호"
+          type="password"
+          value={profileData.password ?? ""}
+          onChange={(v) => updateField("password", v)}
+          placeholder="********"
+        />
 
-        {/* 닉네임 */}
-        <div className="flex justify-between items-center border-b pb-2">
-          <span className="text-gray-500 text-sm">닉네임</span>
-          <input
-            type="text"
-            value={profileData.nickname}
-            onChange={(e) => updateField("nickname", e.target.value)}
-            className="text-right text-sm text-gray-800 focus:outline-none w-2/3"
-          />
-        </div>
+        <ProfileInputRow
+          label="닉네임"
+          value={profileData.nickname}
+          onChange={(v) => updateField("nickname", v)}
+        />
 
-        {/* 성별 */}
-        <div className="flex justify-between items-center border-b pb-2">
-          <span className="text-gray-500 text-sm">성별</span>
-          <input
-            type="text"
-            value={profileData.gender}
-            onChange={(e) => updateField("gender", e.target.value)}
-            className="text-right text-sm text-gray-800 focus:outline-none w-2/3"
-          />
-        </div>
+        <ProfileInputRow
+          label="성별"
+          value={profileData.gender}
+          onChange={(v) => updateField("gender", v)}
+          as="select"
+          options={["남성", "여성"]}
+        />
 
-        {/* 소개 */}
-        <div className="flex justify-between items-center border-b pb-2">
-          <span className="text-gray-500 text-sm">소개</span>
-          <input
-            type="text"
-            value={profileData.intro}
-            onChange={(e) => updateField("intro", e.target.value)}
-            className="text-right text-sm text-gray-800 focus:outline-none w-2/3"
-          />
-        </div>
+        <ProfileInputRow
+          label="소개"
+          value={profileData.memo}
+          onChange={(v) => updateField("memo", v)}
+        />
 
-        {/* 이메일 */}
-        <div className="flex justify-between items-center border-b pb-2">
-          <span className="text-gray-500 text-sm">이메일</span>
-          <input
-            type="email"
-            value={profileData.email}
-            onChange={(e) => updateField("email", e.target.value)}
-            className="text-right text-sm text-gray-800 focus:outline-none w-2/3"
-          />
-        </div>
+        <ProfileInputRow
+          label="이메일"
+          type="email"
+          value={profileData.email}
+          onChange={(v) => updateField("email", v)}
+        />
       </div>
 
       {/* 회원탈퇴 버튼 */}
       <div className="text-right">
-        <button className="text-red-500 text-sm font-medium">회원탈퇴</button>
+        <button
+          className="text-red-500 text-sm font-medium hover:text-red-700"
+          onClick={() => {
+            if (confirm("정말 탈퇴하시겠습니까?")) {
+              // TODO: 회원탈퇴 로직 추가
+            }
+          }}
+        >
+          회원탈퇴
+        </button>
       </div>
     </div>
   );

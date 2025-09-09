@@ -1,6 +1,9 @@
+import dayjs from "dayjs";
+import { create } from "node:domain";
 import React, { useEffect, useState } from "react";
 import { Sheet } from "react-modal-sheet";
 import { useNavigate, useOutletContext } from "react-router-dom";
+
 
 export type LinkerDetail = {
   linkerId: number;
@@ -30,6 +33,8 @@ type LinkerPost = {
   createdDate?: string;
   author?: { name?: string; handle?: string; avatarUrl?: string | null } | null;
 };
+
+
 
 const prettyDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString() : "-");
 
@@ -74,7 +79,7 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
         author: null,
       }));
 
-      setPosts(mapped);
+      setPosts(mapped.slice().reverse()); //최신순 -> 오래된순
       setPostHasNext(false);
       setPostPage(1);
     } catch (e: any) {
@@ -104,6 +109,20 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
       state: { linker: detail },
     });
   };
+
+
+  // 만료일자: createdDate 기준 +30일
+  const expireDate = detail?.createdDate
+    ? dayjs(detail.createdDate).add(30, "day")
+    : null;
+
+  const CreateChatRoom = () => {
+    if (!detail) return;
+    navigate("/chat/room/create", {
+      state: { linker: detail },
+    });
+  };
+
 
   return (
     <Sheet
@@ -145,6 +164,7 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
                     <button
                       className='h-10 w-10 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center'
                       title='채팅방생성'
+                      onClick={CreateChatRoom}
                     >
                       <img src='/icons/mapicon/chat.png' alt='' />
                     </button>
@@ -157,9 +177,9 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
                     <span>{posts.length} 포스트</span>
                   </div>
                   <span>
-                    {prettyDate(
-                      detail?.createdDate, //TODO: 만료일자로 바꾸기
-                    )}{" "}
+                    {
+                      expireDate ? expireDate.format("YYYY년 MM월 DD일 ") : ""
+                    }
                     만료 예정
                   </span>
                 </div>

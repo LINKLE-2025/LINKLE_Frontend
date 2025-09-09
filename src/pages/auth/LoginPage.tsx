@@ -1,8 +1,9 @@
-import { login } from "@/api/authApi";
+import { getCurrentUserId, getCurrentUserInfo, login } from "@/api/authApi";
 import AuthFilledButton from "@/components/auth/AuthFilledButton";
 import AuthInput from "@/components/auth/AuthInput";
 import AuthOutlinedButton from "@/components/auth/AuthOutlinedButton";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function LoginPage() {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -46,10 +47,14 @@ export default function LoginPage() {
 
       // 로그인 성공 시 처리
       if (responseData.success) {
-        console.log("로그인 성공:", responseData);
-        alert("로그인 성공!");
         // JWT 토큰 저장 (예: localStorage)
         localStorage.setItem("token", responseData.token);
+        console.log("로그인 성공:", responseData);
+        // alert("로그인 성공!");
+        // 현재 로그인한 사용자 정보 조회
+        const loginUserData = await getCurrentUserInfo();
+        console.log("현재 로그인한 사용자 정보:", loginUserData);
+        // alert("로그인 유저 정보: " + JSON.stringify(loginUserData));
         window.location.href = "/"; // 메인 페이지 이동
       } else {
         setError("이메일 또는 비밀번호가 올바르지 않습니다.");
@@ -59,6 +64,20 @@ export default function LoginPage() {
       setError("로그인 중 오류가 발생했습니다.");
     }
   };
+
+  // 각종 테스트 버튼 클릭 처리 함수
+  // const handleTestClick = async () => {
+  //   console.log("각종 테스트 버튼 클릭됨");
+  //   // 현재 로그인한 사용자 정보 조회
+  //   try {
+  //     const loginUserId = await getCurrentUserId();
+  //     console.log("현재 로그인한 사용자 ID:", loginUserId);
+  //     alert("로그인 유저 ID: " + loginUserId);
+  //   } catch (e: any) {
+  //     console.error("사용자 정보 조회 오류:", e.response?.data.message || e);
+  //     alert(e.response?.data.message || e);
+  //   }
+  // };
 
   return (
     <div className='flex flex-col items-center justify-center mx-auto w-full max-w-[630px] px-6'>
@@ -76,6 +95,13 @@ export default function LoginPage() {
         />
         <figcaption className='sr-only'>LINKLE 로고</figcaption>
       </figure>
+
+      {/* 테스트 버튼 */}
+      {/* <AuthFilledButton type='button'
+        className='mt-2 mb-5'
+        onClick={handleTestClick}>
+        각종 테스트
+      </AuthFilledButton> */}
 
       {/* 로그인 폼 */}
       <form
@@ -112,15 +138,15 @@ export default function LoginPage() {
 
       {/* 비밀번호 찾기 링크 */}
       <div className='text-base mb-7'>
-        <a href='/forgot' className='font-semibold text-linkleGray hover:text-black'>
+        <Link to='/password/reset' className='font-semibold text-linkleGray hover:text-black'>
           비밀번호를 잊으셨나요?
-        </a>
+        </Link>
       </div>
 
       {/* 계정 만들기 버튼 */}
-      <a href='/signup' className='w-full max-w-sm'>
+      <Link to='/signup' className='w-full max-w-sm'>
         <AuthOutlinedButton>새 계정 만들기</AuthOutlinedButton>
-      </a>
+      </Link>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 // src/components/search/FriendSearchPanel.tsx
 import { type RefObject, type KeyboardEvent, useState } from "react";
-import { MessageCircle, Clock, UserPlus, Users } from "lucide-react";
+import { MessageCircle, Clock, UserPlus, Users, Search } from "lucide-react";
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import { openDm } from "@/services/chat";
 import { sendFriendRequest } from "@/api/friendApi";
@@ -75,7 +75,7 @@ export default function FriendSearchPanel({
             const data = await sendFriendRequest(loggedInUserId, targetUserId);
             setSearchResults(prev =>
                 prev.map(user =>
-                    user.id === targetUserId
+                    user.friendUserid === targetUserId
                         ? { ...user, profileType: data.state === "ACCEPTED" ? "friend" : "wait" }
                         : user
                 )
@@ -93,7 +93,8 @@ export default function FriendSearchPanel({
         switch (user.profileType) {
             case "self":
                 return (
-                    <Link to="/friend" className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg border flex items-center">
+                    <Link to="/friend" className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg border flex items-center"
+                    >
                         <Users className="w-4 h-4 mr-1" />
                         친구 목록
                     </Link>
@@ -104,7 +105,7 @@ export default function FriendSearchPanel({
                         disabled={config.disabled}
                         className={`flex items-center gap-1 px-3 py-2 rounded-lg text-white text-sm font-medium ${config.color} ${config.disabled ? "opacity-50" : "hover:opacity-90"
                             }`}
-                        onClick={() => handleAddFriend(user.id)}
+                        onClick={() => handleAddFriend(user.friendUserid)}
                     >
                         {ButtonIcon && <ButtonIcon className="w-4 h-4" />}
                         {config.text}
@@ -113,7 +114,7 @@ export default function FriendSearchPanel({
             case "friend":
                 return (
                     <button
-                        onClick={() => handleMessage(user.id)}
+                        onClick={() => handleMessage(user.friendUserid)}
                         disabled={loading}
                         className="flex items-center gap-1 px-3 py-2 rounded-lg text-white text-sm font-medium bg-blue-500 disabled:opacity-60"
                     >
@@ -135,47 +136,56 @@ export default function FriendSearchPanel({
     return (
         <div className="flex flex-col h-full bg-white">
             {/* 검색창 */}
-            <div className="flex items-center p-2 border-b border-gray-200 gap-x-2">
-                <input
-                    id="friend-search-input"
-                    ref={inputRef}
-                    type="text"
-                    placeholder="친구 검색"
-                    className="flex-1 px-3 py-3 rounded-lg bg-gray-100 text-base outline-none"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-                        if (e.key === "Enter") {
-                            handleSearch(1);
-                            e.currentTarget.blur();
-                        }
-                    }}
-                />
-                <button
-                    type="button"
-                    onClick={() => handleSearch(1)}
-                    className="w-14 h-12 flex items-center justify-center bg-white cursor-pointer"
-                >
-                    <img src="/icons/mapicon/search.png" alt="검색" className="w-7 h-7" />
-                </button>
+            {/* <div className="flex items-center p-2 border-b border-gray-200 gap-x-2"> */}
+            <div className="bg-white px-4 py-3 border-b">
+                <div className="flex items-center gap-2">
+                    {/* 입력창 */}
+                    <div className="relative flex-1">
+                        <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                        <input
+                            id="friend-search-input"
+                            ref={inputRef}
+                            type="text"
+                            placeholder="친구 검색"
+                            className="w-full pl-10 pr-4 py-2 rounded-lg bg-gray-100 text-base outline-none focus:ring-2 focus:ring-blue-500"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
+                                if (e.key === "Enter") {
+                                    handleSearch(1);
+                                    e.currentTarget.blur();
+                                }
+                            }}
+                        />
+                    </div>
+
+                    {/* 검색 버튼 */}
+                    <button
+                        type="button"
+                        onClick={() => handleSearch(1)}
+                        className="px-3 py-2 text-sm text-gray-600 hover:text-blue-600"
+                    >
+                        <img src="/icons/mapicon/search.png" className="w-5 h-5"></img>
+                    </button>
+                </div>
             </div>
 
             {/* 검색 결과 */}
             <div className="flex-1 min-h-0 overflow-y-auto p-2">
                 {searchResults.length > 0 ? (
                     searchResults.map((user) => {
-                        const isDefaultImage = user.imageUrl === 'public.png' || !user.imageUrl;
+                        const isDefaultImage = user.image === 'public.png' || !user.image;
 
                         const profileImageSrc = isDefaultImage
                             ? user.gender === '남성'
                                 ? '/icons/public/Man.png'
                                 : '/icons/public/Woman.png'
-                            : `/api/user/view/profile/${user.id}`;
+                            : `/api/user/view/profile/${user.friendUserid}`;
 
                         return (
-                            <div key={user.id} className="flex justify-between items-center py-2 border-b border-gray-200 px-2 gap-x-4">
+                            <div key={user.friendUserid} className="flex justify-between items-center py-2 border-b border-gray-200 px-2 gap-x-4">
                                 <div className="flex items-center gap-3 flex-1">
-                                    <Link to={`/profile`} state={{ userId: user.id, gender: user.gender }}>
+                                    <Link to={`/profile`} state={{ userId: user.friendUserid, gender: user.gender, friendId: user.friendUserid, profileType: user.profileType }}>
                                         <img
                                             src={profileImageSrc}
                                             alt={`${user.name} 프로필`}

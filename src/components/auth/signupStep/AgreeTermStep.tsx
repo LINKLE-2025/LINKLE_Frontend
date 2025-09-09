@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import AuthInput from "@/components/auth/AuthInput";
 import AuthFilledButton from "@/components/auth/AuthFilledButton";
+import { Link } from "react-router-dom";
 
 // 약관 데이터
 type Term = {
@@ -73,14 +74,14 @@ export default function AgreeTermStep({ value, onChange, onNext }: Props) {
                 {term.title}
                 {term.required && "(필수)"}
               </span>
-              <a
-                href={term.link}
+              <Link
+                to={term.link}
                 target='_blank'
                 rel='noopener noreferrer'
                 className='text-sm text-blue-500'
               >
                 더 알아보기
-              </a>
+              </Link>
             </div>
             <input
               type='checkbox'

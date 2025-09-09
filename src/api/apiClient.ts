@@ -5,4 +5,23 @@ const apiClient = axios.create({
   withCredentials: true, // ✅ HttpOnly Cookie 전송
 });
 
+// Lazy Refresh 인터셉터
+let isRefreshing = false;
+let refreshSubscribers: ((tokenRefreshed: boolean) => void)[] = [];
+
+// 모든 요청 후 응답 인터셉터
+apiClient.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (!navigator.onLine || err.code === "ERR_NETWORK") {
+      window.location.href = "/error/network";
+    } else if (err.response?.status >= 500) {
+      window.location.href = "/error/server";
+    } else if (err.response?.status === 401) {
+      // window.location.href = "/error/auth";
+    }
+    return Promise.reject(err);
+  },
+);
+
 export default apiClient;

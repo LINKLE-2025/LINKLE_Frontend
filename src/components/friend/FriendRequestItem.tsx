@@ -1,6 +1,5 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
-
+import { getProfileImageSrc } from '@/utils/profileUtils';
 
 // 친구 요청을 받거나 보낸 리스트를 보여줌
 // Friend Request 정보를 담아 준다.
@@ -33,13 +32,7 @@ function FriendRequestItem({
   onCancel,
   image
 }: FriendRequestItemProps) {
-  const isDefaultImage = image === 'public.png' || !image;
-
-  const profileImageSrc = isDefaultImage
-    ? gender === '남성'
-      ? '/icons/public/Man.png'
-      : '/icons/public/Woman.png'
-    : `/api/user/view/profile/${id}`;
+  const { src: profileImageSrc, isDefault } = getProfileImageSrc(id, image, gender);
 
   return (
     // 친구 리스트에서 각 친구 항목을 표시해주는 영역
@@ -55,7 +48,7 @@ function FriendRequestItem({
           <img
             src={profileImageSrc}
             alt={`${name} 프로필`}
-            className={`w-12 h-12 object-cover rounded-full cursor-pointer ${isDefaultImage ? 'opacity-20 bg-blue-100' : ''
+            className={`w-12 h-12 object-cover rounded-full cursor-pointer ${isDefault ? 'opacity-20 bg-blue-100' : ''
               }`}
 
           />

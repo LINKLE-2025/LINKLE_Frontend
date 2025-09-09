@@ -14,27 +14,30 @@ export const getUserPosts = async (userId: number) => {
 };
 
 // 프로필 수정
+// 프로필 수정
 export const patchUserProfile = async (
   userId: number,
   profileData: {
-    name: string;
+    name?: string;
     password?: string;
-    nickname: string;
+    nickname?: string;
+    gender?: string;
+    memo?: string;
+    email?: string;
+    accountNumber?: string;
   },
   files: { profile?: File | null; background?: File | null }
 ) => {
   const formData = new FormData();
-  formData.append("name", profileData.name);
-  if (profileData.password) {
-    formData.append("password", profileData.password);
-  }
-  formData.append("nickname", profileData.nickname);
-  if (files.profile) {
-    formData.append("profile", files.profile);
-  }
-  if (files.background) {
-    formData.append("background", files.background);
-  }
+
+  // ✅ dto만 JSON Blob으로 추가
+  formData.append(
+    "dto",
+    new Blob([JSON.stringify(profileData)], { type: "application/json" })
+  );
+
+  if (files.profile) formData.append("profile", files.profile);
+  if (files.background) formData.append("background", files.background);
 
   const res = await apiClient.patch(`/user/${userId}`, formData, {
     headers: { "Content-Type": "multipart/form-data" },

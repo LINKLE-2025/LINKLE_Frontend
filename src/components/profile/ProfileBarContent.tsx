@@ -12,14 +12,20 @@ interface ProfileContentProps {
   profileType: 'self' | 'friend' | 'stranger' | 'wait';
   isVerified?: boolean;
   friendId?: number;
+  gender?: string;
+  image?: string | null;
+  background?: string | null;
 }
 
 // ProfileBarContent 컴포넌트
 function ProfileContent({
   userId,
   profileType,
-  isVerified = false,
   friendId,
+  isVerified = false,
+  gender,
+  image,
+  background
 }: ProfileContentProps) {
   // ActionMenu 훅 사용
   // openMenu: 액션 시트 열기 함수
@@ -30,18 +36,30 @@ function ProfileContent({
   // 프로필 편집 또는 친구 관리 버튼 클릭 시 실행되는 함수
   // 각 버튼 클릭 시 다른 액션 시트를 보여줌
   const onEditProfile = async () => {
-    // 3개 들어올 때 액션
     await openMenu({
       title: "내 프로필 관리",
-      // 작업
       actions: [
-        { id: "edit", label: "프로필 편집", type: "link", href: `/profileEdit/${userId}`, icon: <Settings className="h-5 w-5" /> },
-        { id: "account", label: "계좌 관리", type: "link", href: "/accountManage", icon: <CreditCard className="h-5 w-5" /> },
+        {
+          id: "edit",
+          label: "프로필 편집",
+          type: "link",
+          href: `/profileEdit/${userId}`,
+          state: { gender, image, background },
+          icon: <Settings className="h-5 w-5" />,
+        },
+        {
+          id: "account",
+          label: "계좌 관리",
+          type: "link",
+          href: "/accountManage",
+          icon: <CreditCard className="h-5 w-5" />,
+        },
       ],
       cancelText: "취소",
       closeOnOverlay: true,
     });
   };
+
 
   // 링커 생성시 실행되는 함수
   const onCreateLinker = async () => {

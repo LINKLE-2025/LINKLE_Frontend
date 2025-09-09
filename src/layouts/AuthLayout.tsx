@@ -24,7 +24,9 @@ export default function AuthLayout() {
 
       {/* Header */}
       {location.pathname === "/signup" ? (
-        <BackTitleHeader title='회원가입' className='bg-white/60' />
+        <></>
+      ) : location.pathname === "/password/reset" ? (
+        <></>
       ) : (
         <MainHeader className='bg-white/60' />
       )}
