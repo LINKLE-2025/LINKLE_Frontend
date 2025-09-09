@@ -13,6 +13,7 @@ export function determineProfileTypes(
       name: user.name,
       nickname: user.nickname,
       imageUrl: user.imageUrl,
+      gender: user.gender,
       profileType:
         user.state === "ACCEPTED"
           ? "friend"

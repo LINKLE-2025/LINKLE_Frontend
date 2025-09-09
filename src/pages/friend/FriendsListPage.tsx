@@ -66,15 +66,14 @@ function FriendsListPage() {
       </div>
 
       {/* 친구 요청 버튼 */}
-      <div className="bg-white mb-2">
+      <div className="bg-white mb-2 border-b">
         <Link to="/received" className="text-gray-900 font-medium">
           <button
-            className="w-full flex items-center justify-between px-4 py-4 hover:bg-gray-50"
-            onClick={() => console.log('친구 요청 화면으로 이동')}
+            className="w-full max-w-[calc(100%-2rem)] flex items-center justify-between px-4 py-4 hover:bg-gray-50 rounded-xl shadow-md mb-4 mt-4 ml-4 mr-8"
           >
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <Users className="w-5 h-5 text-blue-600" />
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-2">
+                <Users className="w-5 h-5" />
               </div>
               {receivedCount}명의 친구 요청
             </div>
@@ -100,6 +99,8 @@ function FriendsListPage() {
                 nickname={friend.nickname}
                 buttonType={friend.state === 'ACCEPTED' ? '메시지' : '친구 추가'}
                 friendId={friend.friendId}
+                image={friend.imageUrl}
+                gender={friend.gender}
               />
             ))}
           </div>

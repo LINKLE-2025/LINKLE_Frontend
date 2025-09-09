@@ -1,5 +1,6 @@
 import PrimaryButton from "@/components/auth/AuthFilledButton";
 import { useEffect } from "react";
+import { Link } from "react-router-dom";
 
 export default function LandingPage() {
   useEffect(() => {
@@ -30,6 +31,7 @@ export default function LandingPage() {
       </figure>
 
       {/* 소개 멘트 */}
+      <Link to='/profile'><button>ad</button></Link>
       <p className='text-gray-600 text-base md:text-lg leading-relaxed mt-1 mb-5'>
         링커에 참여하고 친구들을 만나
         <br />
