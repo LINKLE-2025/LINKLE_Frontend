@@ -29,7 +29,7 @@ export default function LandingRedirect() {
         checkLogin();
     }, []);
 
-    if (loading) {
+    if (loggedIn !== null && loading) {
         return <FullScreenLoader />; // ✅ 스플래시 화면
     }
 

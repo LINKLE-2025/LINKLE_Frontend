@@ -9,6 +9,7 @@ import NicknameStep from "@/components/auth/signupStep/NicknameStep";
 import AgreeTermStep from "@/components/auth/signupStep/AgreeTermStep";
 import BackTitleHeader from "@/components/header/BackTitleHeader";
 import { signup } from "@/api/authApi";
+import { Link } from "react-router-dom";
 
 // 각 단계별 안내 문구
 const stepContents: Record<number, { title: string; description: string }> = {
@@ -195,9 +196,9 @@ export default function SignupPage() {
       </div>
       {/* 로그인 이동 링크 */}
       <div className='text-base sm:mb-10'>
-        <a href='/login' className='text-base font-bold text-linkleGray hover:text-black'>
+        <Link to='/login' className='text-base font-bold text-linkleGray hover:text-black'>
           이미 계정이 있습니다
-        </a>
+        </Link>
       </div>
     </div>
   );

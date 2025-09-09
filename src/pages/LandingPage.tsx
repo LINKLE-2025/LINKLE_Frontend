@@ -42,13 +42,13 @@ export default function LandingPage() {
 
       {/* 로그인 및 회원가입 이동 버튼 */}
       <p className='text-base md:text-base mb-5'>
-        <a href='/login' className='font-semibold text-linkleGray hover:text-black'>
+        <Link to='/login' className='font-semibold text-linkleGray hover:text-black'>
           로그인
-        </a>
+        </Link>
         <span className='text-gray-400'> 또는 </span>
-        <a href='/signup' className='font-semibold text-linkleGray hover:text-black'>
+        <Link to='/signup' className='font-semibold text-linkleGray hover:text-black'>
           가입하기
-        </a>
+        </Link>
       </p>
     </div>
   );

@@ -3,6 +3,7 @@ import AuthFilledButton from "@/components/auth/AuthFilledButton";
 import AuthInput from "@/components/auth/AuthInput";
 import AuthOutlinedButton from "@/components/auth/AuthOutlinedButton";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function LoginPage() {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -49,11 +50,11 @@ export default function LoginPage() {
         // JWT 토큰 저장 (예: localStorage)
         localStorage.setItem("token", responseData.token);
         console.log("로그인 성공:", responseData);
-        alert("로그인 성공!");
+        // alert("로그인 성공!");
         // 현재 로그인한 사용자 정보 조회
         const loginUserData = await getCurrentUserInfo();
         console.log("현재 로그인한 사용자 정보:", loginUserData);
-        alert("로그인 유저 정보: " + JSON.stringify(loginUserData));
+        // alert("로그인 유저 정보: " + JSON.stringify(loginUserData));
         window.location.href = "/"; // 메인 페이지 이동
       } else {
         setError("이메일 또는 비밀번호가 올바르지 않습니다.");
@@ -79,7 +80,7 @@ export default function LoginPage() {
   // };
 
   return (
-    <div className='flex flex-col items-center justify-center mx-auto w-full max-w-[630px] px-6 animate-fadeIn'>
+    <div className='flex flex-col items-center justify-center mx-auto w-full max-w-[630px] px-6'>
       {/* 로고 */}
       <figure className='flex flex-col items-center mb-3'>
         <img
@@ -137,15 +138,15 @@ export default function LoginPage() {
 
       {/* 비밀번호 찾기 링크 */}
       <div className='text-base mb-7'>
-        <a href='/forgot' className='font-semibold text-linkleGray hover:text-black'>
+        <Link to='/forgot-password' className='font-semibold text-linkleGray hover:text-black'>
           비밀번호를 잊으셨나요?
-        </a>
+        </Link>
       </div>
 
       {/* 계정 만들기 버튼 */}
-      <a href='/signup' className='w-full max-w-sm'>
+      <Link to='/signup' className='w-full max-w-sm'>
         <AuthOutlinedButton>새 계정 만들기</AuthOutlinedButton>
-      </a>
+      </Link>
     </div>
   );
 }
