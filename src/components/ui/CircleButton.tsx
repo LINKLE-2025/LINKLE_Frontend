@@ -14,7 +14,7 @@ const CircleButton: React.FC<CircleButtonProps> = ({ imgSrc, alt, onClick, class
     <button
       type="button"
       onClick={onClick}
-      className={`w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-md cursor-pointer aria-pressed:opacity-80 ${className}`}
+      className={`w-10 h-10 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center shadow-md cursor-pointer transition-all duration-200 hover:shadow-lg aria-pressed:opacity-80 ${className}`}
       aria-label={alt}
     >
       {imgSrc ? <img src={imgSrc} alt="" className="w-5 h-5" aria-hidden /> : children}

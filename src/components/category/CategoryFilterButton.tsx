@@ -1,18 +1,27 @@
-import { useState } from "react";
+// src/components/ui/CategoryFilterButton.tsx
+import React from "react";
 
 interface Props {
-  onOpen: () => void;
+  onClick: () => void;
+  isActive?: boolean; // 선택 상태 여부
 }
 
-export default function CategoryFilterButton({ onOpen }: Props) {
+const CategoryFilterButton: React.FC<Props> = ({ onClick, isActive = false }) => {
   return (
-    <div className='w-full bg-white shadow-sm px-4 py-2 flex justify-center border-b border-gray-200'>
+    <div className="absolute top-4 left-4 z-10">
       <button
-        className='px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow transition-colors'
-        onClick={onOpen}
+        className={`
+          px-4 py-2 rounded-lg border-2 border-gray-300 bg-white shadow-md
+          transition-all duration-200
+          ${isActive ? "text-yellow-500 shadow-lg" : "text-blue-500 hover:shadow-lg"}
+          hover:bg-gray-100
+        `}
+        onClick={onClick}
       >
-        🏷️ 카테고리 필터 열기
+        ⭐
       </button>
     </div>
   );
-}
+};
+
+export default CategoryFilterButton;

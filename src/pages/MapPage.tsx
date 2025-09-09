@@ -24,7 +24,7 @@ import ClusterMarkerList from "@/components/linker/ClustermarkerItem";
 import AddressDisplay from "@/components/map/AddressDisplay";
 import BackTitleHeader from "@/components/header/BackTitleHeader";
 import LinkerListModal from "@/components/linker/ListLinkerDetail";
-
+import CategoryFilterButton from "@/components/category/CategoryFilterButton";
 type LayoutContext = { headerHeight: number; footerHeight: number };
 
 interface StoredSpot {
@@ -324,11 +324,14 @@ export default function MapPage(): React.ReactElement {
   // 서버 저장
   const handleSaveLinker = async (payload: LinkerPayload) => {
     try {
-      await saveLinker(payload);
+      const savedLinker = await saveLinker(payload);
+
+
       // 🔥 지도와 클러스터러가 모두 준비된 경우에만 실행
       if (kakaoMapRef.current && clustererRef.current) {
         await loadExistingLinkers(kakaoMapRef.current, clustererRef.current, onOpenDetailById);
       }
+
     } catch (e) {
       console.error(e);
       alert("저장에 실패했습니다.");
@@ -795,21 +798,13 @@ export default function MapPage(): React.ReactElement {
 
         {/* 🔥 카테고리 토글 버튼 (커스텀 훅의 함수 사용) */}
         {!searchOpen && (
-          <div className='absolute top-4 left-4 z-10'>
-            <button
-              className={`px-4 py-2 rounded-lg shadow transition-colors ${categoryFilterOpen
-                ? "bg-yellow-500 hover:bg-yellow-600 text-white"
-                : "bg-blue-500 hover:bg-blue-600 text-white"
-                }`}
-              onClick={() => {
-                console.log("⭐ 카테고리 필터 토글");
-                setCategoryFilterOpen(!categoryFilterOpen);
-              }}
-            >
-              ⭐
-            </button>
-          </div>
+          <CategoryFilterButton
+            onClick={() => setCategoryFilterOpen(!categoryFilterOpen)}
+            isActive={categoryFilterOpen}
+          />
         )}
+
+
 
         {/* 지도 컨트롤 버튼들 (오른쪽 하단) */}
         {!searchOpen && (
@@ -869,6 +864,7 @@ export default function MapPage(): React.ReactElement {
         onClose={() => setSearchOpen(false)}
         snapPoints={[0.6, 0.3]}
         initialSnap={0}
+        style={{ bottom: footerHeight }}
       >
         <Sheet.Container>
           <Sheet.Header>
@@ -902,6 +898,11 @@ export default function MapPage(): React.ReactElement {
           setLinkerInitial(null);
           draftMarkerRef.current?.setMap(null);
           draftMarkerRef.current = null;
+          setSearchOpen(false);
+          setSearchQuery("");
+          setSearchResults([]);
+          searchMarkers.current.forEach((m) => m.setMap(null));
+          searchMarkers.current = [];
         }}
         onSubmit={handleSaveLinker}
       />
