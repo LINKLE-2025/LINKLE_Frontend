@@ -1,6 +1,6 @@
 import React from 'react';
 import { useActionMenu } from "@/components/modal/useActionMenu";
-import { Settings, CreditCard, Trash2, ChevronLeft } from "lucide-react";
+import { Settings, CreditCard, Trash2, ChevronLeft, Ellipsis } from "lucide-react";
 import { fr } from 'date-fns/locale';
 import { deleteFriend } from "@/api/friendApi";
 import { add } from 'date-fns';
@@ -137,7 +137,7 @@ function ProfileBarContent({
     switch (profileType) {
       case 'self':
         return (
-          <button onClick={onEditProfile} className="text-lg rounded-lg px-4 py-2">...</button>
+          <Ellipsis onClick={onEditProfile} className="px-4 py-2" />
         );
       case 'stranger':
         return (
@@ -145,7 +145,7 @@ function ProfileBarContent({
         );
       case 'friend':
         return (
-          <button onClick={onFriendMenu} className="rounded-lg px-4 py-2">...</button>
+          <Ellipsis onClick={onFriendMenu} className="px-4 py-2" />
         );
       case 'wait':
         return (
@@ -168,7 +168,10 @@ function ProfileBarContent({
         );
       case 'friend':
         return (
-          <ChevronLeft onClick={onFriendMenu}></ChevronLeft>
+          <ChevronLeft
+            onClick={onFriendMenu}
+            className="w-6 h-6 text-gray-800 cursor-pointer hover:opacity-80"
+          ></ChevronLeft>
         );
       case 'wait':
         return (
