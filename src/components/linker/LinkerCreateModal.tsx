@@ -191,9 +191,8 @@ export default function LinkerCreateModal({
                         type='button'
                         key={id}
                         onClick={() => setActivityId(id)}
-                        className={`flex flex-col items-center justify-center rounded-xl border px-2 py-2.5 text-sm cursor-pointer transition ${
-                          selected ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white"
-                        }`}
+                        className={`flex flex-col items-center justify-center rounded-xl border px-2 py-2.5 text-sm cursor-pointer transition ${selected ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white"
+                          }`}
                         aria-pressed={selected}
                         aria-label={`${label} 선택`}
                       >
@@ -220,17 +219,17 @@ export default function LinkerCreateModal({
 
             <div className='flex gap-2 border-t border-gray-200 p-4'>
               <button
+                type='submit'
+                className='flex-[2] rounded-lg border-0 bg-gray-900 py-2.5 text-white'
+              >
+                링커 생성하기
+              </button>
+              <button
                 type='button'
                 onClick={onClose}
                 className='flex-1 rounded-lg border border-gray-300 bg-white py-2.5'
               >
                 취소
-              </button>
-              <button
-                type='submit'
-                className='flex-[2] rounded-lg border-0 bg-gray-900 py-2.5 text-white'
-              >
-                링커 생성하기
               </button>
             </div>
           </form>
