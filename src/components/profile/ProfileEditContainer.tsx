@@ -29,13 +29,8 @@ export default function ProfileEditContainer({ userId }: { userId: number }) {
   const { src: profileImageSrc, isDefault } = getProfileImageSrc(userId, image, gender);
   const { src: backgroundImageSrc, isDefault: isBgDefault } = getBackgroundImageSrc(userId, background);
 
-  const [profilePreview, setProfilePreview] = useState<string>(
-    `/api/user/view/profile/${userId}?v=${Date.now()}`
-  );
-
-  const [bgPreview, setBgPreview] = useState<string>(
-    `/api/user/view/background/${userId}?v=${Date.now()}`
-  );
+  const [profilePreview, setProfilePreview] = useState<string>("");
+  const [bgPreview, setBgPreview] = useState<string>("");
 
   useEffect(() => {
     getUserProfile(userId).then((data) => {
@@ -73,6 +68,7 @@ export default function ProfileEditContainer({ userId }: { userId: number }) {
     <div className="max-w-md mx-auto bg-white min-h-screen">
       {/* 배경 업로더 */}
       <BackgroundImageUploader
+        bgPreview={bgPreview}
         getBackgroundImageSrc={backgroundImageSrc}
         onChange={(file, previewUrl) => {
           setBackgroundFile(file);
@@ -82,6 +78,7 @@ export default function ProfileEditContainer({ userId }: { userId: number }) {
 
       {/* 프로필 업로더 */}
       <ProfileImageUploader
+        profilePreview={profilePreview}
         getProfileImageSrc={profileImageSrc}
         onChange={(file, previewUrl) => {
           setProfileFile(file);

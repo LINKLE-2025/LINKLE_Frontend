@@ -1,12 +1,19 @@
-// src/components/search/FriendSearchPanel.tsx
-import { type RefObject, type KeyboardEvent, useState } from "react";
+import { useState, type RefObject, type KeyboardEvent } from "react";
 import { MessageCircle, Clock, UserPlus, Users, Search } from "lucide-react";
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import { openDm } from "@/services/chat";
 import { sendFriendRequest } from "@/api/friendApi";
 import { FriendSummaryWithProfileType, ProfileType } from "@/types/friend";
 import { useLocation } from "react-router-dom";
-import path from "path";
+
+interface SearchLinkerResponseDTO {
+    linkerId: number;
+    name: string;
+    categoryId: number;
+    memo: string;
+    chatRoomCount: number;
+    postCount: number;
+}
 
 type OutletContextType = { loggedInUserId: number };
 
@@ -20,14 +27,7 @@ export interface FriendSearchPanelProps {
     inputRef: RefObject<HTMLInputElement | null>;
 }
 
-type ButtonConfig = {
-    text: string;
-    color: string;
-    disabled: boolean;
-    icon?: React.ComponentType<{ className?: string }>;
-};
-
-const getButtonConfig = (profileType: ProfileType): ButtonConfig => {
+const getButtonConfig = (profileType: ProfileType) => {
     switch (profileType) {
         case "friend":
             return { text: "메시지", icon: MessageCircle, color: "bg-blue-500", disabled: false };
@@ -51,17 +51,36 @@ export default function FriendSearchPanel({
     inputRef,
 }: FriendSearchPanelProps) {
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(false);
     const { loggedInUserId } = useOutletContext<OutletContextType>();
     const location = useLocation();
     const pathname = location.pathname;
+    const [loading, setLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState<"friend" | "linker">("friend");
+    const [linkerResults, setLinkerResults] = useState<SearchLinkerResponseDTO[]>([]);
+
+    const fetchLinkers = async () => {
+        try {
+            const res = await fetch(`/api/search/linker?word=${searchQuery}`);
+            const data = await res.json();
+            setLinkerResults(data);
+        } catch (err) {
+            console.error("링커 검색 실패:", err);
+        }
+    };
+
+    const handleTabSearch = () => {
+        if (activeTab === "friend") {
+            handleSearch(1);
+        } else {
+            fetchLinkers();
+        }
+    };
 
     const handleMessage = async (targetUserId: number) => {
         if (loading || targetUserId === loggedInUserId) {
             alert("자기 자신에게는 DM을 보낼 수 없습니다.");
             return;
         }
-
         setLoading(true);
         try {
             const room = await openDm(targetUserId);
@@ -94,28 +113,21 @@ export default function FriendSearchPanel({
         const config = getButtonConfig(user.profileType);
         const ButtonIcon = config.icon;
 
-
         switch (user.profileType) {
             case "self":
                 return (
-                    <Link
-                        to="/friend"
-                        className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg border flex items-center"
-                    >
-                        <Users className="w-4 h-4 mr-1" />
-                        친구 목록
+                    <Link to="/friend" className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg border flex items-center">
+                        <Users className="w-4 h-4 mr-1" /> 친구 목록
                     </Link>
                 );
             case "stranger":
                 return (
                     <button
                         disabled={config.disabled}
-                        className={`flex items-center gap-1 px-3 py-2 rounded-lg text-white text-sm font-medium ${config.color} ${config.disabled ? "opacity-50" : "hover:opacity-90"
-                            }`}
+                        className={`flex items-center gap-1 px-3 py-2 rounded-lg text-white text-sm font-medium ${config.color} ${config.disabled ? "opacity-50" : "hover:opacity-90"}`}
                         onClick={() => handleAddFriend(user.friendUserid)}
                     >
-                        {ButtonIcon && <ButtonIcon className="w-4 h-4" />}
-                        {config.text}
+                        {ButtonIcon && <ButtonIcon className="w-4 h-4" />} {config.text}
                     </button>
                 );
             case "friend":
@@ -125,8 +137,7 @@ export default function FriendSearchPanel({
                         disabled={loading}
                         className="flex items-center gap-1 px-3 py-2 rounded-lg text-white text-sm font-medium bg-blue-500 disabled:opacity-60"
                     >
-                        <MessageCircle className="w-4 h-4" />
-                        {loading ? "여는 중…" : "메시지"}
+                        <MessageCircle className="w-4 h-4" /> {loading ? "여는 중…" : "메시지"}
                     </button>
                 );
             case "wait":
@@ -142,89 +153,122 @@ export default function FriendSearchPanel({
 
     return (
         <div className="flex flex-col h-full bg-white">
+
+
             {/* 검색창 */}
-            {/* <div className="flex items-center p-2 border-b border-gray-200 gap-x-2"> */}
             <div className="bg-white px-4 py-3 border-b">
                 <div className="flex items-center gap-2">
-                    {/* 입력창 */}
                     <div className="relative flex-1">
                         <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
                         <input
                             id="friend-search-input"
                             ref={inputRef}
                             type="text"
-                            placeholder="친구 검색"
+                            placeholder="검색어 입력"
                             className="w-full pl-10 pr-4 py-2 rounded-lg bg-gray-100 text-base outline-none focus:ring-2 focus:ring-blue-500"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
                                 if (e.key === "Enter") {
-                                    handleSearch(1);
+                                    handleTabSearch();
                                     e.currentTarget.blur();
                                 }
                             }}
                         />
                     </div>
-
-                    {/* 검색 버튼 */}
                     <button
                         type="button"
-                        onClick={() => handleSearch(1)}
+                        onClick={() => handleTabSearch()}
                         className="px-3 py-2 text-sm text-gray-600 hover:text-blue-600"
                     >
-                        <img src="/icons/mapicon/search.png" className="w-5 h-5"></img>
+                        <img src="/icons/mapicon/search.png" className="w-5 h-5" />
                     </button>
                 </div>
             </div>
 
+            {/* 탭 버튼 */}
+            <div className="border-b flex text-sm font-medium">
+                <button
+                    className={`flex-1 px-4 py-2 border-b-2 ${activeTab === "friend" ? "border-black-500" : "border-transparent text-gray-400"
+                        }`}
+                    onClick={() => setActiveTab("friend")}
+                >
+                    친구 검색
+                </button>
+                <button
+                    className={`flex-1 px-4 py-2 border-b-2 ${activeTab === "linker" ? "border-black-500" : "border-transparent text-gray-400"
+                        }`}
+                    onClick={() => setActiveTab("linker")}
+                >
+                    링커 검색
+                </button>
+            </div>
+
             {/* 검색 결과 */}
             <div className="flex-1 min-h-0 overflow-y-auto p-2">
-                {searchResults.length > 0 ? (
-                    searchResults.map((user) => {
-                        const isDefaultImage = user.image === 'public.png' || !user.image;
+                {activeTab === "friend" ? (
+                    searchResults.length > 0 ? (
+                        searchResults.map((user) => {
+                            const isDefaultImage = user.image === 'public.png' || !user.image;
+                            const profileImageSrc = isDefaultImage
+                                ? user.gender === '남성'
+                                    ? '/icons/public/Man.png'
+                                    : '/icons/public/Woman.png'
+                                : `/api/user/view/profile/${user.friendUserid}`;
 
-                        const profileImageSrc = isDefaultImage
-                            ? user.gender === '남성'
-                                ? '/icons/public/Man.png'
-                                : '/icons/public/Woman.png'
-                            : `/api/user/view/profile/${user.friendUserid}`;
-
-                        return (
-                            <div key={user.friendUserid} className="flex justify-between items-center py-2 border-b border-gray-200 px-2 gap-x-4">
-                                <div className="flex items-center gap-3 flex-1">
-                                    <Link to={`/profile`} state={{ userId: user.friendUserid, gender: user.gender, friendId: user.friendUserid, profileType: user.profileType, pathname: pathname }}>
-                                        <img
-                                            src={profileImageSrc}
-                                            alt={`${user.name} 프로필`}
-                                            className={`w-12 h-12 object-cover rounded-full cursor-pointer ${isDefaultImage ? 'opacity-20 bg-blue-100' : ''
-                                                }`}
-                                        />
-                                    </Link>
-                                    <div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-medium text-gray-900">{user.name}</span>
-                                            {user.profileType === "friend" && (
-                                                <span className="px-2 py-0.5 bg-blue-100 text-blue-600 text-xs rounded-full">
-                                                    친구
-                                                </span>
-                                            )}
+                            return (
+                                <div key={user.friendUserid} className="flex justify-between items-center py-2 border-b border-gray-200 px-2 gap-x-4">
+                                    <div className="flex items-center gap-3 flex-1">
+                                        <Link to={`/profile`} state={{ userId: user.friendUserid, gender: user.gender, friendId: user.friendUserid, profileType: user.profileType, pathname }}>
+                                            <img
+                                                src={profileImageSrc}
+                                                alt={`${user.name} 프로필`}
+                                                className={`w-12 h-12 object-cover rounded-full cursor-pointer ${isDefaultImage ? 'opacity-20 bg-blue-100' : ''}`}
+                                            />
+                                        </Link>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-medium text-gray-900">{user.name}</span>
+                                                {user.profileType === "friend" && (
+                                                    <span className="px-2 py-0.5 bg-blue-100 text-blue-600 text-xs rounded-full">친구</span>
+                                                )}
+                                            </div>
+                                            <p className="text-sm text-gray-500">@{user.nickname}</p>
                                         </div>
-                                        <p className="text-sm text-gray-500">@{user.nickname}</p>
                                     </div>
+                                    {renderButton(user)}
                                 </div>
-
-                                {/* 타입별 버튼 */}
-                                {renderButton(user)}
-                            </div>
-                        );
-                    })
+                            );
+                        })
+                    ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-gray-400 mt-4">
+                            <img src="/icons/favicon/favicon.svg" alt="검색 없음" className="w-24 h-24 opacity-20 mb-4" />
+                            <p className="text-center text-sm">검색 결과가 없습니다</p>
+                        </div>
+                    )
                 ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-gray-400 mt-4">
-                        <img src="/icons/favicon/favicon.svg" alt="검색 없음" className="w-24 h-24 opacity-20 mb-4" />
-                        <p className="text-center text-sm">검색 결과가 없습니다</p>
-                    </div>
+                    linkerResults.length > 0 ? (
+                        linkerResults.map(linker => (
+                            <div key={linker.linkerId} className="p-3 border-b">
+                                <div
+                                    className="font-medium text-gray-800 cursor-pointer"
+                                    onClick={() => navigate("/map", { state: { openLinkerId: linker.linkerId } })}
+                                >
+                                    {linker.name}
+                                </div>
+                                <div className="text-sm text-gray-500">카테고리: {linker.categoryId}</div>
+                                <div className="text-sm text-gray-500">채팅방 수: {linker.chatRoomCount}, 포스트 수: {linker.postCount}</div>
+                                <div className="text-sm text-gray-400 mt-1">{linker.memo}</div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-gray-400 mt-4">
+                            <img src="/icons/favicon/favicon.svg" alt="검색 없음" className="w-24 h-24 opacity-20 mb-4" />
+                            <p className="text-center text-sm">링커 검색 결과가 없습니다</p>
+                        </div>
+                    )
                 )}
             </div>
-        </div>
+        </div >
     );
 }

@@ -63,14 +63,14 @@ export default memo(function ChatListItem2({
             onClick={onClick}
             type="button"
             className={clsx(
-                // ✅ ChatListItem과 동일한 래퍼 스타일
+                // ChatListItem과 동일한 래퍼 스타일
                 "w-full text-left px-4 py-3 bg-white rounded-xl shadow-sm border border-gray-100",
                 "hover:bg-gray-50 transition flex items-center gap-3",
                 "active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-gray-100",
                 className,
             )}
         >
-            {/* ✅ 동일한 아바타 원 (44px, 동그라미, object-cover + 폴백 이니셜) */}
+            {/* 동일한 아바타 원 (44px, 동그라미, object-cover + 폴백 이니셜) */}
             {!avatarError && avatarUrl ? (
                 <img
                     src={avatarUrl}
