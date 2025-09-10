@@ -29,6 +29,7 @@ interface ProfileContentProps {
   searchResults: FriendSummaryWithProfileType[];
   loggedInUserId: number;
   setSearchResults: React.Dispatch<React.SetStateAction<FriendSummaryWithProfileType[]>>;
+  pathname: string;
 }
 
 function ProfileContent({
@@ -46,11 +47,14 @@ function ProfileContent({
   background,
   loggedInUserId,
   setSearchResults,
+  pathname,
 }: ProfileContentProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   // 🔥 profileType을 로컬 상태로 관리
   const [currentType, setCurrentType] = useState<ProfileType>(profileType);
+
+
 
   // 부모에서 내려오는 profileType이 바뀌면 동기화
   useEffect(() => {
@@ -145,7 +149,8 @@ function ProfileContent({
             )
           }
         />
-        <div className="absolute top-0 right-2 z-20">
+        <div className="absolute top-0 left-0 w-full z-30">
+          {/* ← 버튼 등 */}
           <ProfileBarContent
             userId={userId}
             profileType={currentType}
@@ -154,6 +159,7 @@ function ProfileContent({
             gender={gender}
             image={image}
             background={background}
+            pathname={pathname}
           />
         </div>
       </div>

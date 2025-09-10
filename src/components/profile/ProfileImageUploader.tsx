@@ -1,15 +1,15 @@
 import React, { useRef } from "react";
 
 interface ProfileImageUploaderProps {
-    currentImage: string;
     onChange: (file: File, previewUrl: string) => void;
     size?: number; // 아바타 크기 (default 96px)
+    getProfileImageSrc?: any;
 }
 
 export default function ProfileImageUploader({
-    currentImage,
     onChange,
     size = 96,
+    getProfileImageSrc,
 }: ProfileImageUploaderProps) {
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -30,7 +30,7 @@ export default function ProfileImageUploader({
             style={{ width: size, height: size }}
         >
             <img
-                src={currentImage}
+                src={getProfileImageSrc}
                 alt="프로필"
                 className="w-full h-full object-cover rounded-full border-4 border-white shadow-md cursor-pointer"
                 onClick={() => inputRef.current?.click()}
