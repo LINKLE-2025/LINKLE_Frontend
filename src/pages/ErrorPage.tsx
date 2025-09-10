@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import type { ErrorType } from "@/types/error";
-import FullScreenLoader from "@/components/common/FullScreenLoader";
 
 const errorMessages: Record<
     ErrorType,

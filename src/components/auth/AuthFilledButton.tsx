@@ -20,7 +20,8 @@ export default function AuthFilledButton({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`bg-linkleGray hover:bg-black text-white font-bold py-2.5 rounded-full w-full max-w-sm disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+      className={`bg-linkleGray hover:bg-black text-white font-bold py-2.5 rounded-full w-full max-w-sm 
+                  disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
     >
       {children}
     </button>

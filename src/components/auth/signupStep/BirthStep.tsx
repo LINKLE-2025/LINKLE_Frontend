@@ -21,11 +21,19 @@ export default function BirthStep({ value, onChange, onNext }: Props) {
   const [open, setOpen] = useState(false);
 
   const handleNext = () => {
+    // 생년월일 입력 여부 확인
     if (!value) {
       setError("생년월일을 선택하세요.");
       return;
     }
-    // TODO: 생년월일 형식 검증 추가 가능
+    // 생년월일 유효성 검사
+    const birthDate = new Date(value);
+    const today = new Date();
+    if (isNaN(birthDate.getTime()) || birthDate > today) {
+      setError("유효한 날짜를 선택하세요.");
+      return;
+    }
+    // 오류 없으면 다음 단계로
     setError("");
     onNext();
   };
