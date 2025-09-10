@@ -240,7 +240,10 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
           </div>
 
           {/* 포스트 그리드 */}
-          <div className="px-1 pt-2 pb-6">
+          <div className="px-1 pt-2 pb-6" style={{
+            maxHeight: "43vh",     // 원하는 높이
+            overflowY: "auto"      // 이 안에서만 스크롤
+          }}>
             {postLoading && posts.length === 0 ? (
               <div className="p-6 text-center text-gray-500 text-sm">불러오는 중…</div>
             ) : postError ? (
