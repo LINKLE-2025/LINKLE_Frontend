@@ -19,6 +19,7 @@ export interface RoomResponseDTO {
   lastMessagePreview?: string | null;
   lastMessageDate?: string | null;
   linkerId?: number | null;
+  isMember?: boolean;
 }
 
 export interface MemberResponseDTO {

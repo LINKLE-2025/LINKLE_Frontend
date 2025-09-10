@@ -67,3 +67,20 @@ export async function createGroupRoom(payload: { name: string; memberIds: number
   });
   return data;
 }
+/** 특정 링커의 모든 방(내가 멤버가 아닐 수도 있음): GET /chat/room/by-linker?linkerId= */
+export async function getRoomsByLinker(linkerId: number) {
+  const { data } = await apiClient.get("/chat/room/by-linker", {
+    params: { linkerId },
+    headers: { "x-user-id": DEV_UID },
+  });
+  return data;
+}
+
+/** 방 들어오기 */
+export async function joinRoom(roomId: number) {
+  // body는 없어도 되면 null 전달
+  const { data } = await apiClient.post(`/chat/room/${roomId}/join`, null, {
+    headers: { "x-user-id": DEV_UID },
+  });
+  return data;
+}
