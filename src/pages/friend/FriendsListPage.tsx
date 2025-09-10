@@ -82,7 +82,7 @@ function FriendsListPage() {
 
       {/* 친구 요청 버튼 */}
       <div className="bg-white mb-2 border-b">
-        <Link to="/received" className="text-gray-900 font-medium">
+        <Link to="/profile/friend/received" className="text-gray-900 font-medium">
           <button className="w-full max-w-[calc(100%-2rem)] flex items-center justify-between px-4 py-4 hover:bg-gray-50 rounded-xl shadow-md mb-4 mt-4 ml-4 mr-8" >
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 rounded-full flex items-center justify-center mr-2">

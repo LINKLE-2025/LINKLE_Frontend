@@ -12,8 +12,7 @@ export default function useSilentRefresh() {
         }
       },
 
-      20 * 60 * 1000, // 20분마다 갱신 (Access Token 만료 시간 15분 고려)
-
+      5 * 60 * 1000, // 5분마다 갱신 (Access Token 만료 시간 30분 고려)
     );
 
     return () => clearInterval(interval);
