@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import PostForm, { LinkerLite } from "@/components/post/PostForm";
 import { createPost, getLinker } from "@/api/postApi";
+import { getCurrentUserId, getCurrentUserInfo } from "@/api/authApi";
 
 export default function PostCreatePage(): React.ReactElement {
   const { footerHeight } = useOutletContext<{ headerHeight: number; footerHeight: number }>();
@@ -13,6 +14,23 @@ export default function PostCreatePage(): React.ReactElement {
   const linkerId = sp.get("linkerId");
   const [linker, setLinker] = useState<LinkerLite | null>(location.state?.linker ?? null);
   const [submitting, setSubmitting] = useState(false);
+
+
+  //현재 로그인한 사용자 ID 상태
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // 로그인 사용자 정보 가져오기
+  useEffect(() => {
+    (async () => {
+      try {
+        const userId = await getCurrentUserId(); // 실제 숫자 or 문자열
+        setCurrentUserId(String(userId));        // FormData에 안전하게 string으로 변환
+      } catch (e) {
+        console.error("현재 사용자 정보 불러오기 실패", e);
+      }
+    })();
+  }, []);
+
 
   useEffect(() => {
     if (!linkerId) {
@@ -44,11 +62,13 @@ export default function PostCreatePage(): React.ReactElement {
       alert("사진을 첨부해 주세요.");
       return;
     }
-
+    if (currentUserId == null) {
+      alert("로그인한 사용자 정보를 불러오지 못했습니다. 다시 시도해주세요.");
+      return;
+    }
     try {
       setSubmitting(true);
-      await createPost(linkerId, text, file);
-
+      await createPost(linkerId, text, file, currentUserId);
       const openId = Number(linker?.linkerId ?? linkerId);
       navigate("/map", { replace: true, state: { openLinkerId: openId } });
     } catch (e: any) {
