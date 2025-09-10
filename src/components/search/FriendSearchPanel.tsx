@@ -5,6 +5,8 @@ import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import { openDm } from "@/services/chat";
 import { sendFriendRequest } from "@/api/friendApi";
 import { FriendSummaryWithProfileType, ProfileType } from "@/types/friend";
+import { useLocation } from "react-router-dom";
+import path from "path";
 
 type OutletContextType = { loggedInUserId: number };
 
@@ -51,6 +53,8 @@ export default function FriendSearchPanel({
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const { loggedInUserId } = useOutletContext<OutletContextType>();
+    const location = useLocation();
+    const pathname = location.pathname;
 
     const handleMessage = async (targetUserId: number) => {
         if (loading || targetUserId === loggedInUserId) {
@@ -90,10 +94,13 @@ export default function FriendSearchPanel({
         const config = getButtonConfig(user.profileType);
         const ButtonIcon = config.icon;
 
+
         switch (user.profileType) {
             case "self":
                 return (
-                    <Link to="/friend" className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg border flex items-center"
+                    <Link
+                        to="/friend"
+                        className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg border flex items-center"
                     >
                         <Users className="w-4 h-4 mr-1" />
                         친구 목록
@@ -185,7 +192,7 @@ export default function FriendSearchPanel({
                         return (
                             <div key={user.friendUserid} className="flex justify-between items-center py-2 border-b border-gray-200 px-2 gap-x-4">
                                 <div className="flex items-center gap-3 flex-1">
-                                    <Link to={`/profile`} state={{ userId: user.friendUserid, gender: user.gender, friendId: user.friendUserid, profileType: user.profileType }}>
+                                    <Link to={`/profile`} state={{ userId: user.friendUserid, gender: user.gender, friendId: user.friendUserid, profileType: user.profileType, pathname: pathname }}>
                                         <img
                                             src={profileImageSrc}
                                             alt={`${user.name} 프로필`}

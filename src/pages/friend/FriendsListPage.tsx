@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Search, Users, ChevronRight } from 'lucide-react';
 
 import FriendItem from '../../components/friend/FriendItem';
@@ -18,6 +18,7 @@ function FriendsListPage() {
   const [receivedCount, setReceivedCount] = useState<number>(0);
 
   const { loggedInUserId } = useOutletContext<OutletContextType>();
+  const location = useLocation();
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -47,7 +48,7 @@ function FriendsListPage() {
         console.error("친구 요청 수 불러오기 실패:", err);
       }
     })();
-  }, [loggedInUserId]);
+  }, [loggedInUserId, location.key]);
 
   return (
     <div className="max-w-md mx-auto bg-gray-50 min-h-screen flex flex-col">
@@ -88,7 +89,7 @@ function FriendsListPage() {
       </div>
 
       {/* 친구 목록 */}
-      <div className="bg-white flex-1">
+      <div className="bg-white flex-1 pb-24">
         {(debouncedQuery ? filteredFriends : friendList).length > 0 ? (
           <div className="divide-y divide-gray-100">
             {(debouncedQuery ? filteredFriends : friendList).map((friend) => (
@@ -110,6 +111,7 @@ function FriendsListPage() {
           </div>
         )}
       </div>
+
     </div>
   );
 }

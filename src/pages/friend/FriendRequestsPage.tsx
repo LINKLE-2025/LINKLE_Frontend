@@ -95,7 +95,7 @@ function FriendRequestsPage() {
   }, [profileUserId]);
 
   return (
-    <div className="max-w-md mx-auto bg-gray-50 min-h-screen flex flex-col">
+    <div className="max-w-md mx-auto bg-gray-50 min-h-screen flex flex-col pb-24">
       {/* 검색 헤더 - FriendsListPage와 동일 */}
       <div className="bg-white px-4 py-3 border-b flex items-center gap-2">
         <div className="relative flex-1">

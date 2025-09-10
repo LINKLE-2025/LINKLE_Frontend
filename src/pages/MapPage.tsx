@@ -288,7 +288,7 @@ export default function MapPage(): React.ReactElement {
 
       // 🔥 클러스터러에 새로운 마커들 추가
       clusterer.addMarkers(linkerMarkersRef.current);
-      map.setLevel(2); // 적절한 줌 레벨로 조정
+      map.setLevel(3); // 적절한 줌 레벨로 조정
       console.log(`🎯 최종 결과: ${createdMarkerCount}개 마커가 지도에 표시되었습니다.`);
 
     } catch (e) {
@@ -371,7 +371,7 @@ export default function MapPage(): React.ReactElement {
         const initMap = (latitude: number, longitude: number) => {
           const options = {
             center: new window.kakao.maps.LatLng(latitude, longitude),
-            level: 3,
+            level: 2,
           };
           const map = new window.kakao.maps.Map(container, options);
           kakaoMapRef.current = map;

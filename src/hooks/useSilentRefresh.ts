@@ -12,7 +12,7 @@ export default function useSilentRefresh() {
           // 실패 시 처리 필요 없음 → 인터셉터가 잡음
         }
       },
-      13 * 60 * 1000,
+      5 * 6 * 1000,
     );
 
     return () => clearInterval(interval);

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { openDm } from "@/services/chat";
 import { getProfileImageSrc } from '@/utils/profileUtils';
 
@@ -16,6 +16,8 @@ interface FriendItemProps {
 const DEV_UID = Number(import.meta.env.VITE_DEV_USER_ID ?? "1");
 
 function FriendItem({ targetUserId, name, nickname, buttonType, friendId, image, gender }: FriendItemProps) {
+  const location = useLocation();
+  const pathname = location.pathname;
   const { isDefault } = getProfileImageSrc(
     targetUserId, undefined, gender, true
   );
@@ -60,7 +62,7 @@ function FriendItem({ targetUserId, name, nickname, buttonType, friendId, image,
   return (
     <div className="flex items-center justify-between px-4 py-3">
       <div className="flex items-center space-x-3">
-        <Link to={`/profile`} state={{ userId: targetUserId, friendId: friendId, gender: gender }}>
+        <Link to={`/profile`} state={{ userId: targetUserId, friendId: friendId, gender: gender, pathname: pathname }}>
           <img
             src={profileImageSrc}
             alt={`${name} 프로필`}
