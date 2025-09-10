@@ -155,6 +155,7 @@ export default function MapPage(): React.ReactElement {
     setDetailLoading(true);
     setDetailError(null);
     setDetailData(null);
+    setShowClusterList(false);
 
     (async () => {
       try {
@@ -389,6 +390,7 @@ export default function MapPage(): React.ReactElement {
           // 🔥 클러스터 클릭 이벤트 등록 (한 번만 등록)
           window.kakao.maps.event.addListener(clusterer, "clusterclick", (cluster: any) => {
             console.log("🔥 클러스터 클릭 이벤트 발생!"); // 디버그 로그 추가
+            setDetailOpen(false);
 
             const level = (map as any).getLevel();
             const clusterData = cluster.getMarkers().map((m: any) => ({

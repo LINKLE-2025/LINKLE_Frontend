@@ -192,10 +192,9 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
     <Sheet
       isOpen={open}
       onClose={onClose}
-      snapPoints={[0.92, 0.78, 0.6]}
-      initialSnap={3}
+      snapPoints={[0.8, 0.6, 0.5]}
+      initialSnap={2}
       style={{ bottom: footerHeight }}
-      detent="content-height"
     >
       <Sheet.Container style={{ zIndex: 1500, boxShadow: "none" }}>
         <Sheet.Header>
@@ -279,7 +278,7 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
 
           {/* 탭 바 */}
           <div className='mt-2 border-b'
-            >
+          >
             <div className='flex items-center justify-around text-sm'>
               <button
                 className={activeTab === "post" ? "relative py-2 font-semibold" : "py-2 text-gray-400"}
@@ -315,10 +314,7 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
           </div>
 
           {/* 포스트 그리드 / 채팅 리스트 (탭에 따라 분기) */}
-         <div className="px-1 pt-2 pb-6" style={{
-            maxHeight: "43vh",     // 원하는 높이
-            overflowY: "auto"      // 이 안에서만 스크롤
-          }}>
+          <div className="px-1 pt-2 pb-6">
             {/* 포스트 탭 */}
             {activeTab === "post" && (
               postLoading && posts.length === 0 ? (
