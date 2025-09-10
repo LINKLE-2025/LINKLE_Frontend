@@ -354,6 +354,8 @@ export default function MapPage(): React.ReactElement {
 
   // 🔥 수정된 Kakao Map 로드 useEffect - 클러스터러 이벤트 중복 등록 방지
   useEffect(() => {
+    document.body.style.overflow = "hidden";
+    window.scrollTo(0, 0);
     if (!mapRef.current) return;
     const script = document.createElement("script");
     script.id = "kakao-map-script";
@@ -526,6 +528,9 @@ export default function MapPage(): React.ReactElement {
           initMap(lat, lng);
         }
       });
+    };
+    return () => {
+      document.body.style.overflow = "auto";
     };
   }, []); // 🔥 의존성 배열을 비워서 한 번만 실행되도록 함
 
