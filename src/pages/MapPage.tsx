@@ -119,7 +119,9 @@ export default function MapPage(): React.ReactElement {
   const [detailError, setDetailError] = useState<string | null>(null);
   const [detailData, setDetailData] = useState<LinkerDetail | null>(null);
 
-  // 클러스터 리스트 상태
+
+
+  // 클러스터 리스트 상태 
   const [clusterMarkers, setClusterMarkers] = useState<any[]>([]);
   const [showClusterList, setShowClusterList] = useState(false);
 
@@ -256,6 +258,7 @@ export default function MapPage(): React.ReactElement {
             clickable: true,
           });
 
+          marker.setMap(map);
           // 🔥 마커에 데이터 저장 (클러스터 클릭 시 사용)
           marker.data = {
             linkerId: m.linkerId,
@@ -284,8 +287,9 @@ export default function MapPage(): React.ReactElement {
 
       // 🔥 클러스터러에 새로운 마커들 추가
       clusterer.addMarkers(linkerMarkersRef.current);
-
+      map.setLevel(2); // 적절한 줌 레벨로 조정
       console.log(`🎯 최종 결과: ${createdMarkerCount}개 마커가 지도에 표시되었습니다.`);
+
     } catch (e) {
       console.error("❌ 링커 로드 중 오류:", e);
     }
@@ -452,33 +456,59 @@ export default function MapPage(): React.ReactElement {
 
           window.kakao.maps.event.addListener(map, "click", handleMapClick as any);
 
-          // 🔥 사용자 위치 표시
+          // 🔥 사용자 위치 표시 (기본 좌표 → 실제 좌표 갱신)
           if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((pos) => {
-              const myLat = pos.coords.latitude;
-              const myLng = pos.coords.longitude;
-              const myLocationImage = new window.kakao.maps.MarkerImage(
-                "/icons/mapicon/user_location2.png",
-                new window.kakao.maps.Size(20, 20),
-                { offset: new window.kakao.maps.Point(10, 10) },
-              );
-              new window.kakao.maps.Marker({
-                position: new window.kakao.maps.LatLng(myLat, myLng),
-                image: myLocationImage,
-                map: kakaoMapRef.current!,
-              });
-              new window.kakao.maps.Circle({
-                center: new window.kakao.maps.LatLng(myLat, myLng),
-                radius: 8,
-                strokeWeight: 2,
-                strokeColor: "#007AFF",
-                strokeOpacity: 0.5,
-                strokeStyle: "solid",
-                fillColor: "#007AFF",
-                fillOpacity: 0.1,
-                map,
-              });
+            // 기본 위치 (fallback)
+            const fallbackLat = 37.5593459381013;
+            const fallbackLng = 126.922630667157;
+
+            // 기본 마커/서클 먼저 표시
+            const fallbackPosition = new window.kakao.maps.LatLng(fallbackLat, fallbackLng);
+            const myLocationImage = new window.kakao.maps.MarkerImage(
+              "/icons/mapicon/user_location2.png",
+              new window.kakao.maps.Size(20, 20),
+              { offset: new window.kakao.maps.Point(10, 10) },
+            );
+
+            const userMarker = new window.kakao.maps.Marker({
+              position: fallbackPosition,
+              image: myLocationImage,
+              map: kakaoMapRef.current!,
             });
+
+            const userCircle = new window.kakao.maps.Circle({
+              center: fallbackPosition,
+              radius: 8,
+              strokeWeight: 2,
+              strokeColor: "#007AFF",
+              strokeOpacity: 0.5,
+              strokeStyle: "solid",
+              fillColor: "#007AFF",
+              fillOpacity: 0.1,
+              map,
+            });
+
+            // 🔥 실제 위치 요청 (성공 시 업데이트)
+            navigator.geolocation.getCurrentPosition(
+              (pos) => {
+                const myLat = pos.coords.latitude;
+                const myLng = pos.coords.longitude;
+                const newPosition = new window.kakao.maps.LatLng(myLat, myLng);
+
+                (userMarker as any).setPosition(newPosition);
+                (userCircle as any).setPosition(newPosition);
+
+                console.log("📍 실제 위치로 업데이트 완료:", myLat, myLng);
+              },
+              (err) => {
+                console.warn("⚠️ 위치 가져오기 실패, 기본 좌표 사용:", err);
+              },
+              {
+                enableHighAccuracy: false, // 빠른 응답 우선
+                timeout: 5000,             // 5초 제한
+                maximumAge: 10000,         // 캐시된 위치 허용 (10초)
+              },
+            );
           }
         };
 
@@ -621,7 +651,11 @@ export default function MapPage(): React.ReactElement {
     });
   };
 
+
   // 내위치 버튼 핸들러
+  let userMarker: kakao.maps.Marker | null = null;
+  let userCircle: kakao.maps.Circle | null = null;
+
   const handleMyLocation = () => {
     if (!kakaoMapRef.current) return;
 
@@ -629,7 +663,7 @@ export default function MapPage(): React.ReactElement {
 
     const map = kakaoMapRef.current;
     const currentCenter = map.getCenter();
-    map.panTo(currentCenter); // 그냥 시각적 피드백
+    map.panTo(currentCenter); // 시각적 피드백
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -638,9 +672,15 @@ export default function MapPage(): React.ReactElement {
           const lng = pos.coords.longitude;
 
           console.log("📍 GPS 위치 획득:", lat, lng);
+          const newPosition = new kakao.maps.LatLng(lat, lng);
 
-          map.panTo(new (window as any).kakao.maps.LatLng(lat, lng));
+          // 1️⃣ 지도 이동
+          map.panTo(newPosition);
           map.setLevel(2);
+
+          // 2️⃣ 마커와 원 이동
+          if (userMarker) (userMarker as any).setPosition(newPosition);
+          if (userCircle) (userCircle as any).setPosition(newPosition);
         },
         (err) => {
           console.warn("⚠️ 위치를 가져올 수 없습니다.", err);
@@ -656,7 +696,6 @@ export default function MapPage(): React.ReactElement {
       alert("이 브라우저는 위치 정보를 지원하지 않습니다.");
     }
   };
-
   const saveNewSpot = ({ alias, category }: { alias: string; category: string }) => {
     if (!createDraft) return;
     const { lat, lng } = createDraft;
@@ -673,38 +712,6 @@ export default function MapPage(): React.ReactElement {
     setActiveId(id);
   };
 
-  //얘넨 아직 구현안됨
-  const addPhoto = ({ url, caption }: { url: string; caption?: string }) => {
-    if (!activeId) return;
-    setSpots((prev) => {
-      const s = prev[activeId];
-      const next: StoredSpots = {
-        ...prev,
-        [activeId]: {
-          ...s,
-          photos: [...(s.photos || []), { url, caption, ts: nowIso() }],
-        },
-      };
-      save(STORAGE_KEY, next);
-      return next;
-    });
-  };
-  //구현안됨
-  const addMessage = ({ text }: { text: string }) => {
-    if (!activeId) return;
-    setSpots((prev) => {
-      const s = prev[activeId];
-      const next: StoredSpots = {
-        ...prev,
-        [activeId]: {
-          ...s,
-          messages: [...(s.messages || []), { text, ts: nowIso() }],
-        },
-      };
-      save(STORAGE_KEY, next);
-      return next;
-    });
-  };
 
   // 검색 후 링커 생성 모달열기
   const handleOpenModal = (item: SearchResult) => {
@@ -749,29 +756,6 @@ export default function MapPage(): React.ReactElement {
         />
       )}
 
-      {/* <div className='h-12 flex justify-between items-center px-4 bg-white shadow-md z-20'>
-        {searchOpen ? (
-          <button
-            className='w-9 h-9 text-lg bg-white border border-gray-300 rounded-full flex items-center justify-center'
-            onClick={() => {
-              console.log("🔙 검색창 닫기");
-              setSearchOpen(false);
-              setSearchQuery("");
-              setSearchResults([]);
-              searchMarkers.current.forEach((m) => m.setMap(null));
-              searchMarkers.current = [];
-            }}
-          >
-            ←
-          </button>
-        ) : (
-          <span>📍LINKLE</span>
-        )}
-
-        <div className='flex items-center gap-2'>
-          <span>🔔</span>
-        </div>
-      </div> */}
       {/* <MainHeader /> */}
       {/* 검색창 열렸을 때 상단 버튼 */}
       {searchOpen && (
