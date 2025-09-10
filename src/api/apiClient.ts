@@ -5,10 +5,6 @@ const apiClient = axios.create({
   withCredentials: true, // ✅ HttpOnly Cookie 전송
 });
 
-// Lazy Refresh 인터셉터
-let isRefreshing = false;
-let refreshSubscribers: ((tokenRefreshed: boolean) => void)[] = [];
-
 // 모든 요청 후 응답 인터셉터
 apiClient.interceptors.response.use(
   (res) => res,

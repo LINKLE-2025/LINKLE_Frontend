@@ -86,3 +86,12 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  min-height: -webkit-fill-available;
+} /* iOS 사파리 주소창 수축 대응 */

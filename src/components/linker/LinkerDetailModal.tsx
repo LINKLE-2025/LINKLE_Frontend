@@ -1,9 +1,13 @@
 import dayjs from "dayjs";
-import { create } from "node:domain";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Sheet } from "react-modal-sheet";
 import { useNavigate, useOutletContext } from "react-router-dom";
+import { participateLinker, checkParticipation } from "../../api/mapApi";
+import { getCurrentUserId, refreshToken } from "@/api/authApi";
 
+import { getRoomList } from "@/api/chatApi";
+import type { RoomResponseDTO } from "@/types/chat";
+import ChatListItem2 from "@/components/chat/ChatListItem2";
 
 export type LinkerDetail = {
   linkerId: number;
@@ -34,95 +38,155 @@ type LinkerPost = {
   author?: { name?: string; handle?: string; avatarUrl?: string | null } | null;
 };
 
-
-
 const prettyDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString() : "-");
 
 export default function LinkerDetailSheet({ open, onClose, detail, loading, error }: Props) {
   const navigate = useNavigate();
+  const { footerHeight } = useOutletContext<{ headerHeight: number; footerHeight: number }>();
 
-  // AppLayout에서 Outlet context로 받은 header/footer 높이
-  type LayoutContext = { headerHeight: number; footerHeight: number };
-  const { footerHeight } = useOutletContext<LayoutContext>();
+  const [loggedInUserId, setLoggedInUserId] = useState<number | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
-  // 포스트 상태
+  // 탭 상태 
+  const [activeTab, setActiveTab] = useState<"post" | "light" | "class">("post");
+
   const [posts, setPosts] = useState<LinkerPost[]>([]);
   const [postLoading, setPostLoading] = useState(false);
   const [postError, setPostError] = useState<string | null>(null);
-  const [postPage, setPostPage] = useState(1);
-  const [postHasNext, setPostHasNext] = useState(false);
 
-  // 포스트 불러오기
-  async function LinkerPost(linkerId: number) {
+  const [participating, setParticipating] = useState(false);
+  const [participationLoading, setParticipationLoading] = useState(false);
+
+  // 채팅방 목록 상태 
+  const [rooms, setRooms] = useState<RoomResponseDTO[]>([]);
+  const [roomLoading, setRoomLoading] = useState(false);
+  const [roomError, setRoomError] = useState<string | null>(null);
+
+  // 🔹 현재 로그인 유저 가져오기
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userId = await getCurrentUserId();
+        setLoggedInUserId(userId);
+      } catch (err: any) {
+        if (err?.response?.status === 401) {
+          try {
+            await refreshToken();
+            const userId = await getCurrentUserId();
+            setLoggedInUserId(userId);
+          } catch (refreshErr) {
+            console.error("토큰 리프레시 실패:", refreshErr);
+          }
+        } else {
+          console.error("유저 정보 불러오기 실패:", err);
+        }
+      } finally {
+        setIsAuthLoading(false);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  // 🔹 포스트 불러오기
+  const fetchPosts = async (linkerId: number) => {
     setPostLoading(true);
     setPostError(null);
     try {
-      const res = await fetch(`/api/post?linkerId=${linkerId}`, {
-        credentials: "include",
-      });
+      const res = await fetch(`/api/post?linkerId=${linkerId}`, { credentials: "include" });
       if (!res.ok) throw new Error(`포스트 조회 실패 (${res.status})`);
-
-      type PostDTO = {
-        postId: number;
-        image?: string | null;
-        memo?: string | null;
-        createdDate?: string;
-      };
-      const raw: PostDTO[] = await res.json();
+      const raw: any[] = await res.json();
       const postImageUrl = (postId: number) => `/api/post/${postId}/image`;
-
-      const mapped: LinkerPost[] = (raw ?? []).map((p) => ({
-        postId: p.postId,
-        imageUrl: p.image ? postImageUrl(p.postId) : null,
-        content: p.memo ?? null,
-        createdDate: p.createdDate ?? undefined,
-        author: null,
-      }));
-
-      setPosts(mapped.slice().reverse()); //최신순 -> 오래된순
-      setPostHasNext(false);
-      setPostPage(1);
+      setPosts(
+        raw.map((p) => ({
+          postId: p.postId,
+          imageUrl: p.image ? postImageUrl(p.postId) : null,
+          content: p.memo ?? null,
+          createdDate: p.createdDate ?? undefined,
+          author: null,
+        }))
+      );
     } catch (e: any) {
       setPostError(e?.message ?? String(e));
     } finally {
       setPostLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     if (!open || !detail?.linkerId) return;
-    LinkerPost(detail.linkerId);
+    fetchPosts(detail.linkerId);
+
+    // 채팅방 목록 로드
+    (async () => {
+      setRoomLoading(true);
+      setRoomError(null);
+      try {
+        const list = await getRoomList();
+        setRooms(list ?? []);
+      } catch (e: any) {
+        setRoomError(e?.message ?? String(e));
+      } finally {
+        setRoomLoading(false);
+      }
+    })();
   }, [open, detail?.linkerId]);
 
-  useEffect(() => {
-    if (!open) {
-      setPosts([]);
-      setPostPage(1);
-      setPostHasNext(false);
-      setPostError(null);
+  // 🔹 참여 여부 체크
+  const fetchParticipation = async () => {
+    if (!loggedInUserId || !detail) return;
+    try {
+      setParticipationLoading(true);
+      const res = await checkParticipation(detail.linkerId, loggedInUserId);
+      setParticipating(res);
+      console.log("참여 여부:", res);
+    } catch (err) {
+      console.error("참여 여부 조회 실패:", err);
+      setParticipating(false);
+    } finally {
+      setParticipationLoading(false);
     }
-  }, [open]);
+  };
+
+  useEffect(() => {
+    if (!open || !detail?.linkerId || !loggedInUserId) return;
+    fetchParticipation();
+  }, [open, detail?.linkerId, loggedInUserId]);
+
+  // 🔹 참여하기
+  const handleParticipate = async () => {
+    if (!detail?.linkerId || !loggedInUserId) return;
+    try {
+      setParticipationLoading(true);
+      await participateLinker(detail.linkerId, loggedInUserId);
+      setParticipating(true);
+    } catch (err) {
+      console.error("참여 실패:", err);
+      alert("참여 실패. 다시 시도해주세요.");
+    } finally {
+      setParticipationLoading(false);
+    }
+  };
 
   const CreatePost = () => {
     if (!detail) return;
-    navigate(`/post?linkerId=${detail.linkerId}`, {
-      state: { linker: detail },
-    });
+    navigate(`/post?linkerId=${detail.linkerId}`, { state: { linker: detail } });
   };
-
-
-  // 만료일자: createdDate 기준 +30일
-  const expireDate = detail?.createdDate
-    ? dayjs(detail.createdDate).add(30, "day")
-    : null;
 
   const CreateChatRoom = () => {
     if (!detail) return;
-    navigate("/chat/room/create", {
-      state: { linker: detail },
-    });
+    navigate("/chat/room/create", { state: { linker: detail } });
   };
 
+  const expireDate = detail?.createdDate ? dayjs(detail.createdDate).add(30, "day") : null;
+
+  // ✅ detail.linkerId에 매핑된 방만 보이도록 필터
+  const filteredRooms = useMemo(
+    () =>
+      (Array.isArray(rooms) && detail?.linkerId != null)
+        ? rooms.filter((r: any) => (r?.linkerId ?? null) === detail.linkerId)
+        : [],
+    [rooms, detail?.linkerId]
+  );
 
   return (
     <Sheet
@@ -131,57 +195,83 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
       snapPoints={[0.92, 0.78, 0.6]}
       initialSnap={3}
       style={{ bottom: footerHeight }}
-      detent='content-height'
+      detent="content-height"
     >
       <Sheet.Container style={{ zIndex: 1500, boxShadow: "none" }}>
         <Sheet.Header>
-          <div className='mx-auto my-2 h-1.5 w-12 rounded-full bg-gray-300' />
+          <div className="mx-auto my-2 h-1.5 w-12 rounded-full bg-gray-300" />
         </Sheet.Header>
 
         <Sheet.Content style={{ paddingBottom: 12 }}>
-          <div className='px-4 pb-2'>
+          <div className="px-4 pb-2">
             {loading ? (
-              <p className='text-gray-500'>불러오는 중…</p>
+              <p className="text-gray-500">불러오는 중…</p>
             ) : error ? (
-              <p className='text-red-500'>{error}</p>
+              <p className="text-red-500">{error}</p>
             ) : (
               <>
-                <div className='flex items-start justify-between'>
-                  <div className='min-w-0'>
-                    <h2 className='text-lg font-bold truncate'>{detail?.name ?? "-"}</h2>
-                    <p className='mt-0.5 text-sm text-gray-500 truncate'>
-                      {detail?.address ?? detail?.addressName ?? "-"}
-                    </p>
+                <div className="flex items-start justify-between">
+                  <div className="min-w-0">
+                    <h2 className="text-lg font-bold truncate">{detail?.name ?? "-"}</h2>
+                    <p className="mt-0.5 text-sm text-gray-500 truncate">{detail?.address ?? "-"}</p>
+                    <p className="mt-0.5 text-sm text-gray-500 truncate">{detail?.addressName ?? "-"}</p>
                   </div>
-                  <div className='ml-3 flex shrink-0 gap-2'>
-                    <button
-                      className='h-10 w-10 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center'
-                      title='포스트작성'
-                      onClick={CreatePost}
-                    >
-                      <img src='/icons/mapicon/photo.png' alt='' />
-                    </button>
-                    <button
-                      className='h-10 w-10 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center'
-                      title='채팅방생성'
-                      onClick={CreateChatRoom}
-                    >
-                      <img src='/icons/mapicon/chat.png' alt='' />
-                    </button>
+
+                  <div className="ml-3 flex shrink-0 gap-2">
+                    {participationLoading ? (
+                      <button className="h-10 w-24 rounded-full bg-gray-200 text-sm text-gray-500">
+                        로딩 중…
+                      </button>
+                    ) : !participating ? (
+                      <button
+                        className="
+                          h-10 w-28
+                          rounded-full
+                          bg-white
+                          text-gray-500
+                          font-semibold
+                          border border-yellow-400
+                          shadow-sm
+                          hover:bg-yellow-50
+                          active:bg-yellow-100
+                          transition-colors
+                          duration-200
+                          flex items-center justify-center
+                          gap-2
+                        "
+                        onClick={handleParticipate}
+                      >
+                        참여
+                      </button>
+
+                    ) : (
+                      <>
+                        <button
+                          className="h-10 w-10 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center"
+                          title="포스트작성"
+                          onClick={CreatePost}
+                        >
+                          <img src="/icons/mapicon/photo.png" alt="" />
+                        </button>
+                        <button
+                          className="h-10 w-10 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center"
+                          title="채팅방생성"
+                          onClick={CreateChatRoom}
+                        >
+                          <img src="/icons/mapicon/chat.png" alt="" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 
-                <div className='mt-3 flex items-center justify-between text-xs text-gray-500'>
-                  <div className='flex gap-4'>
+                <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+                  <div className="flex gap-4">
+                    {/* 필요하다면 filteredRooms.length 로 바꿀 수 있음 */}
                     <span>3 채팅방</span>
                     <span>{posts.length} 포스트</span>
                   </div>
-                  <span>
-                    {
-                      expireDate ? expireDate.format("YYYY년 MM월 DD일 ") : ""
-                    }
-                    만료 예정
-                  </span>
+                  <span>{expireDate ? expireDate.format("YYYY년 MM월 DD일 ") : ""}만료 예정</span>
                 </div>
               </>
             )}
@@ -190,63 +280,148 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
           {/* 탭 바 */}
           <div className='mt-2 border-b'>
             <div className='flex items-center justify-around text-sm'>
-              <button className='relative py-2 font-semibold'>
+              <button
+                className={activeTab === "post" ? "relative py-2 font-semibold" : "py-2 text-gray-400"}
+                onClick={() => setActiveTab("post")}
+                type='button'
+              >
                 <img src='/icons/mapicon/Vector.png' alt='' />
-                <span className='absolute -bottom-[1px] left-0 right-0 h-[2px] bg-black' />
+                {activeTab === "post" && (
+                  <span className='absolute -bottom-[1px] left-0 right-0 h-[2px] bg-black' />
+                )}
               </button>
-              <button className='py-2 text-gray-400'>
+              <button
+                className={activeTab === "light" ? "relative py-2 font-semibold" : "py-2 text-gray-400"}
+                onClick={() => setActiveTab("light")}
+                type='button'
+              >
                 <img src='/icons/mapicon/User Account.png' alt='' />
+                {activeTab === "light" && (
+                  <span className='absolute -bottom-[1px] left-0 right-0 h-[2px] bg-black' />
+                )}
               </button>
-              <button className='py-2 text-gray-400'>
+              <button
+                className={activeTab === "class" ? "relative py-2 font-semibold" : "py-2 text-gray-400"}
+                onClick={() => setActiveTab("class")}
+                type='button'
+              >
                 <img src='/icons/mapicon/lucide_crown.png' alt='' />
+                {activeTab === "class" && (
+                  <span className='absolute -bottom-[1px] left-0 right-0 h-[2px] bg-black' />
+                )}
               </button>
             </div>
           </div>
 
-          {/* 포스트 그리드 */}
+          {/* 포스트 그리드 / 채팅 리스트 (탭에 따라 분기) */}
           <div className='px-1 pt-2 pb-6'>
-            {postLoading && posts.length === 0 ? (
-              <div className='p-6 text-center text-gray-500 text-sm'>불러오는 중…</div>
-            ) : postError ? (
-              <div className='p-6 text-center text-red-500 text-sm'>{postError}</div>
-            ) : posts.length === 0 ? (
-              <div className='p-6 text-center text-gray-400 text-sm'>
-                아직 등록된 포스트가 없어요.
-                <br />
-                <br />
-              </div>
-            ) : (
-              <>
-                <div className='grid grid-cols-3 gap-1'>
-                  {posts.map((p) => (
-                    <button
-                      key={p.postId}
-                      className='aspect-square overflow-hidden bg-gray-100'
-                      title={p.content ?? ""}
-                      onClick={() =>
-                        navigate(`/post/${p.postId}`, {
-                          state: { linker: detail },
-                        })
-                      }
-                    >
-                      {p.imageUrl ? (
-                        <img src={p.imageUrl} alt='' className='h-full w-full object-cover' />
-                      ) : (
-                        <div className='h-full w-full p-2 text-[11px] text-left line-clamp-2'>
-                          {p.content ?? "(이미지 없음)"}
-                        </div>
-                      )}
-                    </button>
-                  ))}
+            {/* 포스트 탭 */}
+            {activeTab === "post" && (
+              postLoading && posts.length === 0 ? (
+                <div className='p-6 text-center text-gray-500 text-sm'>불러오는 중…</div>
+              ) : postError ? (
+                <div className='p-6 text-center text-red-500 text-sm'>{postError}</div>
+              ) : posts.length === 0 ? (
+                <div className='p-6 text-center text-gray-400 text-sm'>
+                  아직 등록된 포스트가 없어요.
+                  <br />
+                  <br />
                 </div>
-              </>
+              ) : (
+                <>
+                  <div className='grid grid-cols-3 gap-1'>
+                    {posts.map((p) => (
+                      <button
+                        key={p.postId}
+                        className='aspect-square overflow-hidden bg-gray-100'
+                        title={p.content ?? ""}
+                        onClick={() =>
+                          navigate(`/post/${p.postId}`, {
+                            state: { linker: detail },
+                          })
+                        }
+                      >
+                        {p.imageUrl ? (
+                          <img src={p.imageUrl} alt='' className='h-full w-full object-cover' />
+                        ) : (
+                          <div className='h-full w-full p-2 text-[11px] text-left line-clamp-2'>
+                            {p.content ?? "(이미지 없음)"}
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )
             )}
+
+            {/* 단체채팅방(LIGHT) 탭 */}
+            {activeTab === "light" && (
+              roomLoading ? (
+                <div className='p-6 text-center text-gray-500 text-sm'>채팅방 불러오는 중…</div>
+              ) : roomError ? (
+                <div className='p-6 text-center text-red-500 text-sm'>{roomError}</div>
+              ) : (
+                <div className='space-y-2 px-3'>
+                  {filteredRooms.filter((r) => r.roomType === "LIGHT").length === 0 ? (
+                    <div className='p-6 text-center text-gray-400 text-sm'>아직 생성된 그룹 채팅방이 없어요.</div>
+                  ) : (
+                    filteredRooms
+                      .filter((r) => r.roomType === "LIGHT")
+                      .map((r) => (
+                        <ChatListItem2
+                          key={r.roomId}
+                          title={r.roomName ?? r.friendName ?? "그룹 채팅"}
+                          memo={r.memo ?? r.description ?? ""}
+                          memberCount={r.memberCount ?? undefined}
+                          roomType={r.roomType}
+                          startDate={r.startDate ?? undefined}
+                          avatarUrl={`/api/chat/view/background/${r.roomId}`}
+                          accentColor='#FBE7D2'
+                          onClick={() => navigate(`/chat/room/${r.roomId}`)}
+                        />
+                      ))
+                  )}
+                </div>
+              )
+            )}
+
+            {/* 클래스채팅방(CLASS) 탭 */}
+            {activeTab === "class" && (
+              roomLoading ? (
+                <div className='p-6 text-center text-gray-500 text-sm'>채팅방 불러오는 중…</div>
+              ) : roomError ? (
+                <div className='p-6 text-center text-red-500 text-sm'>{roomError}</div>
+              ) : (
+                <div className='space-y-2 px-3'>
+                  {filteredRooms.filter((r) => r.roomType === "CLASS").length === 0 ? (
+                    <div className='p-6 text-center text-gray-400 text-sm'> 아직 생성된 클래스톡이 없어요.</div>
+                  ) : (
+                    filteredRooms
+                      .filter((r) => r.roomType === "CLASS")
+                      .map((r) => (
+                        <ChatListItem2
+                          key={r.roomId}
+                          title={r.roomName ?? "클래스 채팅"}
+                          memo={r.memo ?? r.description ?? ""}
+                          memberCount={r.memberCount ?? undefined}
+                          roomType={r.roomType}
+                          startDate={r.startDate ?? undefined}
+                          avatarUrl={`/api/chat/view/background/${r.roomId}`}
+                          accentColor='#FBE7D2'
+                          onClick={() => navigate(`/chat/room/${r.roomId}`)}
+                        />
+                      ))
+                  )}
+                </div>
+              )
+            )}
+
           </div>
         </Sheet.Content>
       </Sheet.Container>
 
-      {/* 백드롭도 푸터 위에서 끝나도록 */}
       <Sheet.Backdrop style={{ bottom: footerHeight, zIndex: 1490, background: "transparent" }} />
-    </Sheet>
+    </Sheet >
   );
 }
