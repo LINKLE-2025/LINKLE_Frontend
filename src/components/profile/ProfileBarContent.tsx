@@ -1,10 +1,8 @@
-import React from 'react';
 import { useActionMenu } from "@/components/modal/useActionMenu";
 import { Settings, CreditCard, Trash2, ChevronLeft, Ellipsis, LogOut } from "lucide-react";
-import { fr } from 'date-fns/locale';
 import { deleteFriend } from "@/api/friendApi";
-import { add } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { logout } from '@/api/authApi';
 
 // ProfileBarContent 컴포넌트 props 타입 정의
 // Props는 타입을 명확하게 정의하기 위해서 인터페이스로 작성한다.
@@ -19,6 +17,18 @@ interface ProfileContentProps {
   background?: string | null;
   pathname: string;
 }
+
+// 로그아웃 처리 함수
+const handleLogout = async () => {
+  try {
+    await logout();
+    alert('로그아웃 되었습니다.');
+    window.location.href = '/login'; // 로그아웃 후 로그인 페이지로 이동
+  } catch (error) {
+    alert('로그아웃에 실패했습니다.');
+    console.error("로그아웃 실패:", error);
+  }
+};
 
 // ProfileBarContent 컴포넌트
 function ProfileBarContent({
@@ -57,7 +67,7 @@ function ProfileBarContent({
           id: "edit",
           label: "프로필 편집",
           type: "link",
-          href: `/profileEdit/${userId}`,
+          href: `/profile/edit/${userId}`,
           state: { gender, image, background },
           icon: <Settings className="h-5 w-5" />,
         },
@@ -71,10 +81,10 @@ function ProfileBarContent({
         {
           id: "logout",
           label: "로그아웃",
-          type: "link",
-          href: "/auth/logout",
-          icon: <LogOut className="h-5 w-5" />,
+          type: "callback",
+          onClick: handleLogout,
           danger: true,
+          icon: <LogOut className="h-5 w-5" />,
         },
       ],
       cancelText: "",
@@ -83,33 +93,8 @@ function ProfileBarContent({
   };
 
 
-  // 링커 생성시 실행되는 함수
-  const onCreateLinker = async () => {
-    const { confirmed, data } = await confirm({
-      message: "링커를 생성하시겠습니까?",
-      confirmText: "생성",
-      cancelText: "취소",
-      // 아래 셋 중 하나를 사용
-      action: {
-        type: "fetch",
-        request: { url: "/api/linker", method: "POST", body: { /* payload */ } },
-      },
-      // action: { type: "link", href: "/linker/new" },
-      // action: { type: "callback", run: () => doSomething() },
-    });
-
-    if (!confirmed) return;
-    // 생성 성공 후 후처리 (data 사용 가능)
-  };
-
-
   // 친구 관리 버튼 클릭시 실행되는 함수
   const onFriendMenu = async () => {
-    // if (!friendId) {
-    //   console.error("friendId가 없습니다. 삭제할 수 없습니다.");
-    //   return;
-    // }
-
     const res = await openMenu({
       title: "친구 설정",
       actions: [
@@ -120,8 +105,10 @@ function ProfileBarContent({
           onClick: async () => {
             try {
               await deleteFriend(friendId!);
+              alert("친구가 삭제되었습니다.");
             } catch (err) {
               console.error("친구 삭제 실패:", err);
+              alert("친구 삭제에 실패했습니다.");
             }
           },
           danger: true,
@@ -135,59 +122,6 @@ function ProfileBarContent({
 
     if (res?.pickedId === "delete_friend") {
       // UI 후처리 (예: 버튼 숨기거나 리스트 갱신)
-    }
-  };
-
-
-  const renderButton = () => {
-    switch (profileType) {
-      case 'self':
-        return (
-          <Ellipsis onClick={onEditProfile} className="px-4 py-2" />
-        );
-      case 'stranger':
-        return (
-          <></>
-        );
-      case 'friend':
-        return (
-          <Ellipsis onClick={onFriendMenu} className="px-4 py-2" />
-        );
-      case 'wait':
-        return (
-          <></>
-        );
-      default:
-        return null;
-    }
-  };
-
-  const backButton = () => {
-    switch (profileType) {
-      case 'self':
-        return (
-          <></>
-        );
-      case 'stranger':
-        return (
-          <></>
-        );
-      case 'friend':
-        return (
-          <ChevronLeft
-            onClick={onFriendMenu}
-            className="w-6 h-6 text-gray-800 cursor-pointer hover:opacity-80"
-          ></ChevronLeft>
-        );
-      case 'wait':
-        return (
-          <ChevronLeft
-            onClick={onFriendMenu}
-            className="w-6 h-6 text-gray-800 cursor-pointer hover:opacity-80"
-          />
-        );
-      default:
-        return null;
     }
   };
 

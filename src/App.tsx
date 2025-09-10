@@ -53,15 +53,15 @@ export default function App() {
       {/* 프로필 관련 레이아웃 */}
       <Route element={<ProfileLayout />}>
         <Route path='/profile' element={<ProfilePage />} />
-        <Route path='/profileEdit' element={<ProfileEditPage />} />
-        <Route path='/profileEdit/:userId' element={<ProfileEditPage />} />
+        <Route path='/profile/edit' element={<ProfileEditPage />} />
+        <Route path='/profile/edit/:userId' element={<ProfileEditPage />} />
 
       </Route>
 
       {/* 친구 목록 관련 레이아웃 */}
       <Route element={<FriendListLayout />}>
-        <Route path='/friend' element={<FriendListPage />} />
-        <Route path='/received' element={<FriendRequestsPage />} />
+        <Route path='/profile/friend' element={<FriendListPage />} />
+        <Route path='/profile/friend/received' element={<FriendRequestsPage />} />
       </Route>
 
       <Route element={<FriendListLayout />}>

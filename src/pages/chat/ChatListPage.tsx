@@ -98,7 +98,7 @@ export default function ChatPage() {
       )}
 
       <button
-        onClick={() => navigate("/friend")}
+        onClick={() => navigate("/profile/friend")}
         className='fixed bottom-24 right-6 sm:right-[calc(50%-16rem)] w-12 h-12 rounded-full shadow-lg bg-black text-white text-xl flex items-center justify-center'
         aria-label='새 대화'
       >
