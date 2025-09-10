@@ -250,7 +250,12 @@ export default function FriendSearchPanel({
                     linkerResults.length > 0 ? (
                         linkerResults.map(linker => (
                             <div key={linker.linkerId} className="p-3 border-b">
-                                <div className="font-medium text-gray-800">{linker.name}</div>
+                                <div
+                                    className="font-medium text-gray-800 cursor-pointer"
+                                    onClick={() => navigate("/map", { state: { openLinkerId: linker.linkerId } })}
+                                >
+                                    {linker.name}
+                                </div>
                                 <div className="text-sm text-gray-500">카테고리: {linker.categoryId}</div>
                                 <div className="text-sm text-gray-500">채팅방 수: {linker.chatRoomCount}, 포스트 수: {linker.postCount}</div>
                                 <div className="text-sm text-gray-400 mt-1">{linker.memo}</div>
@@ -264,6 +269,6 @@ export default function FriendSearchPanel({
                     )
                 )}
             </div>
-        </div>
+        </div >
     );
 }

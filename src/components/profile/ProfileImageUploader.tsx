@@ -4,12 +4,14 @@ interface ProfileImageUploaderProps {
     onChange: (file: File, previewUrl: string) => void;
     size?: number; // 아바타 크기 (default 96px)
     getProfileImageSrc?: any;
+    profilePreview: string;
 }
 
 export default function ProfileImageUploader({
     onChange,
     size = 96,
     getProfileImageSrc,
+    profilePreview,
 }: ProfileImageUploaderProps) {
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -24,13 +26,16 @@ export default function ProfileImageUploader({
         reader.readAsDataURL(file);
     };
 
+    const displaySrc = profilePreview || getProfileImageSrc;
+
+
     return (
         <div
             className="relative mx-auto -mt-12"
             style={{ width: size, height: size }}
         >
             <img
-                src={getProfileImageSrc}
+                src={displaySrc}
                 alt="프로필"
                 className="w-full h-full object-cover rounded-full border-4 border-white shadow-md cursor-pointer"
                 onClick={() => inputRef.current?.click()}
