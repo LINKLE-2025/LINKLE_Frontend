@@ -1,8 +1,5 @@
-//app/src/layouts/AppLayout.tsx
-
 import RandomPastelBackground from "@/components/background/RandomPastelBackground";
 import MainFooter from "@/components/footer/MainFooter";
-import TeamNameFooter from "@/components/footer/TeamNameFooter";
 import BackTitleHeader from "@/components/header/BackTitleHeader";
 import MainHeader from "@/components/header/MainHeader";
 import { useEffect, useState } from "react";
@@ -12,6 +9,9 @@ export default function AppLayout() {
   const location = useLocation();
   const [headerHeight, setHeaderHeight] = useState(0);
   const [footerHeight, setFooterHeight] = useState(0);
+
+  // 전역 상태로 링커 생성 모드 관리
+  const [linkerCreateMode, setLinkerCreateMode] = useState(false);
 
   // Header 뒤쪽 paddingTop 높이 동적으로 조정
   useEffect(() => {
@@ -47,11 +47,11 @@ export default function AppLayout() {
           ${location.pathname === "/signup" ? "justify-start sm:justify-center" : "justify-center"}`}
         style={{ paddingTop: headerHeight, paddingBottom: footerHeight }}
       >
-        <Outlet context={{ headerHeight, footerHeight }} />
+        <Outlet context={{ headerHeight, footerHeight, linkerCreateMode, setLinkerCreateMode }} />
       </main>
 
       {/* Footer */}
-      <MainFooter />
+      <MainFooter linkerCreateMode={linkerCreateMode} setLinkerCreateMode={setLinkerCreateMode} />
     </div>
   );
 }

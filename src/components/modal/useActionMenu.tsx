@@ -151,7 +151,7 @@ export function useActionMenu() {
             <div className="mb-3 flex items-center justify-between">
               <div className="w-9 h-9" />
               {/* 타이틀 or 빈자리 */}
-              <div className="text-sm font-semibold">
+              <div className="text-base font-semibold">
                 {state.title ?? ""}
               </div>
               <button
@@ -199,8 +199,8 @@ export function useActionMenu() {
                   onClick={() => handleAction(a)}
                   disabled={busyId === a.id}
                   className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left text-sm ${a.danger
-                    ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
-                    : "border-gray-200 bg-gray-50 hover:bg-gray-100"
+                    ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100/60"
+                    : "border-gray-200 bg-gray-50 hover:bg-gray-100/80"
                     } disabled:opacity-60`}
                 >
                   <span className="flex items-center gap-2">
@@ -229,7 +229,7 @@ export function useActionMenu() {
           {state.cancelText && (
             <button
               onClick={() => close(null)}
-              className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm"
+              className="mt-2 w-full rounded-xl border border-gray-200 bg-white hover:bg-gray-100/30 px-4 py-3 text-sm"
             >
               {state.cancelText}
             </button>

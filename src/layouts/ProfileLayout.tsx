@@ -47,7 +47,7 @@ export default function ProfileLayout() {
   return (
     <div className="flex flex-col min-h-[100dvh] text-black">
       <main className="flex-col items-center justify-center text-center">
-        <Outlet context={{ loggedInUserId }} />
+        <Outlet context={{ loggedInUserId, headerHeight, footerHeight }} />
       </main>
       <MainFooter />
     </div>
