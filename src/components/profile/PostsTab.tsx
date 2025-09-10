@@ -11,6 +11,7 @@ interface PostsTabProps {
 function PostsTab({ posts }: PostsTabProps) {
   const navigate = useNavigate();
 
+  console.log(posts);
   // 게시물이 없을 때 보여지는 문구 및 그리드 형태의 게시물을 보여줌
   return (
     <div>
