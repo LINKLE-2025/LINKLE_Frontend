@@ -89,7 +89,6 @@ export default function PostForm({
       if (!linker) return;
       navigate("/map", { state: { openLinkerId: linker.linkerId } });
     });
-
   return (
     <div className='flex w-full flex-col bg-[#f6f6f6]'>
       {/* 업로드 영역 */}
@@ -99,11 +98,14 @@ export default function PostForm({
             <img src='/icons/favicon/favicon.svg' alt='' />
           </div>
         ) : (
-          <div className='p-2 h-[42vh]'>
-            <div className='h-full w-full flex items-center justify-center rounded-md bg-white overflow-hidden'>
-              <img src={preview} alt='' className='max-h-full max-w-full object-contain' />
-            </div>
+          <div className='w-full h-[50vh] rounded-md bg-white overflow-hidden flex items-center justify-center'>
+            <img
+              src={preview}
+              alt='미리보기'
+              className='w-full object-cover'
+            />
           </div>
+
         )}
 
         {/* readOnly면 사진 버튼 숨김 */}
@@ -114,7 +116,7 @@ export default function PostForm({
               className='absolute right-3 bottom-3 h-11 w-11 rounded-full bg-white shadow border flex items-center justify-center'
               title='사진 첨부'
             >
-              <img src='/icons/photo.png' alt='photo' className='h-6 w-6' />
+              <img src='/icons/mapicon/photo.png' alt='photo' className='h-6 w-6' />
             </button>
             <input
               ref={fileInputRef}
@@ -141,10 +143,10 @@ export default function PostForm({
           {linker && (
             <button
               type='button'
-              className='flex items-center gap-1 text-[11px] text-gray-700'
+              className='flex items-center gap-1 text-[11px] text-gray-700 bg-[#EFDCCB]/20 px-3 py-1.5 rounded-lg'
               onClick={ClickLinker}
             >
-              <img src='/icons/fire.png' className='h-4 w-4' alt='fire' />
+              <img src='/logos/linkle-icon.svg' className='h-4 w-4' alt='link' />
               <span className='truncate'>{linker.name}</span>
             </button>
           )}
@@ -157,7 +159,7 @@ export default function PostForm({
           onChange={(e) => setText(e.target.value)}
           placeholder=' '
           rows={5}
-          className='w-full resize-none outline-none text-[14px] placeholder:text-gray-300'
+          className='w-full resize-none outline-none text-base placeholder:text-gray-300'
           readOnly={readOnly} //
         />
       </div>
@@ -175,7 +177,7 @@ export default function PostForm({
               onClick={() => onSubmit({ text, file })}
               disabled={!canSubmit || submitting}
               aria-busy={submitting}
-              className='flex-1 py-4 text-center font-semibold text-[14px] disabled:opacity-50'
+              className='flex-1 pt-4 text-center font-semibold text-[14px] disabled:opacity-50'
             >
               {submitting ? "업로드 중…" : submitLabel}
             </button>

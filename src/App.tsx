@@ -55,6 +55,7 @@ export default function App() {
         <Route path='/profile' element={<ProfilePage />} />
         <Route path='/profileEdit' element={<ProfileEditPage />} />
         <Route path='/profileEdit/:userId' element={<ProfileEditPage />} />
+
       </Route>
 
       {/* 친구 목록 관련 레이아웃 */}
