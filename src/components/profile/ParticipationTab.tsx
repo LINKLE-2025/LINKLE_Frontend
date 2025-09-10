@@ -8,7 +8,7 @@ interface UserParticipateLinkerDTO {
   name: string;
   participatedDate: string;
   memo: string;
-  state: string;
+  state?: string;
   categoryId?: number; // 카테고리 번호 (백엔드에서 내려옴)
 }
 

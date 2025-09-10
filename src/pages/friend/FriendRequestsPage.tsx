@@ -19,7 +19,11 @@ import { getUserProfile } from '@/api/profileApi';
 
 import { useFriendFilter } from "@/hooks/useFriendFilter";
 
-type OutletContextType = { loggedInUserId: number };
+type OutletContextType = {
+  loggedInUserId: number;
+  headerHeight: number;
+  footerHeight: number;
+};
 
 function FriendRequestsPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -71,7 +75,8 @@ function FriendRequestsPage() {
     }
   };
 
-  const { loggedInUserId } = useOutletContext<OutletContextType>();
+  const { loggedInUserId, headerHeight, footerHeight } =
+    useOutletContext<OutletContextType>();
   const { userId: profileUserIdParam } = useParams<{ userId: string }>();
   const profileUserId = profileUserIdParam ? Number(profileUserIdParam) : loggedInUserId;
 
@@ -95,7 +100,10 @@ function FriendRequestsPage() {
   }, [profileUserId]);
 
   return (
-    <div className="max-w-md mx-auto bg-gray-50 min-h-screen flex flex-col pb-24">
+    <div
+      className="max-w-md mx-auto bg-gray-50 min-h-screen flex flex-col"
+      style={{ paddingTop: headerHeight, paddingBottom: footerHeight }}
+    >
       {/* 검색 헤더 - FriendsListPage와 동일 */}
       <div className="bg-white px-4 py-3 border-b flex items-center gap-2">
         <div className="relative flex-1">

@@ -9,7 +9,11 @@ import { useOutletContext } from "react-router-dom";
 import { getFriends, getReceivedFriendRequests } from "@/api/friendApi";
 import { useFriendFilter } from "@/hooks/useFriendFilter";
 
-type OutletContextType = { loggedInUserId: number };
+type OutletContextType = {
+  loggedInUserId: number;
+  headerHeight: number;
+  footerHeight: number;
+};
 
 function FriendsListPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -17,7 +21,8 @@ function FriendsListPage() {
   const [friendList, setFriendList] = useState<FriendResponse[]>([]);
   const [receivedCount, setReceivedCount] = useState<number>(0);
 
-  const { loggedInUserId } = useOutletContext<OutletContextType>();
+  const { loggedInUserId, headerHeight, footerHeight } =
+    useOutletContext<OutletContextType>();
   const location = useLocation();
 
   useEffect(() => {
@@ -51,7 +56,10 @@ function FriendsListPage() {
   }, [loggedInUserId, location.key]);
 
   return (
-    <div className="max-w-md mx-auto bg-gray-50 min-h-screen flex flex-col">
+    <div
+      className="max-w-md mx-auto bg-gray-50 min-h-screen flex flex-col"
+      style={{ paddingTop: headerHeight, paddingBottom: footerHeight }}
+    >
       {/* 검색 헤더 */}
       <div className="bg-white px-4 py-3 border-b flex items-center gap-2">
         <div className="relative flex-1">
@@ -89,7 +97,7 @@ function FriendsListPage() {
       </div>
 
       {/* 친구 목록 */}
-      <div className="bg-white flex-1 pb-24">
+      <div className="bg-white flex-1">
         {(debouncedQuery ? filteredFriends : friendList).length > 0 ? (
           <div className="divide-y divide-gray-100">
             {(debouncedQuery ? filteredFriends : friendList).map((friend) => (
