@@ -17,6 +17,8 @@ export default defineConfig(({ mode }) => {
           "/icons/favicon/favicon.ico",
           "/icons/pwa/apple-touch-icon.png",
           "/icons/logos/linkle-icon.svg",
+          "/icons/category/*.png",
+          "/icons/mapicon/*.png",
         ],
         devOptions: {
           enabled: true,
@@ -32,6 +34,17 @@ export default defineConfig(({ mode }) => {
                 expiration: {
                   maxEntries: 50,
                   maxAgeSeconds: 60 * 60 * 24 * 7, // 7일동안 유지
+                },
+              },
+            },
+            {
+              urlPattern: ({ url }) => url.pathname.startsWith("/icons/category/"),
+              handler: "CacheFirst",
+              options: {
+                cacheName: "category-icons",
+                expiration: {
+                  maxEntries: 50,
+                  maxAgeSeconds: 60 * 60 * 24 * 30, // 30일
                 },
               },
             },

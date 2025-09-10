@@ -132,7 +132,6 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
       initialSnap={3}
       style={{ bottom: footerHeight }}
       detent='content-height'
-      style={{ bottom: footerHeight }}
     >
       <Sheet.Container style={{ zIndex: 1500, boxShadow: "none" }}>
         <Sheet.Header>

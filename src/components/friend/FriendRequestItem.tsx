@@ -1,6 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-
+import { Link, useLocation } from 'react-router-dom';
+import { getProfileImageSrc } from '@/utils/profileUtils';
 
 // 친구 요청을 받거나 보낸 리스트를 보여줌
 // Friend Request 정보를 담아 준다.
@@ -33,29 +32,26 @@ function FriendRequestItem({
   onCancel,
   image
 }: FriendRequestItemProps) {
-  const isDefaultImage = image === 'public.png' || !image;
-
-  const profileImageSrc = isDefaultImage
-    ? gender === '남성'
-      ? '/icons/public/Man.png'
-      : '/icons/public/Woman.png'
-    : `/api/user/view/profile/${id}`;
-
+  const { src: profileImageSrc, isDefault } = getProfileImageSrc(id, image, gender);
+  const location = useLocation();
+  const pathname = location.pathname;
   return (
     // 친구 리스트에서 각 친구 항목을 표시해주는 영역
+
+
     <div className="flex items-center justify-between px-4 py-3">
       {/* 친구 리스트에서 프로필 및 유저 이름 닉네임을 표시해주는 영역 */}
       <div className="flex items-center space-x-3">
         {/* 각 ID값을 활용해 해당 프로필로 이동 */}
         <Link
           to={`/profile`}
-          state={{ userId: id, type, friendId, gender }}
+          state={{ userId: id, type, friendId, gender, pathname }}
         >
           {/* 프로필 이지미를 보여줌 */}
           <img
             src={profileImageSrc}
             alt={`${name} 프로필`}
-            className={`w-12 h-12 object-cover rounded-full cursor-pointer ${isDefaultImage ? 'opacity-20 bg-blue-100' : ''
+            className={`w-12 h-12 object-cover rounded-full cursor-pointer ${isDefault ? 'opacity-20 bg-blue-100' : ''
               }`}
 
           />
@@ -93,6 +89,7 @@ function FriendRequestItem({
         )}
       </div>
     </div>
+
   );
 }
 

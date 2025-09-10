@@ -7,6 +7,7 @@ export interface UserParticipateLinkerDTO {
   participatedDate: string;
   memo: string;
   linkerState: string;
+  categoryId?: number; // 카테고리 번호 (백엔드에서 내려옴)
 }
 
 // 프로필 수정 요청 DTO
@@ -15,7 +16,7 @@ export type ProfileDTO = {
   password?: string;
   nickname: string;
   gender: string;
-  intro: string;
+  memo: string;
   email: string;
 };
 
@@ -25,8 +26,7 @@ export type UserResponseDTO = {
   name: string;
   nickname: string;
   gender: string;
-  intro: string;
-  description: string;
+  memo: string;
   createdDate: string;
   verified: boolean;
   email: string;

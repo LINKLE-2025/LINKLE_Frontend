@@ -7,42 +7,45 @@ import EmptyState from '../../components/friend/EmptyState';
 import { UserResponseDTO } from '@/types/user';
 import { FriendResponse } from "@/types/friend";
 
-// layout에서 context로 받아오기 위해
 import { useOutletContext } from "react-router-dom";
-// api
-import { acceptFriendRequest, rejectFriendRequest, deleteFriend, getReceivedFriendRequests, getSentFriendRequests } from '@/api/friendApi';
+import {
+  acceptFriendRequest,
+  rejectFriendRequest,
+  deleteFriend,
+  getReceivedFriendRequests,
+  getSentFriendRequests
+} from '@/api/friendApi';
 import { getUserProfile } from '@/api/profileApi';
 
+import { useFriendFilter } from "@/hooks/useFriendFilter";
 
-
-//로그인한 유저 아이디
 type OutletContextType = { loggedInUserId: number };
+
 function FriendRequestsPage() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState(''); // 🔹 디바운스된 검색어
   const [user, setUser] = useState<UserResponseDTO | null>(null);
   const [receivedRequests, setReceivedRequests] = useState<FriendResponse[]>([]);
   const [sentRequests, setSentRequests] = useState<FriendResponse[]>([]);
-  const [requests, setRequests] = useState<FriendResponse[]>(); // 사용 안함 (필요 시 제거 가능)
 
   const isEmpty = receivedRequests.length === 0 && sentRequests.length === 0;
 
-  const filteredReceived = receivedRequests.filter(
-    (friend) =>
-      friend.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      friend.nickname.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // 🔹 디바운스 처리
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
-  const filteredSent = sentRequests.filter(
-    (friend) =>
-      friend.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      friend.nickname.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // 🔹 필터링
+  const filteredReceived = useFriendFilter(receivedRequests, debouncedQuery);
+  const filteredSent = useFriendFilter(sentRequests, debouncedQuery);
 
   const handleAccept = async (friendId: number) => {
     try {
-      await acceptFriendRequest(friendId); // 성공하면 여기까지 옴
+      await acceptFriendRequest(friendId);
       setReceivedRequests(prev => prev.filter(req => req.friendId !== friendId));
-      // 필요하면 sentRequests에도 추가하거나, 프로필 타입 업데이트 가능
     } catch (err) {
       console.error("친구 수락 실패:", err);
     }
@@ -68,16 +71,13 @@ function FriendRequestsPage() {
     }
   };
 
-
   const { loggedInUserId } = useOutletContext<OutletContextType>();
-  // 
   const { userId: profileUserIdParam } = useParams<{ userId: string }>();
   const profileUserId = profileUserIdParam ? Number(profileUserIdParam) : loggedInUserId;
 
-  // ProfilePage.tsx (일부)
+  // 데이터 패칭
   useEffect(() => {
     if (!profileUserId) return;
-
     (async () => {
       try {
         const [userData, received, sent] = await Promise.all([
@@ -86,7 +86,7 @@ function FriendRequestsPage() {
           getSentFriendRequests(profileUserId),
         ]);
         setUser(userData);
-        setReceivedRequests(received);   // 추가
+        setReceivedRequests(received);
         setSentRequests(sent);
       } catch (err) {
         console.error("프로필 관련 데이터 불러오기 실패:", err);
@@ -94,29 +94,35 @@ function FriendRequestsPage() {
     })();
   }, [profileUserId]);
 
-
   return (
-    <div className="max-w-md mx-auto bg-gray-50 min-h-screen flex flex-col">
-      {/* 검색 헤더 */}
-      <div className="bg-white px-4 py-3 border-b">
-        <div className="relative">
+    <div className="max-w-md mx-auto bg-gray-50 min-h-screen flex flex-col pb-24">
+      {/* 검색 헤더 - FriendsListPage와 동일 */}
+      <div className="bg-white px-4 py-3 border-b flex items-center gap-2">
+        <div className="relative flex-1">
           <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
           <input
             type="text"
-            placeholder="친구 검색"
+            placeholder="친구 요청 검색"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
+        <button
+          type="button"
+          className="px-3 py-2 text-sm text-gray-600 hover:text-blue-600"
+          onClick={() => setDebouncedQuery(searchQuery)} // 즉시 검색
+        >
+          <img src="/icons/mapicon/search.png" className="w-5 h-5" />
+        </button>
       </div>
 
-      {/* 빈 상태 */}
+      {/* 본문 */}
       {isEmpty ? (
         <EmptyState />
       ) : (
         <div className="flex-1 overflow-y-auto">
-          {/* 받은 친구 요청 */}
+          {/* 받은 요청 */}
           {filteredReceived.length > 0 && (
             <div className="mb-6">
               <div className="px-4 py-3">
@@ -133,7 +139,7 @@ function FriendRequestsPage() {
                     name={request.name}
                     nickname={request.nickname}
                     gender={request.gender ?? "남성"}
-                    image={request.imageUrl}
+                    image={request.image}
                     avatar="bg-blue-500"
                     type="received"
                     onAccept={handleAccept}
@@ -145,7 +151,7 @@ function FriendRequestsPage() {
             </div>
           )}
 
-          {/* 보낸 친구 요청 */}
+          {/* 보낸 요청 */}
           {filteredSent.length > 0 && (
             <div>
               <div className="px-4 py-3">
@@ -162,10 +168,9 @@ function FriendRequestsPage() {
                     name={request.name}
                     nickname={request.nickname}
                     gender={request.gender ?? "남성"}
+                    image={request.image}
                     avatar="bg-blue-500"
                     type="sent"
-                    onAccept={handleAccept}
-                    onReject={() => handleReject(request)}
                     onCancel={handleCancel}
                   />
                 ))}

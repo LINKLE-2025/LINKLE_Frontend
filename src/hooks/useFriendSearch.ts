@@ -44,9 +44,11 @@ export const useFriendSearch = (currentUserId: number) => {
     // ✅ 디바운싱 적용
     useEffect(() => {
         const delayDebounce = setTimeout(() => {
-            if (searchQuery.trim()) {
-                handleSearch(searchQuery);
+            if (!searchQuery.trim()) {
+                setResults([]);
+                return;
             }
+            handleSearch(searchQuery);
         }, 500);
         return () => clearTimeout(delayDebounce);
     }, [searchQuery, handleSearch]);

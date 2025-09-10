@@ -25,19 +25,24 @@ export default function VerifyCodeStep({ value, email, onChange, onNext }: Props
       setError("");
     }
   }, [success]);
+  useEffect(() => {
+    if (value) {
+      setError("");
+    }
+  }, [value]);
 
   const handleNext = () => {
     if (!value) {
-      setError("인증번호가 올바르지 않습니다.");
+      setError("인증번호를 입력하세요.");
       return;
     }
 
-    setError("");
     console.log("인증 코드:", value);
 
     // 인증코드 검증
     verifyCodeOnServer(email, value).then((isValid) => {
       if (isValid) {
+        setError("");
         console.log("인증 코드가 확인되었습니다. 다음 단계로 이동");
         onNext();
       }

@@ -3,16 +3,6 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 
 export default function LandingPage() {
-  useEffect(() => {
-    fetch("/api/test")
-      .then((res) => {
-        if (!res.ok) throw new Error("API 실패");
-        return res.json();
-      })
-      .then((data) => console.log("API 응답:", data))
-      .catch((err) => console.error(err));
-  }, []);
-
   return (
     <div className='flex flex-col items-center justify-center mx-auto w-full max-w-[630px] px-5'>
       {/* 로고 */}
@@ -42,13 +32,13 @@ export default function LandingPage() {
 
       {/* 로그인 및 회원가입 이동 버튼 */}
       <p className='text-base md:text-base mb-5'>
-        <a href='/login' className='font-semibold text-linkleGray hover:text-black'>
+        <Link to='/login' className='font-semibold text-linkleGray hover:text-black'>
           로그인
-        </a>
+        </Link>
         <span className='text-gray-400'> 또는 </span>
-        <a href='/signup' className='font-semibold text-linkleGray hover:text-black'>
+        <Link to='/signup' className='font-semibold text-linkleGray hover:text-black'>
           가입하기
-        </a>
+        </Link>
       </p>
     </div>
   );
