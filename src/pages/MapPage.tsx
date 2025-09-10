@@ -27,6 +27,7 @@ import LinkerListModal from "@/components/linker/ListLinkerDetail";
 import CategoryFilterButton from "@/components/category/CategoryFilterButton";
 import { on } from "events";
 import { useViewportHeight } from "@/hooks/useViewportHeight";
+import { set } from "date-fns";
 
 type LayoutContext = { headerHeight: number; footerHeight: number };
 
@@ -155,6 +156,7 @@ export default function MapPage(): React.ReactElement {
     setDetailLoading(true);
     setDetailError(null);
     setDetailData(null);
+    setShowClusterList(false);
 
     (async () => {
       try {
