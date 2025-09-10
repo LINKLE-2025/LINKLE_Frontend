@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { openDm } from "@/services/chat";
 import { getProfileImageSrc } from '@/utils/profileUtils';
+import { getCurrentUserId } from "@/api/authApi";
 
 interface FriendItemProps {
   targetUserId: number; // 대상 유저 ID
@@ -13,7 +14,8 @@ interface FriendItemProps {
   gender?: string;
 }
 
-const DEV_UID = Number(import.meta.env.VITE_DEV_USER_ID ?? "1");
+
+const DEV_UID = await getCurrentUserId().catch(() => { });
 
 function FriendItem({ targetUserId, name, nickname, buttonType, friendId, image, gender }: FriendItemProps) {
   const location = useLocation();

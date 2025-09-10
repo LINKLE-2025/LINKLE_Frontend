@@ -5,6 +5,10 @@ import { useNavigate, useOutletContext } from "react-router-dom";
 import { participateLinker, checkParticipation } from "../../api/mapApi";
 import { getCurrentUserId, refreshToken } from "@/api/authApi";
 
+import { getRoomList } from "@/api/chatApi";
+import type { RoomResponseDTO } from "@/types/chat";
+import ChatListItem2 from "@/components/chat/ChatListItem2";
+
 export type LinkerDetail = {
   linkerId: number;
   name: string;
@@ -34,6 +38,8 @@ type LinkerPost = {
   author?: { name?: string; handle?: string; avatarUrl?: string | null } | null;
 };
 
+const prettyDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString() : "-");
+
 export default function LinkerDetailSheet({ open, onClose, detail, loading, error }: Props) {
   const navigate = useNavigate();
   const { footerHeight } = useOutletContext<{ headerHeight: number; footerHeight: number }>();
@@ -41,12 +47,20 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
   const [loggedInUserId, setLoggedInUserId] = useState<number | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
+  // 탭 상태 
+  const [activeTab, setActiveTab] = useState<"post" | "light" | "class">("post");
+
   const [posts, setPosts] = useState<LinkerPost[]>([]);
   const [postLoading, setPostLoading] = useState(false);
   const [postError, setPostError] = useState<string | null>(null);
 
   const [participating, setParticipating] = useState(false);
   const [participationLoading, setParticipationLoading] = useState(false);
+
+  // 채팅방 목록 상태 
+  const [rooms, setRooms] = useState<RoomResponseDTO[]>([]);
+  const [roomLoading, setRoomLoading] = useState(false);
+  const [roomError, setRoomError] = useState<string | null>(null);
 
   // 🔹 현재 로그인 유저 가져오기
   useEffect(() => {
@@ -101,6 +115,22 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
   useEffect(() => {
     if (!open || !detail?.linkerId) return;
     fetchPosts(detail.linkerId);
+
+    // 채팅방 목록 로드 (추가)
+    (async () => {
+      setRoomLoading(true);
+      setRoomError(null);
+      try {
+        const list = await getRoomList();
+        // 필요 시 특정 linkerId에 종속된 방만 보이도록 필터링 가능
+        // const filtered = list.filter((r) => r.linkerId === detail?.linkerId);
+        setRooms(list ?? []);
+      } catch (e: any) {
+        setRoomError(e?.message ?? String(e));
+      } finally {
+        setRoomLoading(false);
+      }
+    })();
   }, [open, detail?.linkerId]);
 
   // 🔹 참여 여부 체크
@@ -239,36 +269,147 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
             )}
           </div>
 
-          {/* 포스트 그리드 */}
-          <div className="px-1 pt-2 pb-6">
-            {postLoading && posts.length === 0 ? (
-              <div className="p-6 text-center text-gray-500 text-sm">불러오는 중…</div>
-            ) : postError ? (
-              <div className="p-6 text-center text-red-500 text-sm">{postError}</div>
-            ) : posts.length === 0 ? (
-              <div className="p-6 text-center text-gray-400 text-sm">
-                아직 등록된 포스트가 없어요.
-                <br />
-                <br />
-              </div>
-            ) : (
-              <div className="grid grid-cols-3 gap-1">
-                {posts.map((p) => (
-                  <button
-                    key={p.postId}
-                    className="aspect-square overflow-hidden bg-gray-100"
-                    title={p.content ?? ""}
-                    onClick={() => navigate(`/post/${p.postId}`, { state: { linker: detail } })}
-                  >
-                    {p.imageUrl ? (
-                      <img src={p.imageUrl} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="h-full w-full p-2 text-[11px] text-left line-clamp-2">{p.content ?? "(이미지 없음)"}</div>
-                    )}
-                  </button>
-                ))}
-              </div>
+          {/* 탭 바 */}
+          <div className='mt-2 border-b'>
+            <div className='flex items-center justify-around text-sm'>
+              <button
+                className={activeTab === "post" ? "relative py-2 font-semibold" : "py-2 text-gray-400"}
+                onClick={() => setActiveTab("post")}
+                type='button'
+              >
+                <img src='/icons/mapicon/Vector.png' alt='' />
+                {activeTab === "post" && (
+                  <span className='absolute -bottom-[1px] left-0 right-0 h-[2px] bg-black' />
+                )}
+              </button>
+              <button
+                className={activeTab === "light" ? "relative py-2 font-semibold" : "py-2 text-gray-400"}
+                onClick={() => setActiveTab("light")}
+                type='button'
+              >
+                <img src='/icons/mapicon/User Account.png' alt='' />
+                {activeTab === "light" && (
+                  <span className='absolute -bottom-[1px] left-0 right-0 h-[2px] bg-black' />
+                )}
+              </button>
+              <button
+                className={activeTab === "class" ? "relative py-2 font-semibold" : "py-2 text-gray-400"}
+                onClick={() => setActiveTab("class")}
+                type='button'
+              >
+                <img src='/icons/mapicon/lucide_crown.png' alt='' />
+                {activeTab === "class" && (
+                  <span className='absolute -bottom-[1px] left-0 right-0 h-[2px] bg-black' />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* 포스트 그리드 / 채팅 리스트 (탭에 따라 분기) */}
+          <div className='px-1 pt-2 pb-6'>
+            {/* 포스트 탭 */}
+            {activeTab === "post" && (
+              postLoading && posts.length === 0 ? (
+                <div className='p-6 text-center text-gray-500 text-sm'>불러오는 중…</div>
+              ) : postError ? (
+                <div className='p-6 text-center text-red-500 text-sm'>{postError}</div>
+              ) : posts.length === 0 ? (
+                <div className='p-6 text-center text-gray-400 text-sm'>
+                  아직 등록된 포스트가 없어요.
+                  <br />
+                  <br />
+                </div>
+              ) : (
+                <>
+                  <div className='grid grid-cols-3 gap-1'>
+                    {posts.map((p) => (
+                      <button
+                        key={p.postId}
+                        className='aspect-square overflow-hidden bg-gray-100'
+                        title={p.content ?? ""}
+                        onClick={() =>
+                          navigate(`/post/${p.postId}`, {
+                            state: { linker: detail },
+                          })
+                        }
+                      >
+                        {p.imageUrl ? (
+                          <img src={p.imageUrl} alt='' className='h-full w-full object-cover' />
+                        ) : (
+                          <div className='h-full w-full p-2 text-[11px] text-left line-clamp-2'>
+                            {p.content ?? "(이미지 없음)"}
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )
             )}
+
+            {/* 단체채팅방(LIGHT) 탭 */}
+            {activeTab === "light" && (
+              roomLoading ? (
+                <div className='p-6 text-center text-gray-500 text-sm'>채팅방 불러오는 중…</div>
+              ) : roomError ? (
+                <div className='p-6 text-center text-red-500 text-sm'>{roomError}</div>
+              ) : (
+                <div className='space-y-2 px-3'>
+                  {rooms.filter((r) => r.roomType === "LIGHT").length === 0 ? (
+                    <div className='p-6 text-center text-gray-400 text-sm'>LIGHT 채팅방이 없어요.</div>
+                  ) : (
+                    rooms
+                      .filter((r) => r.roomType === "LIGHT")
+                      .map((r) => (
+                        <ChatListItem2
+                          key={r.roomId}
+                          title={r.roomName ?? r.friendName ?? "그룹 채팅"}
+                          memo={r.memo ?? r.description ?? ""}
+                          memberCount={r.memberCount ?? undefined}
+                          roomType={r.roomType}
+                          startDate={r.startDate ?? undefined}
+                          avatarUrl={`/api/chat/view/background/${r.roomId}`}
+                          accentColor='#FBE7D2'
+                          onClick={() => navigate(`/chat/room/${r.roomId}`)}
+                        />
+                      ))
+                  )}
+                </div>
+              )
+            )}
+
+            {/* 클래스채팅방(CLASS) 탭 */}
+            {activeTab === "class" && (
+              roomLoading ? (
+                <div className='p-6 text-center text-gray-500 text-sm'>채팅방 불러오는 중…</div>
+              ) : roomError ? (
+                <div className='p-6 text-center text-red-500 text-sm'>{roomError}</div>
+              ) : (
+                <div className='space-y-2 px-3'>
+                  {rooms.filter((r) => r.roomType === "CLASS").length === 0 ? (
+                    <div className='p-6 text-center text-gray-400 text-sm'>CLASS 채팅방이 없어요.</div>
+                  ) : (
+                    rooms
+                      .filter((r) => r.roomType === "CLASS")
+                      .map((r) => (
+                        <ChatListItem2
+                          key={r.roomId}
+                          title={r.roomName ?? "클래스 채팅"}
+                          memo={r.memo ?? r.description ?? ""}
+
+                          memberCount={r.memberCount ?? undefined}
+                          roomType={r.roomType}
+                          startDate={r.startDate ?? undefined}
+                          avatarUrl={`/api/chat/view/background/${r.roomId}`}
+                          accentColor='#FBE7D2'
+                          onClick={() => navigate(`/chat/room/${r.roomId}`)}
+                        />
+                      ))
+                  )}
+                </div>
+              )
+            )}
+
           </div>
         </Sheet.Content>
       </Sheet.Container>
