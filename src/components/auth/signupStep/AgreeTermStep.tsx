@@ -1,22 +1,6 @@
 import { useEffect, useState } from "react";
-import AuthInput from "@/components/auth/AuthInput";
+import { Term, terms } from "@/constants/terms";
 import AuthFilledButton from "@/components/auth/AuthFilledButton";
-import { Link } from "react-router-dom";
-
-// 약관 데이터
-type Term = {
-  id: number;
-  title: string;
-  required: boolean;
-  link: string;
-};
-
-// 약관 예시 데이터
-const terms: Term[] = [
-  { id: 0, title: "이용 약관", required: true, link: "/terms/service" },
-  { id: 1, title: "개인정보처리방침", required: true, link: "/terms/privacy" },
-  { id: 2, title: "위치 기반 기능", required: true, link: "/terms/location" },
-];
 
 type Props = {
   value: boolean[];
@@ -26,6 +10,7 @@ type Props = {
 
 export default function AgreeTermStep({ value, onChange, onNext }: Props) {
   const [error, setError] = useState("");
+  const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
 
   // 개별 약관 토글
   const toggleTerm = (idx: number) => {
@@ -74,14 +59,13 @@ export default function AgreeTermStep({ value, onChange, onNext }: Props) {
                 {term.title}
                 {term.required && "(필수)"}
               </span>
-              <Link
-                to={term.link}
-                target='_blank'
-                rel='noopener noreferrer'
-                className='text-sm text-blue-500'
+              <button
+                type='button'
+                onClick={() => setSelectedTerm(term)}
+                className='text-sm text-blue-500 text-left'
               >
                 더 알아보기
-              </Link>
+              </button>
             </div>
             <input
               type='checkbox'
@@ -100,6 +84,53 @@ export default function AgreeTermStep({ value, onChange, onNext }: Props) {
       <AuthFilledButton type='button' className='my-5 sm:mb-7' onClick={handleNext}>
         회원가입
       </AuthFilledButton>
+
+      {/* 모달 */}
+      {selectedTerm && (
+        <div
+          className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
+          onClick={() => setSelectedTerm(null)} // 🔹 바깥 클릭 시 닫힘
+        >
+          <div
+            className="bg-white rounded-xl shadow-lg max-w-md w-full p-5 pb-6 relative max-h-[80vh] overflow-y-auto mx-5"
+            onClick={(e) => e.stopPropagation()} // 🔹 내부 클릭은 이벤트 버블링 막기
+          >
+            <h2 className="text-lg font-bold pl-1 mb-3">{selectedTerm.title}</h2>
+
+            {/* 스크롤 가능한 본문 */}
+            <div className="text-sm text-gray-700 bg-slate-50 whitespace-pre-line overflow-y-auto max-h-[50vh] py-3 pl-2 pr-3">
+              {selectedTerm.content}
+            </div>
+
+            {/* 닫기 버튼 */}
+            <button
+              className="absolute top-5 right-6 text-gray-500 hover:text-black"
+              onClick={() => setSelectedTerm(null)}
+            >
+              ✕
+            </button>
+
+            {/* 동의 버튼 */}
+            <AuthFilledButton
+              type="button"
+              className="mt-5 w-40 mx-auto block"
+              disabled={value[terms.findIndex((t) => t.id === selectedTerm.id)]}
+              onClick={() => {
+                const idx = terms.findIndex((t) => t.id === selectedTerm.id);
+                if (idx !== -1 && !value[idx]) {
+                  toggleTerm(idx);
+                }
+                setSelectedTerm(null);
+              }}
+            >
+              {value[terms.findIndex((t) => t.id === selectedTerm.id)]
+                ? "동의함"
+                : "동의하기"}
+            </AuthFilledButton>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

@@ -4,12 +4,14 @@ interface BackgroundImageUploaderProps {
     onChange: (file: File, previewUrl: string) => void;
     height?: number; // 배경 높이 (default 160px)
     getBackgroundImageSrc?: any;
+    bgPreview: string;
 }
 
 export default function BackgroundImageUploader({
     onChange,
     height = 160,
-    getBackgroundImageSrc
+    getBackgroundImageSrc,
+    bgPreview
 }: BackgroundImageUploaderProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -22,11 +24,11 @@ export default function BackgroundImageUploader({
         };
         reader.readAsDataURL(file);
     };
-    console.log("getBackgroundImageSrc" + getBackgroundImageSrc);
+    const displaySrc = bgPreview || getBackgroundImageSrc;
     return (
         <div className="relative w-full bg-gray-200" style={{ height }}>
             <img
-                src={getBackgroundImageSrc}
+                src={displaySrc}
                 alt="배경"
                 className="w-full h-full object-cover cursor-pointer"
                 onClick={() => inputRef.current?.click()}

@@ -51,7 +51,7 @@ function ProfileContent({
 }: ProfileContentProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  // 🔥 profileType을 로컬 상태로 관리
+  // profileType을 로컬 상태로 관리
   const [currentType, setCurrentType] = useState<ProfileType>(profileType);
 
 
@@ -144,7 +144,7 @@ function ProfileContent({
           onClick={() =>
             setPreviewImage(
               background
-                ? `/api/user/view/background/${userId}`
+                ? `/api/user/view/background/${userId}?v=${Date.now()}`
                 : '/icons/public/Background.png'
             )
           }
