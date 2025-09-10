@@ -131,7 +131,8 @@ export default function PostDetailPage(): React.ReactElement {
         readOnly={!(isMine && isEditing)}
         showDeleteButton={isMine}
         footerOffset={footerHeight}
-        authorName={post.name}
+        userNickname={post.userNickname}
+        name={post.name}
       />
     </div>
   );

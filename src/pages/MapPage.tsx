@@ -26,6 +26,7 @@ import BackTitleHeader from "@/components/header/BackTitleHeader";
 import LinkerListModal from "@/components/linker/ListLinkerDetail";
 import CategoryFilterButton from "@/components/category/CategoryFilterButton";
 import { on } from "events";
+import { useViewportHeight } from "@/hooks/useViewportHeight";
 
 type LayoutContext = { headerHeight: number; footerHeight: number };
 
@@ -726,9 +727,15 @@ export default function MapPage(): React.ReactElement {
     setSearchOpen(false);
   };
 
+
+  useViewportHeight();
   const { headerHeight, footerHeight } = useOutletContext<LayoutContext>();
 
+  const mapH = `calc(var(--app-vh) * 100 - ${headerHeight + footerHeight}px)`;
+  const supportsDvh = CSS?.supports?.('height', '100dvh') ?? false;
+
   return (
+
     <MapWrapper>
       {/* ===== 헤더 ===== */}
       {/* 검색창 열렸을 때 뒤로가기 헤더 */}
@@ -779,8 +786,12 @@ export default function MapPage(): React.ReactElement {
       />
       {/* 지도 영역 */}
       <div
-        className='relative w-full'
-        style={{ height: `calc(100vh - ${headerHeight + footerHeight}px)` }}
+        className="relative w-full"
+        style={{
+          height: supportsDvh
+            ? `calc(100dvh - ${headerHeight + footerHeight}px)`
+            : mapH
+        }}
       >
         <div ref={mapRef} className='w-full h-full' />
 
