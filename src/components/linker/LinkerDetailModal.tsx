@@ -1,8 +1,9 @@
 import dayjs from "dayjs";
-import { create } from "node:domain";
 import React, { useEffect, useState } from "react";
 import { Sheet } from "react-modal-sheet";
 import { useNavigate, useOutletContext } from "react-router-dom";
+import { participateLinker, checkParticipation } from "../../api/mapApi";
+import { getCurrentUserId, refreshToken } from "@/api/authApi";
 
 import { getRoomList } from "@/api/chatApi";
 import type { RoomResponseDTO } from "@/types/chat";
@@ -41,66 +42,79 @@ const prettyDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString() :
 
 export default function LinkerDetailSheet({ open, onClose, detail, loading, error }: Props) {
   const navigate = useNavigate();
+  const { footerHeight } = useOutletContext<{ headerHeight: number; footerHeight: number }>();
 
-  // AppLayout에서 Outlet context로 받은 header/footer 높이
-  type LayoutContext = { headerHeight: number; footerHeight: number };
-  const { footerHeight } = useOutletContext<LayoutContext>();
+  const [loggedInUserId, setLoggedInUserId] = useState<number | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   // 탭 상태 
   const [activeTab, setActiveTab] = useState<"post" | "light" | "class">("post");
 
-  // 포스트 상태
   const [posts, setPosts] = useState<LinkerPost[]>([]);
   const [postLoading, setPostLoading] = useState(false);
   const [postError, setPostError] = useState<string | null>(null);
-  const [postPage, setPostPage] = useState(1);
-  const [postHasNext, setPostHasNext] = useState(false);
+
+  const [participating, setParticipating] = useState(false);
+  const [participationLoading, setParticipationLoading] = useState(false);
 
   // 채팅방 목록 상태 
   const [rooms, setRooms] = useState<RoomResponseDTO[]>([]);
   const [roomLoading, setRoomLoading] = useState(false);
   const [roomError, setRoomError] = useState<string | null>(null);
 
-  // 포스트 불러오기
-  async function LinkerPost(linkerId: number) {
+  // 🔹 현재 로그인 유저 가져오기
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userId = await getCurrentUserId();
+        setLoggedInUserId(userId);
+      } catch (err: any) {
+        if (err?.response?.status === 401) {
+          try {
+            await refreshToken();
+            const userId = await getCurrentUserId();
+            setLoggedInUserId(userId);
+          } catch (refreshErr) {
+            console.error("토큰 리프레시 실패:", refreshErr);
+          }
+        } else {
+          console.error("유저 정보 불러오기 실패:", err);
+        }
+      } finally {
+        setIsAuthLoading(false);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  // 🔹 포스트 불러오기
+  const fetchPosts = async (linkerId: number) => {
     setPostLoading(true);
     setPostError(null);
     try {
-      const res = await fetch(`/api/post?linkerId=${linkerId}`, {
-        credentials: "include",
-      });
+      const res = await fetch(`/api/post?linkerId=${linkerId}`, { credentials: "include" });
       if (!res.ok) throw new Error(`포스트 조회 실패 (${res.status})`);
-
-      type PostDTO = {
-        postId: number;
-        image?: string | null;
-        memo?: string | null;
-        createdDate?: string;
-      };
-      const raw: PostDTO[] = await res.json();
+      const raw: any[] = await res.json();
       const postImageUrl = (postId: number) => `/api/post/${postId}/image`;
-
-      const mapped: LinkerPost[] = (raw ?? []).map((p) => ({
-        postId: p.postId,
-        imageUrl: p.image ? postImageUrl(p.postId) : null,
-        content: p.memo ?? null,
-        createdDate: p.createdDate ?? undefined,
-        author: null,
-      }));
-
-      setPosts(mapped.slice().reverse()); //최신순 -> 오래된순
-      setPostHasNext(false);
-      setPostPage(1);
+      setPosts(
+        raw.map((p) => ({
+          postId: p.postId,
+          imageUrl: p.image ? postImageUrl(p.postId) : null,
+          content: p.memo ?? null,
+          createdDate: p.createdDate ?? undefined,
+          author: null,
+        }))
+      );
     } catch (e: any) {
       setPostError(e?.message ?? String(e));
     } finally {
       setPostLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     if (!open || !detail?.linkerId) return;
-    LinkerPost(detail.linkerId);
+    fetchPosts(detail.linkerId);
 
     // 채팅방 목록 로드 (추가)
     (async () => {
@@ -119,34 +133,53 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
     })();
   }, [open, detail?.linkerId]);
 
-  useEffect(() => {
-    if (!open) {
-      setPosts([]);
-      setPostPage(1);
-      setPostHasNext(false);
-      setPostError(null);
-
-      // 탭을 초기화하고 싶다면 아래 주석 해제
-      // setActiveTab("post");
+  // 🔹 참여 여부 체크
+  const fetchParticipation = async () => {
+    if (!loggedInUserId || !detail) return;
+    try {
+      setParticipationLoading(true);
+      const res = await checkParticipation(detail.linkerId, loggedInUserId);
+      setParticipating(res);
+      console.log("참여 여부:", res);
+    } catch (err) {
+      console.error("참여 여부 조회 실패:", err);
+      setParticipating(false);
+    } finally {
+      setParticipationLoading(false);
     }
-  }, [open]);
+  };
+
+  useEffect(() => {
+    if (!open || !detail?.linkerId || !loggedInUserId) return;
+    fetchParticipation();
+  }, [open, detail?.linkerId, loggedInUserId]);
+
+  // 🔹 참여하기
+  const handleParticipate = async () => {
+    if (!detail?.linkerId || !loggedInUserId) return;
+    try {
+      setParticipationLoading(true);
+      await participateLinker(detail.linkerId, loggedInUserId);
+      setParticipating(true);
+    } catch (err) {
+      console.error("참여 실패:", err);
+      alert("참여 실패. 다시 시도해주세요.");
+    } finally {
+      setParticipationLoading(false);
+    }
+  };
 
   const CreatePost = () => {
     if (!detail) return;
-    navigate(`/post?linkerId=${detail.linkerId}`, {
-      state: { linker: detail },
-    });
+    navigate(`/post?linkerId=${detail.linkerId}`, { state: { linker: detail } });
   };
-
-  // 만료일자: createdDate 기준 +30일
-  const expireDate = detail?.createdDate ? dayjs(detail.createdDate).add(30, "day") : null;
 
   const CreateChatRoom = () => {
     if (!detail) return;
-    navigate("/chat/room/create", {
-      state: { linker: detail },
-    });
+    navigate("/chat/room/create", { state: { linker: detail } });
   };
+
+  const expireDate = detail?.createdDate ? dayjs(detail.createdDate).add(30, "day") : null;
 
   return (
     <Sheet
@@ -155,55 +188,82 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
       snapPoints={[0.92, 0.78, 0.6]}
       initialSnap={3}
       style={{ bottom: footerHeight }}
-      detent='content-height'
+      detent="content-height"
     >
       <Sheet.Container style={{ zIndex: 1500, boxShadow: "none" }}>
         <Sheet.Header>
-          <div className='mx-auto my-2 h-1.5 w-12 rounded-full bg-gray-300' />
+          <div className="mx-auto my-2 h-1.5 w-12 rounded-full bg-gray-300" />
         </Sheet.Header>
 
         <Sheet.Content style={{ paddingBottom: 12 }}>
-          <div className='px-4 pb-2'>
+          <div className="px-4 pb-2">
             {loading ? (
-              <p className='text-gray-500'>불러오는 중…</p>
+              <p className="text-gray-500">불러오는 중…</p>
             ) : error ? (
-              <p className='text-red-500'>{error}</p>
+              <p className="text-red-500">{error}</p>
             ) : (
               <>
-                <div className='flex items-start justify-between'>
-                  <div className='min-w-0'>
-                    <h2 className='text-lg font-bold truncate'>{detail?.name ?? "-"}</h2>
-                    <p className='mt-0.5 text-sm text-gray-500 truncate'>
-                      {detail?.address ?? detail?.addressName ?? "-"}
-                    </p>
+                <div className="flex items-start justify-between">
+                  <div className="min-w-0">
+                    <h2 className="text-lg font-bold truncate">{detail?.name ?? "-"}</h2>
+                    <p className="mt-0.5 text-sm text-gray-500 truncate">{detail?.address ?? "-"}</p>
+                    <p className="mt-0.5 text-sm text-gray-500 truncate">{detail?.addressName ?? "-"}</p>
                   </div>
-                  <div className='ml-3 flex shrink-0 gap-2'>
-                    <button
-                      className='h-10 w-10 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center'
-                      title='포스트작성'
-                      onClick={CreatePost}
-                    >
-                      <img src='/icons/mapicon/photo.png' alt='' />
-                    </button>
-                    <button
-                      className='h-10 w-10 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center'
-                      title='채팅방생성'
-                      onClick={CreateChatRoom}
-                    >
-                      <img src='/icons/mapicon/chat.png' alt='' />
-                    </button>
+
+                  <div className="ml-3 flex shrink-0 gap-2">
+                    {participationLoading ? (
+                      <button className="h-10 w-24 rounded-full bg-gray-200 text-sm text-gray-500">
+                        로딩 중…
+                      </button>
+                    ) : !participating ? (
+                      <button
+                        className="
+                          h-10 w-28
+                          rounded-full
+                          bg-white
+                          text-gray-500
+                          font-semibold
+                          border border-yellow-400
+                          shadow-sm
+                          hover:bg-yellow-50
+                          active:bg-yellow-100
+                          transition-colors
+                          duration-200
+                          flex items-center justify-center
+                          gap-2
+                        "
+                        onClick={handleParticipate}
+                      >
+                        참여
+                      </button>
+
+                    ) : (
+                      <>
+                        <button
+                          className="h-10 w-10 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center"
+                          title="포스트작성"
+                          onClick={CreatePost}
+                        >
+                          <img src="/icons/mapicon/photo.png" alt="" />
+                        </button>
+                        <button
+                          className="h-10 w-10 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center"
+                          title="채팅방생성"
+                          onClick={CreateChatRoom}
+                        >
+                          <img src="/icons/mapicon/chat.png" alt="" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 
-                <div className='mt-3 flex items-center justify-between text-xs text-gray-500'>
-                  <div className='flex gap-4'>
+                <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+                  <div className="flex gap-4">
                     <span>3 채팅방</span>
                     <span>{posts.length} 포스트</span>
                   </div>
-                  <span>
-                    {expireDate ? expireDate.format("YYYY년 MM월 DD일 ") : ""}
-                    만료 예정
-                  </span>
+                  <span>{expireDate ? expireDate.format("YYYY년 MM월 DD일 ") : ""}만료 예정</span>
                 </div>
               </>
             )}
@@ -354,8 +414,7 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
         </Sheet.Content>
       </Sheet.Container>
 
-      {/* 백드롭도 푸터 위에서 끝나도록 */}
       <Sheet.Backdrop style={{ bottom: footerHeight, zIndex: 1490, background: "transparent" }} />
-    </Sheet>
+    </Sheet >
   );
 }

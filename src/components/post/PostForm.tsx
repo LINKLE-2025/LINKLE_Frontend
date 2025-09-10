@@ -21,7 +21,8 @@ type Props = {
   readOnly?: boolean;
   /** (선택) 삭제 버튼 표시 여부 – 수정/생성 화면에서만 쓰고, 기본값 true */
   showDeleteButton?: boolean;
-  authorName?: string;
+  userNickname?: string; // 닉네임
+  name?: string; // 이름
 };
 
 export default function PostForm({
@@ -36,7 +37,8 @@ export default function PostForm({
   onClickLinker,
   readOnly = false,
   showDeleteButton = true,
-  authorName
+  userNickname,
+  name
 }: Props) {
   const [text, setText] = useState(initialText);
   const [file, setFile] = useState<File | null>(null);
@@ -131,9 +133,9 @@ export default function PostForm({
             <div className='h-8 w-8 rounded-full bg-gray-300 overflow-hidden' />
             <div className='leading-tight'>
               <div className='text-[13px] font-semibold'>
-                {authorName ?? "알 수 없는 사용자"}
+                {name ?? "알 수 없는 사용자"}
               </div>
-              <div className='text-[11px] text-gray-500'>@ghrgn98</div>
+              <div className='text-[11px] text-gray-500'>@{userNickname ?? "알 수 없는 사용자"}</div>
             </div>
           </div>
           {linker && (

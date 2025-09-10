@@ -2,11 +2,17 @@
 import apiClient from "./apiClient";
 
 /** 게시글 생성 */
-export const createPost = async (linkerId: string, text: string, file: File) => {
+export const createPost = async (
+  linkerId: string,
+  text: string,
+  file: File,
+  loggedInUserId: string,
+) => {
   const form = new FormData();
   form.append("linkerId", linkerId);
   form.append("content", text);
   form.append("image", file);
+  form.append("userId", loggedInUserId);
 
   const res = await apiClient.post("/post", form, {
     headers: { "Content-Type": "multipart/form-data" },

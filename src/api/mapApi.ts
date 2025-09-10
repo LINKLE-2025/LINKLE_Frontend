@@ -85,3 +85,31 @@ export const fetchLinkerDetail = async (linkerId: number): Promise<LinkerDetail>
     throw new Error(msg);
   }
 };
+
+// 🔹 링커 참여
+export const participateLinker = async (linkerId: number, userId: number) => {
+  try {
+    const res = await apiClient.post(`/linker/participate`, { linkerId, userId });
+    return res.data; // 서버에서 필요한 응답 반환
+  } catch (err: any) {
+    const msg =
+      err.response?.data?.message ||
+      `POST /linker/participate 실패: ${err.response?.status} ${err.response?.statusText}`;
+    throw new Error(msg);
+  }
+};
+
+// 🔹 참여 여부 조회
+export const checkParticipation = async (linkerId: number, userId: number): Promise<boolean> => {
+  if (!userId) throw new Error("로그인된 유저가 필요합니다.");
+
+  try {
+    const res = await apiClient.get(`/linker/participate/check`, {
+      params: { linkerId, userId }, // <-- 여기서 userId도 보내야 함
+    });
+    return res.data.participating ?? false; // { participating: true/false } 형태 예상
+  } catch (err: any) {
+    console.error(err);
+    return false;
+  }
+};
