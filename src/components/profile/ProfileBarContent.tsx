@@ -1,8 +1,10 @@
 import React from 'react';
 import { useActionMenu } from "@/components/modal/useActionMenu";
-import { Settings, CreditCard, Trash2 } from "lucide-react";
+import { Settings, CreditCard, Trash2, ChevronLeft } from "lucide-react";
 import { fr } from 'date-fns/locale';
 import { deleteFriend } from "@/api/friendApi";
+import { add } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 
 // ProfileBarContent 컴포넌트 props 타입 정의
 // Props는 타입을 명확하게 정의하기 위해서 인터페이스로 작성한다.
@@ -15,24 +17,38 @@ interface ProfileContentProps {
   gender?: string;
   image?: string | null;
   background?: string | null;
+  pathname: string;
 }
 
 // ProfileBarContent 컴포넌트
-function ProfileContent({
+function ProfileBarContent({
   userId,
   profileType,
   friendId,
   isVerified = false,
   gender,
   image,
-  background
+  background,
+  pathname,
 }: ProfileContentProps) {
+
+  const navigate = useNavigate();
+
+  const handleBack = () => {
+    if (pathname) {
+      navigate(pathname);
+    } else {
+      navigate(pathname); // 또는 navigate('/')
+    }
+  };
+
+
+
   // ActionMenu 훅 사용
   // openMenu: 액션 시트 열기 함수
   // ActionMenu: 렌더링할 액션 시트 컴포넌트
   // confirm: 확인 모달 함수
   const { open: openMenu, confirm, ActionMenu } = useActionMenu();
-
   // 프로필 편집 또는 친구 관리 버튼 클릭 시 실행되는 함수
   // 각 버튼 클릭 시 다른 액션 시트를 보여줌
   const onEditProfile = async () => {
@@ -140,15 +156,56 @@ function ProfileContent({
     }
   };
 
+  const backButton = () => {
+    switch (profileType) {
+      case 'self':
+        return (
+          <></>
+        );
+      case 'stranger':
+        return (
+          <></>
+        );
+      case 'friend':
+        return (
+          <ChevronLeft onClick={onFriendMenu}></ChevronLeft>
+        );
+      case 'wait':
+        return (
+          <ChevronLeft
+            onClick={onFriendMenu}
+            className="w-6 h-6 text-gray-800 cursor-pointer hover:opacity-80"
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="relative">
-      {/* 버튼을 상단 오른쪽으로 */}
-      <div className="absolute top-2 right-2">
-        {renderButton()}
+    <div className="flex justify-between items-center w-full px-4 mt-2 z-20">
+      {/* 왼쪽 ← 버튼 또는 빈 공간 */}
+      <div className="w-6">
+        {profileType === 'friend' || profileType === 'wait' ? (
+          <ChevronLeft
+            onClick={handleBack}
+            className="w-6 h-6 text-gray-900 cursor-pointer hover:opacity-80"
+          />
+        ) : null}
+      </div>
+
+      {/* 오른쪽 ⋯ 버튼 */}
+      <div>
+        {(profileType === 'self' || profileType === 'friend') && (
+          <button onClick={profileType === 'self' ? onEditProfile : onFriendMenu} className="w-8 h-8 flex items-center justify-center text-xl">
+            ⋯
+          </button>
+        )}
       </div>
       {ActionMenu}
     </div>
+
   );
 }
 
-export default ProfileContent;
+export default ProfileBarContent;

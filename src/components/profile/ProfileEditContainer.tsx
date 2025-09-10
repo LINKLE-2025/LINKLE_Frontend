@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import ProfileForm from "@/components/profile/ProfileEditForm";
 import { type ProfileDTO } from "@/types/user";
 import { Link } from "react-router-dom";
-import { patchUserProfile, getUserProfile } from "@/api/profileApi";
+import { patchUserProfile, getUserProfile, getBackgroundImage } from "@/api/profileApi";
 import ProfileImageUploader from "@/components/profile/ProfileImageUploader";
 import BackgroundImageUploader from "@/components/profile/BackgroundImageUploader";
 import { useLocation } from "react-router-dom";
 import { getFriends } from "@/api/friendApi";
+import { getProfileImageSrc, getBackgroundImageSrc } from "@/utils/profileUtils";
 
 export default function ProfileEditContainer({ userId }: { userId: number }) {
   const [profileData, setProfileData] = useState<ProfileDTO>({
@@ -20,10 +21,14 @@ export default function ProfileEditContainer({ userId }: { userId: number }) {
   const location = useLocation();
   const { gender, image, background } = location.state || {};
 
-  console.log(gender, image, background);
+  // console.log(gender, image, background);
 
   const [profileFile, setProfileFile] = useState<File | null>(null);
   const [backgroundFile, setBackgroundFile] = useState<File | null>(null);
+
+  const { src: profileImageSrc, isDefault } = getProfileImageSrc(userId, image, gender);
+  const { src: backgroundImageSrc, isDefault: isBgDefault } = getBackgroundImageSrc(userId, background);
+
   const [profilePreview, setProfilePreview] = useState<string>(
     `/api/user/view/profile/${userId}?v=${Date.now()}`
   );
@@ -63,7 +68,7 @@ export default function ProfileEditContainer({ userId }: { userId: number }) {
     <div className="max-w-md mx-auto bg-white min-h-screen">
       {/* 배경 업로더 */}
       <BackgroundImageUploader
-        currentImage={bgPreview}
+        getBackgroundImageSrc={backgroundImageSrc}
         onChange={(file, previewUrl) => {
           setBackgroundFile(file);
           setBgPreview(previewUrl);
@@ -72,10 +77,11 @@ export default function ProfileEditContainer({ userId }: { userId: number }) {
 
       {/* 프로필 업로더 */}
       <ProfileImageUploader
-        currentImage={profilePreview}
+        getProfileImageSrc={profileImageSrc}
         onChange={(file, previewUrl) => {
           setProfileFile(file);
           setProfilePreview(previewUrl);
+
         }}
       />
 
