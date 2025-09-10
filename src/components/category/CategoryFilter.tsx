@@ -73,33 +73,27 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
         <div className='flex gap-2'>
           {/* 전체 선택 버튼 */}
           <button
-            onClick={() => {
-              console.log("전체 선택 버튼 클릭");
-              onSelectAll();
-            }}
-            className='px-3 py-1.5 text-sm bg-green-500 hover:bg-green-600 rounded-lg text-white transition-colors'
+            onClick={onSelectAll}
+            className='px-3 py-1.5 bg-white border-2 border-gray-300 rounded-lg shadow-md text-green-500 font-medium hover:bg-gray-50 hover:shadow-lg transition-all duration-200'
+            aria-label="전체 선택"
           >
             ✅
           </button>
 
           {/* 전체 해제 버튼 */}
           <button
-            onClick={() => {
-              console.log("전체 해제 버튼 클릭");
-              onClearAll();
-            }}
-            className='px-3 py-1.5 text-sm bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-700 transition-colors'
+            onClick={onClearAll}
+            className='px-3 py-1.5 bg-white border-2 border-gray-300 rounded-lg shadow-md text-gray-700 font-medium hover:bg-gray-50 hover:shadow-lg transition-all duration-200'
+            aria-label="전체 해제"
           >
             ❌
           </button>
 
           {/* 패널 닫기 버튼 */}
           <button
-            onClick={() => {
-              console.log("카테고리 패널 닫기");
-              onClose();
-            }}
-            className='px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow transition-colors'
+            onClick={onClose}
+            className='px-3 py-1.5 bg-white border-2 border-gray-300 rounded-lg shadow-md text-blue-500 font-medium hover:bg-gray-50 hover:shadow-lg transition-all duration-200'
+            aria-label="카테고리 패널 닫기"
           >
             ⭐
           </button>
@@ -119,11 +113,10 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
                 console.log(`카테고리 버튼 클릭: ${name} (ID: ${categoryId})`);
                 onCategoryToggle(categoryId);
               }}
-              className={`flex flex-row items-center w-full h-14 px-3 rounded-xl border transition-all duration-200 ${
-                isSelected
+              className={`flex flex-row items-center w-full h-14 px-3 rounded-xl border transition-all duration-200 ${isSelected
                   ? "border-blue-500 bg-blue-50 shadow-md"
                   : "border-gray-200 bg-white hover:bg-gray-50"
-              }`}
+                }`}
             >
               {/* 카테고리 아이콘 */}
               <div className='w-8 h-8 mr-1 flex items-center justify-center'>

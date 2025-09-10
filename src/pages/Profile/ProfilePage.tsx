@@ -88,9 +88,12 @@ const ProfilePage = () => {
     gender?: string;
     userId?: number;
     profileType?: ProfileType;
+    pathname?: string;
   } | undefined;
 
+
   const { type, friendId, gender } = state || {};
+  const pathname = state?.pathname ?? location.pathname;
 
   // 프로필 주인 ID
   const profileUserId = profileUserIdParam
@@ -190,6 +193,7 @@ const ProfilePage = () => {
           searchResults={results}
           loggedInUserId={loggedInUserId}
           setSearchResults={setResults}
+          pathname={pathname}
         />
       ) : (
         <p className="p-4 text-gray-500">로딩중...</p>

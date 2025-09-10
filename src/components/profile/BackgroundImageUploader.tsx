@@ -1,18 +1,17 @@
 import React, { useRef } from "react";
 
 interface BackgroundImageUploaderProps {
-    currentImage: string;
     onChange: (file: File, previewUrl: string) => void;
     height?: number; // 배경 높이 (default 160px)
+    getBackgroundImageSrc?: any;
 }
 
 export default function BackgroundImageUploader({
-    currentImage,
     onChange,
     height = 160,
+    getBackgroundImageSrc
 }: BackgroundImageUploaderProps) {
     const inputRef = useRef<HTMLInputElement>(null);
-
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -23,11 +22,11 @@ export default function BackgroundImageUploader({
         };
         reader.readAsDataURL(file);
     };
-
+    console.log("getBackgroundImageSrc" + getBackgroundImageSrc);
     return (
         <div className="relative w-full bg-gray-200" style={{ height }}>
             <img
-                src={currentImage}
+                src={getBackgroundImageSrc}
                 alt="배경"
                 className="w-full h-full object-cover cursor-pointer"
                 onClick={() => inputRef.current?.click()}

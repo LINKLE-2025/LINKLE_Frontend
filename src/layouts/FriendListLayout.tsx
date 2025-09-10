@@ -4,22 +4,24 @@ import { useEffect, useState } from "react";
 import { getCurrentUserId } from "@/api/authApi";
 
 export default function FriendLayout() {
+  const [isAuthLoading, setIsAuthLoading] = useState(true); // ← 여기에 주목
   const [loggedInUserId, setLoggedInUserId] = useState<number | null>(null);
 
   useEffect(() => {
     (async () => {
       try {
-        const userId = await getCurrentUserId(); // ✅ 여기서 await 가능
+        const userId = await getCurrentUserId(); // accessToken 만료 시 refresh 요청 포함
         setLoggedInUserId(userId);
       } catch (err) {
         console.error("현재 유저 ID 불러오기 실패:", err);
+      } finally {
+        setIsAuthLoading(false); // ✅ 무조건 false로 내려줌
       }
     })();
   }, []);
 
-  // 아직 userId 안 불러왔을 때 로딩 처리
-  if (loggedInUserId === null) {
-    return <div className="text-center py-10">불러오는 중...</div>;
+  if (isAuthLoading) {
+    return <div className="h-screen bg-white" />; // 혹은 null
   }
 
   return (

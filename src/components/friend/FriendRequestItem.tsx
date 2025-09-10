@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { getProfileImageSrc } from '@/utils/profileUtils';
 
 // 친구 요청을 받거나 보낸 리스트를 보여줌
@@ -33,16 +33,19 @@ function FriendRequestItem({
   image
 }: FriendRequestItemProps) {
   const { src: profileImageSrc, isDefault } = getProfileImageSrc(id, image, gender);
-
+  const location = useLocation();
+  const pathname = location.pathname;
   return (
     // 친구 리스트에서 각 친구 항목을 표시해주는 영역
+
+
     <div className="flex items-center justify-between px-4 py-3">
       {/* 친구 리스트에서 프로필 및 유저 이름 닉네임을 표시해주는 영역 */}
       <div className="flex items-center space-x-3">
         {/* 각 ID값을 활용해 해당 프로필로 이동 */}
         <Link
           to={`/profile`}
-          state={{ userId: id, type, friendId, gender }}
+          state={{ userId: id, type, friendId, gender, pathname }}
         >
           {/* 프로필 이지미를 보여줌 */}
           <img
@@ -86,6 +89,7 @@ function FriendRequestItem({
         )}
       </div>
     </div>
+
   );
 }
 
