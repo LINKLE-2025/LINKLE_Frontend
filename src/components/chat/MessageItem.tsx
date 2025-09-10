@@ -1,8 +1,9 @@
 import { useState } from "react";
 import type { MessageResponseDTO } from "@/types/chat";
 import { formatTimeLabel } from "@/utils/chat";
+import { getCurrentUserId } from "@/api/authApi";
 
-const DEV_UID = Number(import.meta.env.VITE_DEV_USER_ID ?? "2");
+const DEV_UID = await getCurrentUserId().catch(() => { });
 
 export default function MessageItem({
   m,
@@ -56,13 +57,13 @@ export default function MessageItem({
               <div className='text-[11px] text-gray-500 mb-0.5 whitespace-nowrap'>
                 {formatTimeLabel(m.createdDate)}
               </div>
-              <div className='inline-block px-3 py-2 rounded-2xl bg-[#e9ffe4] shadow-sm whitespace-pre-wrap break-words'>
+              <div className='inline-block px-3 py-2 rounded-2xl bg-[#f5f5f5] border border-gray-300 shadow-sm whitespace-pre-wrap break-words'>
                 {m.content}
               </div>
             </div>
           ) : (
             <div className='flex items-end gap-1.5'>
-              <div className='inline-block px-3 py-2 rounded-2xl bg-white shadow-sm whitespace-pre-wrap break-words'>
+              <div className='inline-block px-3 py-2 rounded-2xl bg-white border border-gray-300 shadow-sm whitespace-pre-wrap break-words'>
                 {m.content}
               </div>
               <div className='text-[11px] text-gray-500 mb-0.5 whitespace-nowrap'>
