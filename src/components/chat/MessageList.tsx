@@ -53,22 +53,15 @@ export default function MessageList({
   );
 
   const handleScroll = useCallback(() => {
-    const el =
-      listContainerRef.current ??
-      document.scrollingElement ??
-      document.documentElement;
+    const el = listContainerRef.current;
     if (!el) return;
     if (el.scrollTop <= 80 && hasMore && !loadingOlder) loadOlder();
   }, [listContainerRef, hasMore, loadingOlder, loadOlder]);
 
   useEffect(() => {
     const el = listContainerRef.current;
-    if (el) {
-      el.addEventListener("scroll", handleScroll, { passive: true });
-      return () => el.removeEventListener("scroll", handleScroll);
-    }
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    if (!el) return; el.addEventListener("scroll", handleScroll, { passive: true });
+    return () => el.removeEventListener("scroll", handleScroll);
   }, [handleScroll, listContainerRef]);
 
   return (
@@ -77,8 +70,9 @@ export default function MessageList({
       ref={listContainerRef}
       className="w-full bg-[#fafafa] overflow-y-auto"
       style={{
-        minHeight: `calc(100svh - ${inputHeightPx}px - ${effectiveFooter}px - env(safe-area-inset-bottom, 0px))`,
+        height: `calc(100dvh - ${inputHeightPx}px - ${effectiveFooter}px - env(safe-area-inset-bottom, 0px))`,
         paddingBottom: `calc(${inputHeightPx}px + env(safe-area-inset-bottom, 0px))`,
+        overscrollBehavior: "contain",
       }}
     >
       {/* 가운데 칼럼: 폭은 기존처럼 768px 고정 */}
