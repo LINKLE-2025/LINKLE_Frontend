@@ -288,7 +288,7 @@ export default function MapPage(): React.ReactElement {
 
       // 🔥 클러스터러에 새로운 마커들 추가
       clusterer.addMarkers(linkerMarkersRef.current);
-      map.setLevel(3); // 적절한 줌 레벨로 조정
+      map.setLevel(2); // 적절한 줌 레벨로 조정
       console.log(`🎯 최종 결과: ${createdMarkerCount}개 마커가 지도에 표시되었습니다.`);
 
     } catch (e) {
@@ -354,6 +354,8 @@ export default function MapPage(): React.ReactElement {
 
   // 🔥 수정된 Kakao Map 로드 useEffect - 클러스터러 이벤트 중복 등록 방지
   useEffect(() => {
+    document.body.style.overflow = "hidden";
+    window.scrollTo(0, 0);
     if (!mapRef.current) return;
     const script = document.createElement("script");
     script.id = "kakao-map-script";
@@ -371,7 +373,7 @@ export default function MapPage(): React.ReactElement {
         const initMap = (latitude: number, longitude: number) => {
           const options = {
             center: new window.kakao.maps.LatLng(latitude, longitude),
-            level: 2,
+            level: 3,
           };
           const map = new window.kakao.maps.Map(container, options);
           kakaoMapRef.current = map;
@@ -526,6 +528,9 @@ export default function MapPage(): React.ReactElement {
           initMap(lat, lng);
         }
       });
+    };
+    return () => {
+      document.body.style.overflow = "auto";
     };
   }, []); // 🔥 의존성 배열을 비워서 한 번만 실행되도록 함
 
