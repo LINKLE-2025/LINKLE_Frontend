@@ -790,7 +790,7 @@ export default function MapPage(): React.ReactElement {
         style={{
           height: supportsDvh
             ? `calc(100dvh - ${headerHeight + footerHeight}px)`
-            : mapH
+            : `calc(var(--app-vh) * 100 - ${headerHeight + footerHeight}px)`
         }}
       >
         <div ref={mapRef} className='w-full h-full' />

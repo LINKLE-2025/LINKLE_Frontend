@@ -47,7 +47,7 @@ export default function ChatInput({
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && send()}
             placeholder='채팅을 입력하세요'
-            className='flex-1 rounded-2xl bg-gray-100 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-300'
+            className='flex-1 rounded-2xl bg-gray-100 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100'
           />
           <button
             onClick={send}

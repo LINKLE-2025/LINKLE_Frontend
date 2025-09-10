@@ -3,9 +3,10 @@ import { Client, IFrame } from "@stomp/stompjs";
 import type { MemberResponseDTO, MessageResponseDTO, RoomResponseDTO } from "../types/chat";
 import { resolveImageUrl } from "../utils/chat";
 import apiClient from "../api/apiClient";
+import { getCurrentUserId } from "../api/authApi";
 
 const WS_URL = import.meta.env.VITE_WS_URL as string;
-const DEV_UID = String(import.meta.env.VITE_DEV_USER_ID ?? "2");
+const DEV_UID = await getCurrentUserId().catch(() => {});
 
 const PAGE_SIZE = 30 as const;
 
@@ -128,9 +129,60 @@ export function useChatRoom(roomId: number) {
   }, [roomId]);
 
   // 새 메시지면 하단으로
+  // useChatRoom.ts (추가)
+  const isAtBottomRef = useRef(true);
+  const firstLoadRef = useRef(true);
+  const prevLastIdRef = useRef<number | null>(null);
+
+  function getLastId(list: MessageResponseDTO[]) {
+    return list.length ? list[list.length - 1].messageId : null;
+  }
+
+  function isNearBottom(el: HTMLElement) {
+    const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
+    return distance <= 24;
+  }
+
+  // 스크롤 이벤트에서 바닥 여부 갱신
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [msgs]);
+    const el = listContainerRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      isAtBottomRef.current = isNearBottom(el);
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, [listContainerRef]);
+
+  //  기존 "msgs 바뀌면 무조건 아래로" 이펙트 삭제하고, 아래로 대체
+  useEffect(() => {
+    const el = listContainerRef.current;
+    if (!el) return;
+
+    const lastId = getLastId(msgs);
+
+    // 1) 최초 로드: 한 번만 무조건 아래로
+    if (firstLoadRef.current) {
+      firstLoadRef.current = false;
+      bottomRef.current?.scrollIntoView({ behavior: "instant" as any });
+      prevLastIdRef.current = lastId;
+      return;
+    }
+
+    // 2) 과거 로드 중에는 자동 스크롤 금지
+    if (loadingOlder) {
+      prevLastIdRef.current = lastId;
+      return;
+    }
+
+    // 3) "새로운 마지막 메시지"가 생겼고, 사용자가 바닥 근처일 때만 자동 스크롤
+    const lastChanged = lastId != null && lastId !== prevLastIdRef.current;
+    if (lastChanged && isAtBottomRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+
+    prevLastIdRef.current = lastId;
+  }, [msgs, loadingOlder, listContainerRef, bottomRef]);
 
   const send = (text: string) => {
     const body = text.trim();

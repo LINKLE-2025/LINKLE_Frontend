@@ -124,7 +124,8 @@ export default function PostDetailPage(): React.ReactElement {
       >
         <button
           className='absolute left-3 text-[22px]'
-          onClick={() => (isEditing ? setIsEditing(false) : navigate(-1))}
+          //클릭하면 맵으로 이동 한 후 포스트에 해당하는 링커 띄우기
+          onClick={() => (isEditing ? setIsEditing(false) : navigate("/map", { state: { openlinker: post.linker } }))}
           aria-label='back'
         >
           <span className='inline-block -translate-y-[1px]'>‹</span>
