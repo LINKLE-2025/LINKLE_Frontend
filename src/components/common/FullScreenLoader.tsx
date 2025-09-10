@@ -1,9 +1,13 @@
 import RandomPastelBackground from "../background/RandomPastelBackground";
 
-export default function FullScreenLoader() {
+type Props = {
+    isWaiting?: boolean;
+};
+
+export default function FullScreenLoader({ isWaiting = false }: Props) {
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-b from-white to-gray-100 z-50">
-            <div className="flex flex-col items-center animate-fadeIn">
+            <div className={`flex flex-col items-center ${isWaiting ? "" : "animate-fadeIn"}`}>
                 <RandomPastelBackground />
 
                 {/* 로고 아이콘 */}
@@ -20,10 +24,13 @@ export default function FullScreenLoader() {
                     className="w-[55vw] sm:w-[20vw] h-auto mb-4"
                 />
 
+
                 {/* 로딩 메시지 */}
-                {/* <p className="text-gray-600 text-lg sm:text-2xl tracking-wide animate-pulse">
-                    잠시만 기다려주세요...
-                </p> */}
+                {isWaiting && (
+                    <p className="text-gray-600 text-lg sm:text-2xl tracking-wide animate-pulse">
+                        잠시만 기다려주세요...
+                    </p>
+                )}
             </div>
         </div>
     );
