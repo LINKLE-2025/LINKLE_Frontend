@@ -94,4 +94,5 @@ body,
 }
 body {
   min-height: -webkit-fill-available;
+  overflow: hidden;
 } /* iOS 사파리 주소창 수축 대응 */
