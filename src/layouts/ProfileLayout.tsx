@@ -5,41 +5,44 @@ import MainFooter from "@/components/footer/MainFooter";
 import FullScreenLoader from "@/components/common/FullScreenLoader";
 
 export default function ProfileLayout() {
-  const [loggedInUserId, setLoggedInUserId] = useState<number | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [loggedInUserId, setLoggedInUserId] = useState<number | null>(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const [footerHeight, setFooterHeight] = useState(0);
 
   useEffect(() => {
-    const fetchUser = async () => {
+    (async () => {
       try {
-        // 먼저 현재 유저 정보 요청
         const userId = await getCurrentUserId();
         setLoggedInUserId(userId);
-      } catch (err: any) {
-        // 401 Unauthorized인 경우 accessToken이 만료되었을 수 있음
-        if (err?.response?.status === 401) {
-          try {
-            // 토큰 refresh 시도
-            await refreshToken();
-            const userId = await getCurrentUserId(); // 다시 시도
-            setLoggedInUserId(userId);
-          } catch (refreshError) {
-            console.error("토큰 리프레시 실패:", refreshError);
-            // 여기서 로그인 페이지로 이동하거나 처리 가능
-          }
-        } else {
-          console.error("유저 정보 불러오기 실패:", err);
-        }
+      } catch (err) {
+        console.error("현재 유저 ID 불러오기 실패:", err);
       } finally {
         setIsAuthLoading(false);
       }
-    };
+    })();
+  }, []);
 
-    fetchUser();
+  // Header 높이 계산
+  useEffect(() => {
+    const header = document.querySelector("header");
+    if (header) {
+      setHeaderHeight(header.clientHeight);
+    }
+  }, []);
+
+  // Footer 높이 계산
+  useEffect(() => {
+    const footer = document.querySelector("footer");
+    if (footer) {
+      setFooterHeight(footer.clientHeight);
+    }
   }, []);
 
   if (isAuthLoading) {
-    return <FullScreenLoader />;
+    return <div className="h-screen bg-white" />;
   }
+
 
   return (
     <div className="flex flex-col min-h-[100dvh] text-black">

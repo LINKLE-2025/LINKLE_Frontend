@@ -1,5 +1,6 @@
-// src/components/profile/ParticipationTab.tsx
-import React from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { fetchLinkerDetail } from "@/api/mapApi"; // ✅ 상세 조회 API
 
 // UserParticipateLinkerDTO 타입 정의
 interface UserParticipateLinkerDTO {
@@ -7,7 +8,7 @@ interface UserParticipateLinkerDTO {
   name: string;
   participatedDate: string;
   memo: string;
-  linkerState: string;
+  state?: string;
   categoryId?: number; // 카테고리 번호 (백엔드에서 내려옴)
 }
 
@@ -19,8 +20,34 @@ interface ParticipationTabProps {
 }
 
 function ParticipationTab({ participations, activities, icons, colors }: ParticipationTabProps) {
+  const navigate = useNavigate();
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
+  const [detailData, setDetailData] = useState<UserParticipateLinkerDTO | null>(null);
+
+  const openDetailModal = async (linkerId: number) => {
+    setDetailOpen(true);
+    setDetailLoading(true);
+    setDetailError(null);
+    setDetailData(null);
+
+  };
+
   if (!participations || participations.length === 0) {
-    return <p className="text-gray-500 text-center py-6">참여한 링커가 없습니다.</p>;
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center py-20">
+        <img
+          src='/icons/favicon/favicon.svg' // 🔹 워터마크 이미지 경로
+          alt='워터마크'
+          className='w-24 h-24 opacity-20 mb-4' // 크기, 투명도, 아래 여백
+        />
+        <div className="text-center px-8">
+          <p className="text-gray-400 text-base mb-2">링커에 참여하고</p>
+          <p className="text-gray-400 text-base">나만의 추억을 기록해 보세요</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -29,7 +56,6 @@ function ParticipationTab({ participations, activities, icons, colors }: Partici
         {participations.length}개의 링커 참여함
       </div>
       <div className="px-4 py-2 space-y-3">
-
         {participations.map((linker) => {
           const activityName = linker.categoryId
             ? activities[linker.categoryId - 1] ?? "기타"
@@ -42,11 +68,17 @@ function ParticipationTab({ participations, activities, icons, colors }: Partici
             : "#FFAEAE";
 
           return (
-
             <div
               key={linker.linkerId}
-              className="flex items-center p-4 rounded-2xl border"
-              style={{ backgroundColor: `${colorSrc}20` }} // HEX + alpha
+              className="flex items-center p-4 rounded-2xl border cursor-pointer hover:shadow-md transition"
+              style={{ backgroundColor: `${colorSrc}20` }}
+              onClick={() => {
+                if (linker.state === "DELETED") {
+                  openDetailModal(linker.linkerId);
+                } else {
+                  navigate("/map", { state: { openLinkerId: linker.linkerId } });
+                }
+              }}
             >
               {/* 카테고리 아이콘 */}
               <div className="w-12 h-12 rounded-full flex items-center justify-center mr-4">
@@ -62,6 +94,28 @@ function ParticipationTab({ participations, activities, icons, colors }: Partici
           );
         })}
       </div>
+
+      {/* ✅ DELETED용 가벼운 모달 */}
+      {detailOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-2xl shadow-lg w-80 p-5">
+            {detailLoading && <p className="text-gray-500">불러오는 중...</p>}
+            {detailError && <p className="text-red-500">{detailError}</p>}
+            {detailData && (
+              <>
+                <h2 className="text-lg font-bold text-gray-800 mb-2">{detailData.name}</h2>
+                <p className="text-sm text-gray-600">{detailData.memo || "메모 없음"}</p>
+              </>
+            )}
+            <button
+              className="mt-4 w-full bg-blue-500 text-white rounded-lg py-2 text-sm"
+              onClick={() => setDetailOpen(false)}
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
