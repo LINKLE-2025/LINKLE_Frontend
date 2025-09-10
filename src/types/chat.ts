@@ -18,6 +18,7 @@ export interface RoomResponseDTO {
   friendImage?: string | null;
   lastMessagePreview?: string | null;
   lastMessageDate?: string | null;
+  linkerId?: number | null;
 }
 
 export interface MemberResponseDTO {

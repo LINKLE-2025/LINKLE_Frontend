@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Sheet } from "react-modal-sheet";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { participateLinker, checkParticipation } from "../../api/mapApi";
@@ -116,14 +116,12 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
     if (!open || !detail?.linkerId) return;
     fetchPosts(detail.linkerId);
 
-    // 채팅방 목록 로드 (추가)
+    // 채팅방 목록 로드
     (async () => {
       setRoomLoading(true);
       setRoomError(null);
       try {
         const list = await getRoomList();
-        // 필요 시 특정 linkerId에 종속된 방만 보이도록 필터링 가능
-        // const filtered = list.filter((r) => r.linkerId === detail?.linkerId);
         setRooms(list ?? []);
       } catch (e: any) {
         setRoomError(e?.message ?? String(e));
@@ -180,6 +178,15 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
   };
 
   const expireDate = detail?.createdDate ? dayjs(detail.createdDate).add(30, "day") : null;
+
+  // ✅ detail.linkerId에 매핑된 방만 보이도록 필터
+  const filteredRooms = useMemo(
+    () =>
+      (Array.isArray(rooms) && detail?.linkerId != null)
+        ? rooms.filter((r: any) => (r?.linkerId ?? null) === detail.linkerId)
+        : [],
+    [rooms, detail?.linkerId]
+  );
 
   return (
     <Sheet
@@ -260,6 +267,7 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
 
                 <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
                   <div className="flex gap-4">
+                    {/* 필요하다면 filteredRooms.length 로 바꿀 수 있음 */}
                     <span>3 채팅방</span>
                     <span>{posts.length} 포스트</span>
                   </div>
@@ -355,10 +363,10 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
                 <div className='p-6 text-center text-red-500 text-sm'>{roomError}</div>
               ) : (
                 <div className='space-y-2 px-3'>
-                  {rooms.filter((r) => r.roomType === "LIGHT").length === 0 ? (
-                    <div className='p-6 text-center text-gray-400 text-sm'>LIGHT 채팅방이 없어요.</div>
+                  {filteredRooms.filter((r) => r.roomType === "LIGHT").length === 0 ? (
+                    <div className='p-6 text-center text-gray-400 text-sm'>아직 생성된 그룹 채팅방이 없어요.</div>
                   ) : (
-                    rooms
+                    filteredRooms
                       .filter((r) => r.roomType === "LIGHT")
                       .map((r) => (
                         <ChatListItem2
@@ -386,17 +394,16 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
                 <div className='p-6 text-center text-red-500 text-sm'>{roomError}</div>
               ) : (
                 <div className='space-y-2 px-3'>
-                  {rooms.filter((r) => r.roomType === "CLASS").length === 0 ? (
-                    <div className='p-6 text-center text-gray-400 text-sm'>CLASS 채팅방이 없어요.</div>
+                  {filteredRooms.filter((r) => r.roomType === "CLASS").length === 0 ? (
+                    <div className='p-6 text-center text-gray-400 text-sm'> 아직 생성된 클래스톡이 없어요.</div>
                   ) : (
-                    rooms
+                    filteredRooms
                       .filter((r) => r.roomType === "CLASS")
                       .map((r) => (
                         <ChatListItem2
                           key={r.roomId}
                           title={r.roomName ?? "클래스 채팅"}
                           memo={r.memo ?? r.description ?? ""}
-
                           memberCount={r.memberCount ?? undefined}
                           roomType={r.roomType}
                           startDate={r.startDate ?? undefined}
