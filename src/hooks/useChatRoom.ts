@@ -3,9 +3,10 @@ import { Client, IFrame } from "@stomp/stompjs";
 import type { MemberResponseDTO, MessageResponseDTO, RoomResponseDTO } from "../types/chat";
 import { resolveImageUrl } from "../utils/chat";
 import apiClient from "../api/apiClient";
+import { getCurrentUserId } from "../api/authApi";
 
 const WS_URL = import.meta.env.VITE_WS_URL as string;
-const DEV_UID = String(import.meta.env.VITE_DEV_USER_ID ?? "2");
+const DEV_UID = await getCurrentUserId().catch(() => {});
 
 const PAGE_SIZE = 30 as const;
 

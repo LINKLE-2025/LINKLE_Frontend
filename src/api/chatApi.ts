@@ -1,7 +1,8 @@
 // src/api/chatApi.ts
 import apiClient from "./apiClient";
+import { getCurrentUserId } from "./authApi";
 
-const DEV_UID = String(import.meta.env.VITE_DEV_USER_ID ?? "1");
+const DEV_UID = await getCurrentUserId().catch(() => {});
 
 /** 내가 참여 중인 방 목록: GET /chat/room */
 export async function getRoomList() {

@@ -3,6 +3,7 @@ import type { MessageResponseDTO, MemberResponseDTO } from "@/types/chat";
 import { useEffect, useCallback, useMemo, useState } from "react";
 import MessageItem from "./MessageItem";
 import { userProfileUrl } from "@/utils/chat";
+import { getCurrentUserId } from "@/api/authApi";
 
 export default function MessageList({
   msgs,
@@ -29,7 +30,12 @@ export default function MessageList({
   loadingOlder: boolean;
   loadOlder: () => Promise<void> | void;
 }) {
-  const devUid = Number(import.meta.env.VITE_DEV_USER_ID ?? "2");
+  const [devUid, setDevUid] = useState<number | undefined>(undefined);
+  useEffect(() => {
+    getCurrentUserId()
+      .then((id) => setDevUid(id))
+      .catch(() => setDevUid(undefined));
+  }, []);
 
   const [measuredFooter, setMeasuredFooter] = useState(0);
   useEffect(() => {

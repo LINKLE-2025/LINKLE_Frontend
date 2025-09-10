@@ -1,8 +1,9 @@
 import { useState } from "react";
 import type { MessageResponseDTO } from "@/types/chat";
 import { formatTimeLabel } from "@/utils/chat";
+import { getCurrentUserId } from "@/api/authApi";
 
-const DEV_UID = Number(import.meta.env.VITE_DEV_USER_ID ?? "2");
+const DEV_UID = await getCurrentUserId().catch(() => { });
 
 export default function MessageItem({
   m,
