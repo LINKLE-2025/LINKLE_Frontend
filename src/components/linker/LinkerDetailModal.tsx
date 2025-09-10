@@ -109,7 +109,8 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
     try {
       setParticipationLoading(true);
       const res = await checkParticipation(detail.linkerId, loggedInUserId);
-      setParticipating(res.participating);
+      setParticipating(res);
+      console.log("참여 여부:", res);
     } catch (err) {
       console.error("참여 여부 조회 실패:", err);
       setParticipating(false);
@@ -186,11 +187,26 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
                       </button>
                     ) : !participating ? (
                       <button
-                        className="h-10 w-24 rounded-full bg-yellow-400 text-black font-semibold"
+                        className="
+                          h-10 w-28
+                          rounded-full
+                          bg-white
+                          text-gray-500
+                          font-semibold
+                          border border-yellow-400
+                          shadow-sm
+                          hover:bg-yellow-50
+                          active:bg-yellow-100
+                          transition-colors
+                          duration-200
+                          flex items-center justify-center
+                          gap-2
+                        "
                         onClick={handleParticipate}
                       >
-                        참여하기
+                        참여
                       </button>
+
                     ) : (
                       <>
                         <button
@@ -258,6 +274,6 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
       </Sheet.Container>
 
       <Sheet.Backdrop style={{ bottom: footerHeight, zIndex: 1490, background: "transparent" }} />
-    </Sheet>
+    </Sheet >
   );
 }
