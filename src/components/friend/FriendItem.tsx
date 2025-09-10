@@ -33,8 +33,8 @@ function FriendItem({ targetUserId, name, nickname, buttonType, friendId, image,
   const profileImageSrc = hasValidImage
     ? `/api/user/view/profile/${targetUserId}?v=${Date.now()}`
     : gender === "남성"
-      ? "/icons/public/Man.png"
-      : "/icons/public/Woman.png";
+      ? "/icons/profile/Man.png"
+      : "/icons/profile/Woman.png";
 
 
 

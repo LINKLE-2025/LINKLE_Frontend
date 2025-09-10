@@ -63,6 +63,21 @@ function ProfileContent({
 
   const isDefaultBackground = background === 'public.png' || !background;
   const { src: profileImageSrc, isDefault } = getProfileImageSrc(userId, image, gender, true);
+  const placeholderBg = "/icons/profile/Background.png";
+  const [bgSrc, setBgSrc] = useState<string>(placeholderBg);
+
+  useEffect(() => {
+    // background(키)가 있으면 실제 이미지 미리 로드해서 성공하면 교체
+    const tryUrl = `/api/user/view/background/${userId}?v=${Date.now()}`;
+    if (!background) {
+      setBgSrc(placeholderBg);
+      return;
+    }
+    const img = new Image();
+    img.src = tryUrl;
+    img.onload = () => setBgSrc(tryUrl);
+    img.onerror = () => setBgSrc(placeholderBg);
+  }, [userId, background]);
 
   const handleAddFriend = async (targetUserId: number) => {
     try {
@@ -86,7 +101,7 @@ function ProfileContent({
   };
 
   const profileBackgroundSrc = isDefaultBackground
-    ? '/icons/public/Background.png'
+    ? '/icons/profile/Background.png'
     : `/api/user/view/background/${userId}?v=${Date.now()}`;
 
   const renderButton = () => {
@@ -136,21 +151,16 @@ function ProfileContent({
   return (
     <div className="relative">
       {/* 배경 이미지 */}
-      <div className="h-60 bg-gradient-to-r relative overflow-hidden">
-        <img
-          src={profileBackgroundSrc}
-          alt="background"
-          className={`w-full h-60 object-cover cursor-pointer ${background ? '' : 'opacity-80'}`}
-          onClick={() =>
-            setPreviewImage(
-              background
-                ? `/api/user/view/background/${userId}?v=${Date.now()}`
-                : '/icons/public/Background.png'
-            )
-          }
-        />
+      <div className="relative w-full h-60 overflow-hidden bg-gray-200">
+        <div className="relative w-full h-60 overflow-hidden bg-gray-100">
+          <img
+            src={profileBackgroundSrc}
+            alt="background"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        </div>
+        {/* 상단바는 그대로 */}
         <div className="absolute top-0 left-0 w-full z-30">
-          {/* ← 버튼 등 */}
           <ProfileBarContent
             userId={userId}
             profileType={currentType}
@@ -165,12 +175,14 @@ function ProfileContent({
       </div>
 
       {/* 프로필 정보 */}
-      <div className="bg-white px-4 mt-3 rounded-t-3xl relative z-10">
+      <div
+        className="bg-white px-4 mt-3 rounded-t-3xl relative z-10 min-h-[120px]"
+      >
         <div className="flex items-center space-x-3 mb-4">
           <img
             src={profileImageSrc}
             alt={`${name} 프로필`}
-            className={`w-12 h-12 object-cover rounded-full cursor-pointer ${isDefault ? 'opacity-40 bg-blue-100' : ''}`}
+            className={`w-12 h-12 object-cover rounded-full cursor-pointer ${isDefault ? 'opacity-65 bg-blue-100' : ''}`}
             onClick={() => setPreviewImage(profileImageSrc)}
           />
           <div className="flex-1">
@@ -179,11 +191,6 @@ function ProfileContent({
                 <h1 className="font-semibold text-gray-900 text-sm leading-tight">{name}</h1>
                 <p className="text-xs text-gray-500 leading-tight">@{nickname}</p>
               </div>
-              {isVerified && (
-                <div className="w-4 h-4 bg-blue-500 rounded flex items-center justify-center">
-                  <span className="text-white text-xs">✓</span>
-                </div>
-              )}
             </div>
           </div>
           {renderButton()}
@@ -209,17 +216,14 @@ function ProfileContent({
         </div>
       </div>
 
+
       {/* 이미지 프리뷰 모달 */}
       {previewImage && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 transition-opacity duration-150 opacity-100"
           onClick={() => setPreviewImage(null)}
         >
-          <img
-            src={previewImage}
-            alt="preview"
-            className="max-w-[90%] max-h-[90%] rounded-lg shadow-lg"
-          />
+          <img src={previewImage} className="max-w-[90%] max-h-[90%] rounded-lg shadow-lg" />
         </div>
       )}
     </div>

@@ -51,7 +51,7 @@ function FriendRequestItem({
           <img
             src={profileImageSrc}
             alt={`${name} 프로필`}
-            className={`w-12 h-12 object-cover rounded-full cursor-pointer ${isDefault ? 'opacity-20 bg-blue-100' : ''
+            className={`w-12 h-12 object-cover rounded-full cursor-pointer ${isDefault ? 'opacity-65 bg-blue-100' : ''
               }`}
 
           />

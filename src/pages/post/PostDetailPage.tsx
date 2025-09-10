@@ -3,7 +3,7 @@ import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import PostForm, { LinkerLite } from "@/components/post/PostForm";
 import { getPost, updatePost, deletePost } from "@/api/postApi";
 import { getCurrentUserId, getCurrentUserInfo } from "@/api/authApi";
-
+import BackTitleHeader from "@/components/header/BackTitleHeader";
 //TypeScript interface for PostDTO
 //TypeScript란?
 // JavaScript에 타입 시스템을 추가한 언어
@@ -44,7 +44,7 @@ export default function PostDetailPage(): React.ReactElement {
 
   //현재 로그인한 사용자 ID 상태
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-
+  console.log("foot" + footerHeight);
   // 로그인 사용자 정보 가져오기
   useEffect(() => {
     (async () => {
@@ -112,46 +112,12 @@ export default function PostDetailPage(): React.ReactElement {
   if (!post) return <div className='p-6 text-gray-400'>포스트 없음</div>;
 
   return (
-    <div className='flex flex-col min-h-screen w-full'>
-      {/* 헤더 */}
-      <div
-        className="
-          sticky top-0 z-20
-          flex items-center justify-center relative
-          bg-white border-b
-          h-12 pt-[env(safe-area-inset-top)]
-        "
-      >
-        <button
-          className='absolute left-3 text-[22px]'
-          //클릭하면 맵으로 이동 한 후 포스트에 해당하는 링커 띄우기
-          onClick={() => (isEditing ? setIsEditing(false) : navigate("/map", { state: { openlinker: post.linker } }))}
-          aria-label='back'
-        >
-          <span className='inline-block -translate-y-[1px]'>‹</span>
-        </button>
-        <div className='text-[15px] font-semibold'>{isEditing ? "포스트 편집" : "포스트"}</div>
-
-        {isMine && (
-          <div className='absolute right-3 flex items-center gap-2'>
-            {!isEditing ? (
-              <button
-                className='px-3 py-1.5 text-sm rounded bg-black text-white'
-                onClick={() => setIsEditing(true)}
-              >
-                편집
-              </button>
-            ) : (
-              <button
-                className='px-3 py-1.5 text-sm rounded bg-gray-200'
-                onClick={() => setIsEditing(false)}
-              >
-                취소
-              </button>
-            )}
-          </div>
-        )}
-      </div>
+    <div className='flex flex-col min-h-screen w-full'
+      style={{ paddingBottom: `${footerHeight}px` }}>
+      <BackTitleHeader
+        title={isEditing ? "새 포스트 만들기" : "포스트"}
+        onBack={isEditing ? () => setIsEditing(false) : undefined}
+      />
 
       <PostForm
         linker={post.linker}
@@ -167,6 +133,25 @@ export default function PostDetailPage(): React.ReactElement {
         userNickname={post.userNickname}
         name={post.name}
       />
+      {/* <div className='text-[15px] font-semibold'>{isEditing ? "포스트 편집" : "포스트"}</div> */}
+
+      {isMine && (
+        <div
+          className='fixed bottom-2 right-4 z-40'
+          style={{ paddingBottom: footerHeight }}
+        >
+          {!isEditing ? (
+            <button
+              className='px-4 py-2'
+              onClick={() => setIsEditing(true)}
+            >
+              <img src="/icons/post/FixPost.png"></img>
+            </button>
+          ) : null}
+        </div>
+      )}
+
+
     </div>
   );
 }

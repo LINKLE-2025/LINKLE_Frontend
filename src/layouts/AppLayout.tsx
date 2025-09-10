@@ -35,8 +35,8 @@ export default function AppLayout() {
       {/* <RandomPastelBackground /> */}
 
       {/* Header */}
-      {location.pathname === "/signup" ? (
-        <BackTitleHeader title='회원가입' className='bg-white/60' />
+      {location.pathname.startsWith("/post") ? (
+        <BackTitleHeader title='포스트' className='bg-white' />
       ) : (
         <MainHeader />
       )}

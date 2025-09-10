@@ -174,7 +174,7 @@ const ProfilePage = () => {
   };
 
   return (
-    <div>
+    <div key={profileUserIdParam} className="flex flex-col min-h-screen bg-white">
       {/* 프로필 상단 */}
       {user ? (
         <ProfileContent
@@ -196,7 +196,13 @@ const ProfilePage = () => {
           pathname={pathname}
         />
       ) : (
-        <p className="p-4 text-gray-500">로딩중...</p>
+        <>
+          {/* 배경 placeholder */}
+          <div className="h-60 bg-gray-100 animate-pulse" />
+
+          {/* 프로필 정보 placeholder */}
+          <div className="bg-white px-4 mt-3 rounded-t-3xl min-h-[120px] animate-pulse" />
+        </>
       )}
 
       {/* 탭 선택 */}
@@ -236,7 +242,7 @@ const ProfilePage = () => {
       </div>
 
       {/* 탭 컨텐츠 */}
-      <div className="flex-1 mb-24">{renderTabContent()}</div>
+      <div className="flex-1 pb-24">{renderTabContent()}</div>
     </div>
   );
 };

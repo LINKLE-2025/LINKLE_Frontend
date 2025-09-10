@@ -34,7 +34,7 @@ function FriendRequestsPage() {
 
   const isEmpty = receivedRequests.length === 0 && sentRequests.length === 0;
 
-  // 🔹 디바운스 처리
+  // 디바운스 처리
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedQuery(searchQuery);
@@ -42,7 +42,7 @@ function FriendRequestsPage() {
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
-  // 🔹 필터링
+  // 필터링
   const filteredReceived = useFriendFilter(receivedRequests, debouncedQuery);
   const filteredSent = useFriendFilter(sentRequests, debouncedQuery);
 
@@ -107,21 +107,21 @@ function FriendRequestsPage() {
       {/* 검색 헤더 - FriendsListPage와 동일 */}
       <div className="bg-white px-4 py-3 border-b flex items-center gap-2">
         <div className="relative flex-1">
-          <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+          {/* <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" /> */}
           <input
             type="text"
-            placeholder="친구 요청 검색"
+            placeholder="친구 검색"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-5 ml-2 pr-4 py-2 bg-gray-100 rounded-full text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <button
           type="button"
-          className="px-3 py-2 text-sm text-gray-600 hover:text-blue-600"
-          onClick={() => setDebouncedQuery(searchQuery)} // 즉시 검색
+          className="px-2 py-2 text-sm text-gray-600 hover:text-blue-600 ml-1"
+          onClick={() => setDebouncedQuery(searchQuery)} // 버튼 누르면 즉시 검색
         >
-          <img src="/icons/mapicon/search.png" className="w-5 h-5" />
+          <Search className='w-7 h-7'></Search>
         </button>
       </div>
 

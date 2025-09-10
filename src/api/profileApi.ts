@@ -1,5 +1,6 @@
 import { UserResponseDTO } from "@/types/user";
 import apiClient from "./apiClient";
+import { setUncaughtExceptionCaptureCallback } from "process";
 
 // 유저 정보 불러오기
 export const getUserProfile = async (userId: number) => {
@@ -13,7 +14,6 @@ export const getUserPosts = async (userId: number) => {
   return res.data;
 };
 
-// 프로필 수정
 // 프로필 수정
 export const patchUserProfile = async (
   userId: number,
@@ -30,7 +30,7 @@ export const patchUserProfile = async (
 ) => {
   const formData = new FormData();
 
-  // ✅ dto만 JSON Blob으로 추가
+  // dto만 JSON Blob으로 추가
   formData.append(
     "dto",
     new Blob([JSON.stringify(profileData)], { type: "application/json" })
@@ -72,3 +72,9 @@ export const getProfileImage = (userId: number, v?: number) => {
 export const getBackgroundImage = (userId: number, v?: number) => {
   return `/api/user/view/background/${userId}${v ? `?v=${v}` : ""}`;
 };
+
+// 유저 삭제하기
+export const deleteUser = async (userId: number) => {
+  const res = await apiClient.delete(`/user/${userId}`);
+  return res.data;
+}

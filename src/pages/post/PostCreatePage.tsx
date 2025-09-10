@@ -82,17 +82,6 @@ export default function PostCreatePage(): React.ReactElement {
   return (
     <div className='flex w-full flex-col'>
       {/* 헤더 */}
-      <div className='h-12 flex items-center justify-center relative bg-white border-b'>
-        <button
-          className='absolute left-3 text-[22px]'
-          onClick={() => navigate(-1)}
-          aria-label='back'
-        >
-          <span className='inline-block -translate-y-[1px]'>‹</span>
-        </button>
-        <div className='text-[15px] font-semibold'>새 포스트 만들기</div>
-      </div>
-
       <PostForm
         linker={linker ?? undefined}
         submitting={submitting}
