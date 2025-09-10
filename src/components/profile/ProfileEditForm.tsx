@@ -1,6 +1,8 @@
+import { deleteUser } from "@/api/profileApi";
 import type { ProfileDTO } from "@/types/user";
 
 interface ProfileFormProps {
+  userId: number;
   profileData: ProfileDTO;
   updateField: (field: keyof ProfileDTO, value: string) => void;
 }
@@ -42,9 +44,9 @@ function ProfileInputRow({
       ) : (
         <input
           type={type}
-          value={value}
+          value={value ?? ""}
           onChange={(e) => onChange(e.target.value)}
-          className="text-right text-sm text-gray-800 focus:outline-none w-2/3"
+          className="text-right text-base text-gray-800 focus:outline-none w-2/3"
           placeholder={placeholder}
         />
       )}
@@ -52,7 +54,7 @@ function ProfileInputRow({
   );
 }
 
-function ProfileForm({ profileData, updateField }: ProfileFormProps) {
+function ProfileForm({ userId, profileData, updateField }: ProfileFormProps) {
   return (
     <div className="bg-white rounded-xl shadow p-4 space-y-6">
       {/* 기본 정보 변경 제목 */}
@@ -108,9 +110,17 @@ function ProfileForm({ profileData, updateField }: ProfileFormProps) {
       <div className="text-right">
         <button
           className="text-red-500 text-sm font-medium hover:text-red-700"
-          onClick={() => {
+          onClick={async () => {
             if (confirm("정말 탈퇴하시겠습니까?")) {
-              // TODO: 회원탈퇴 로직 추가
+              try {
+                await deleteUser(userId); // ✅ 여기서 직접 호출
+                alert("회원 탈퇴가 완료되었습니다.");
+                // 로그아웃 처리 및 메인 페이지로 이동
+                window.location.href = "/";
+              } catch (err) {
+                console.error("회원 탈퇴 실패:", err);
+                alert("회원 탈퇴 중 오류가 발생했습니다.");
+              }
             }
           }}
         >

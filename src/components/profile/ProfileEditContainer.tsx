@@ -89,7 +89,9 @@ export default function ProfileEditContainer({ userId }: { userId: number }) {
 
       {/* 폼 */}
       <div className="p-4 space-y-4">
-        <ProfileForm profileData={profileData} updateField={updateField} />
+        <ProfileForm
+          userId={userId}
+          profileData={profileData} updateField={updateField} />
       </div>
 
       <div className="p-4">

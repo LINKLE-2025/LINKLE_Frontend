@@ -10,8 +10,8 @@ export function getProfileImageSrc(
 
   const src = isDefault
     ? gender === "남성"
-      ? "/icons/public/Man.png"
-      : "/icons/public/Woman.png"
+      ? "/icons/profile/Man.png"
+      : "/icons/profile/Woman.png"
     : `/api/user/view/profile/${userId}${version}`;
 
   return { src, isDefault };
@@ -26,7 +26,7 @@ export function getBackgroundImageSrc(
   const version = bustCache ? `?v=${Date.now()}` : "";
 
   const src = isDefault
-    ? "/icons/public/Background.png"
+    ? "/icons/profile/Background.png"
     : `/api/user/view/background/${userId}${version}`;
 
   return { src, isDefault };

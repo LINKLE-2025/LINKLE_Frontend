@@ -115,7 +115,7 @@ export default function PostDetailPage(): React.ReactElement {
     <div className='flex flex-col min-h-screen w-full'
       style={{ paddingBottom: `${footerHeight}px` }}>
       <BackTitleHeader
-        title={isEditing ? "포스트 편집" : "포스트"}
+        title={isEditing ? "새 포스트 만들기" : "포스트"}
         onBack={isEditing ? () => setIsEditing(false) : undefined}
       />
 
@@ -137,7 +137,7 @@ export default function PostDetailPage(): React.ReactElement {
 
       {isMine && (
         <div
-          className='fixed bottom-4 right-4 z-40'
+          className='fixed bottom-2 right-4 z-40'
           style={{ paddingBottom: footerHeight }}
         >
           {!isEditing ? (
