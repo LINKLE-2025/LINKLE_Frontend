@@ -28,7 +28,12 @@ import CategoryFilterButton from "@/components/category/CategoryFilterButton";
 import { on } from "events";
 import { useViewportHeight } from "@/hooks/useViewportHeight";
 
-type LayoutContext = { headerHeight: number; footerHeight: number };
+interface LayoutContext {
+  linkerCreateMode: boolean;
+  setLinkerCreateMode: React.Dispatch<React.SetStateAction<boolean>>;
+  headerHeight: number;
+  footerHeight: number;
+}
 
 interface StoredSpot {
   lat: number;
@@ -73,9 +78,9 @@ export default function MapPage(): React.ReactElement {
   const [mapReady, setMapReady] = useState(false); //지도 로드 완료 여부
   const [activeLinkers, setActiveLinkers] = useState<any[]>([]);  // 활성 링커 목록
 
-
   // 버튼 관련
-  const [linkerCreateMode, setLinkerCreateMode] = useState(false); // 🔥 링커 생성 모드
+  // const [linkerCreateMode, setLinkerCreateMode] = useState(false); // 🔥 링커 생성 모드
+  const { linkerCreateMode, setLinkerCreateMode } = useOutletContext<LayoutContext>();
   const [showAddress, setShowAddress] = useState(false); // 🔥 주소 표시
 
   // 검색 관련
@@ -731,6 +736,14 @@ export default function MapPage(): React.ReactElement {
     setLinkerOpen(true);
     setSearchOpen(false);
   };
+
+  useEffect(() => {
+    if ((location.state as any)?.linkerCreateMode) {
+      setLinkerCreateMode(true);
+      // ✅ 한번만 쓰고 state 초기화 (뒤로가기 시 중복 실행 방지)
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, setLinkerCreateMode]);
 
 
   useViewportHeight();

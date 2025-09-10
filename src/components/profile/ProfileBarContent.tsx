@@ -1,6 +1,6 @@
 import React from 'react';
 import { useActionMenu } from "@/components/modal/useActionMenu";
-import { Settings, CreditCard, Trash2, ChevronLeft, Ellipsis } from "lucide-react";
+import { Settings, CreditCard, Trash2, ChevronLeft, Ellipsis, LogOut } from "lucide-react";
 import { fr } from 'date-fns/locale';
 import { deleteFriend } from "@/api/friendApi";
 import { add } from 'date-fns';
@@ -42,8 +42,6 @@ function ProfileBarContent({
     }
   };
 
-
-
   // ActionMenu 훅 사용
   // openMenu: 액션 시트 열기 함수
   // ActionMenu: 렌더링할 액션 시트 컴포넌트
@@ -53,7 +51,7 @@ function ProfileBarContent({
   // 각 버튼 클릭 시 다른 액션 시트를 보여줌
   const onEditProfile = async () => {
     await openMenu({
-      title: "내 프로필 관리",
+      title: "프로필 관리",
       actions: [
         {
           id: "edit",
@@ -67,11 +65,19 @@ function ProfileBarContent({
           id: "account",
           label: "계좌 관리",
           type: "link",
-          href: "/accountManage",
+          href: "/profile/account",
           icon: <CreditCard className="h-5 w-5" />,
         },
+        {
+          id: "logout",
+          label: "로그아웃",
+          type: "link",
+          href: "/auth/logout",
+          icon: <LogOut className="h-5 w-5" />,
+          danger: true,
+        },
       ],
-      cancelText: "취소",
+      cancelText: "",
       closeOnOverlay: true,
     });
   };
