@@ -1,8 +1,8 @@
 import { Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import apiClient from "@/api/apiClient";
 import LandingPage from "./LandingPage";
 import FullScreenLoader from "@/components/common/FullScreenLoader";
+import { getCurrentUserInfo } from "@/api/authApi";
 
 export default function LandingRedirect() {
     const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
@@ -11,7 +11,7 @@ export default function LandingRedirect() {
     useEffect(() => {
         const checkLogin = async () => {
             try {
-                await apiClient.get("/auth/me");
+                await getCurrentUserInfo();
                 console.log("✅ 로그인 성공");
                 setLoggedIn(true);
             } catch (err) {
@@ -30,7 +30,6 @@ export default function LandingRedirect() {
     if (loading) {
         return <FullScreenLoader />;
     }
-
 
     return loggedIn ? <Navigate to="/map" replace /> : <LandingPage />;
 }

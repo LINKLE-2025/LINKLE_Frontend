@@ -4,11 +4,11 @@ export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
-      content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
-      theme: {
-        extend: {},
+      screens: {
+        xs: "480px", // 480px 이상일 때 적용
+        xxs: "400px", // 400px 이상일 때 적용
       },
-      plugins: [],
+      content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
       fontFamily: {
         sans: ["Inter", "SF Pro", "ui-sans-serif", "system-ui", "sans-serif"],
       },
