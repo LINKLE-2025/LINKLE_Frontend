@@ -40,11 +40,11 @@ export async function sendMessage(roomId: number, body: { content: string }) {
   return data;
 }
 
-/** 읽음 동기화: POST /chat/read  (⚠️ roomId 포함) */
-export async function markRead(roomId: number, lastMessageId: number) {
+/** 읽음 동기화: POST /chat/read */
+export async function markRead(roomId: number, lastReadMessageId: number) {
   const { data } = await apiClient.post(
     `/chat/read`,
-    { roomId, lastMessageId },
+    { roomId, lastReadMessageId },
     { headers: { "x-user-id": DEV_UID } },
   );
   return data;

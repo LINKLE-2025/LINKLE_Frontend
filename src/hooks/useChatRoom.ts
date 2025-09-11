@@ -1,15 +1,19 @@
-// useChatRoom.ts
-import { useEffect, useMemo, useRef, useState } from "react";
+// src/hooks/useChatRoom.ts
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { MemberResponseDTO, MessageResponseDTO, RoomResponseDTO } from "../types/chat";
 import { resolveImageUrl } from "../utils/chat";
 import apiClient from "../api/apiClient";
 import { getCurrentUserId } from "../api/authApi";
 import { stompClient } from "@/lib/stompClient";
+import { useQueryClient } from "@tanstack/react-query";
+import { markRead } from "@/api/chatApi";
+import { setRoomUnreadZero } from "@/utils/chatRead";
 
+const READ_DEBOUNCE_MS = 400 as const;
 const DEV_UID = await getCurrentUserId().catch(() => {});
 const PAGE_SIZE = 30 as const;
 
-// --- REST helpers (기존 유지) ---
+// --- REST helpers ---
 async function getRoom(roomId: number) {
   const { data } = await apiClient.get<RoomResponseDTO>(`/chat/room/${roomId}`, {
     headers: { "x-user-id": DEV_UID },
@@ -38,6 +42,10 @@ function byCreatedAsc(a: MessageResponseDTO, b: MessageResponseDTO) {
   return new Date(a.createdDate).getTime() - new Date(b.createdDate).getTime();
 }
 
+function isNearBottom(el: HTMLElement, threshold = 24) {
+  return el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
+}
+
 // --- hook ---
 export function useChatRoom(roomId: number) {
   const [room, setRoom] = useState<RoomResponseDTO | null>(null);
@@ -51,7 +59,13 @@ export function useChatRoom(roomId: number) {
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const listContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // 1) 초기 로드 (REST)
+  const queryClient = useQueryClient();
+
+  // 읽음 관리
+  const lastAckedIdRef = useRef<number | null>(null);
+  const readTimerRef = useRef<number | null>(null);
+
+  // 초기 로드
   useEffect(() => {
     if (!roomId) return;
 
@@ -81,6 +95,9 @@ export function useChatRoom(roomId: number) {
 
       const initial = (m ?? [])
         .map((x) => ({ ...x, content: x.content ?? (x as any).text ?? "" }))
+        .filter((x) => x.messageType === "TEXT")
+        .filter((x) => typeof x.messageId === "number")
+        .filter((x) => typeof x.content === "string" && x.content.trim().length > 0)
         .sort(byCreatedAsc);
 
       setMsgs(initial);
@@ -88,28 +105,47 @@ export function useChatRoom(roomId: number) {
     })().catch(console.error);
   }, [roomId]);
 
-  // 2) 전역 STOMP 상태 반영
+  // STOMP 상태
   useEffect(() => {
-    // 즉시 현재 상태 반영 + 변화 구독
     const off = stompClient.onStatusChange((s) => setStatus(s));
-    return () => off();
+    return () => {
+      try {
+        off?.();
+      } catch {}
+    };
   }, []);
 
-  // 3) 방 토픽 구독 (전역 싱글톤 사용)
+  // 방별 구독
   useEffect(() => {
     if (!roomId) return;
 
-    // 연결 여부와 무관하게 subscribe 호출 가능: 싱글톤이 내부에서 재연결 시 자동 재구독 처리
-    const off = stompClient.subscribe(`/sub/room.${roomId}`, (raw) => {
+    const off = stompClient.subscribe(`/sub/room.${roomId}`, (raw: any) => {
+      // 1) 이벤트 타입 식별
+      const type = raw?.type ?? raw?.eventType ?? null;
+
+      // 2) 메시지 이벤트만 통과 (예: MESSAGE_CREATED, NEW_MESSAGE)
+      if (type && type !== "MESSAGE_CREATED" && type !== "NEW_MESSAGE") {
+        return; // 읽음/타이핑/입장 등 무시
+      }
+
+      // 3) 내용/ID 검증 (빈 내용 메시지 방지)
+      const contentRaw = raw?.content ?? raw?.text ?? "";
+      if (typeof raw?.messageId !== "number") return;
+      if (typeof contentRaw !== "string" || contentRaw.trim().length === 0) return;
+
+      // 4) messageType도 TEXT만 통과
+      const mt = (raw?.messageType as any) ?? "TEXT";
+      if (mt !== "TEXT") return;
+
       const evt: MessageResponseDTO = {
-        messageId: raw?.messageId ?? Date.now(),
-        roomId: raw?.roomId ?? roomId,
-        messageType: raw?.messageType ?? "TEXT",
-        content: raw?.content ?? raw?.text ?? "",
-        createdDate: raw?.createdDate ?? new Date().toISOString(),
-        senderId: raw?.senderId ?? raw?.userId ?? raw?.sender?.userId ?? null,
-        senderName: raw?.senderName ?? raw?.sender?.name ?? null,
-        senderImage: resolveImageUrl(raw?.senderImage ?? raw?.sender?.image) ?? null,
+        messageId: raw.messageId,
+        roomId: raw.roomId ?? roomId,
+        messageType: mt,
+        content: contentRaw,
+        createdDate: raw.createdDate ?? new Date().toISOString(),
+        senderId: raw.senderId ?? raw.userId ?? raw.sender?.userId ?? null,
+        senderName: raw.senderName ?? raw.sender?.name ?? null,
+        senderImage: resolveImageUrl(raw.senderImage ?? raw.sender?.image) ?? null,
       };
 
       setMsgs((prev) => {
@@ -118,64 +154,57 @@ export function useChatRoom(roomId: number) {
       });
     });
 
-    return () => off();
+    return () => {
+      try {
+        off?.();
+      } catch {}
+    };
   }, [roomId]);
 
-  // 4) 자동 스크롤 (기존 로직 유지)
-  const isAtBottomRef = useRef(true);
-  const firstLoadRef = useRef(true);
-  const prevLastIdRef = useRef<number | null>(null);
+  // --- 자동 스크롤 ---
 
-  function getLastId(list: MessageResponseDTO[]) {
-    return list.length ? list[list.length - 1].messageId : null;
-  }
-  function isNearBottom(el: HTMLElement) {
-    const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
-    return distance <= 24;
-  }
-
-  // 스크롤 이벤트에서 바닥 여부 갱신
+  // 스크롤 이벤트로 "바닥 근처" 상태 추적 (필요 시 확장 가능)
   useEffect(() => {
     const el = listContainerRef.current;
     if (!el) return;
     const onScroll = () => {
-      isAtBottomRef.current = isNearBottom(el);
+      /* 상태 추적이 필요하면 여기에 */
     };
     el.addEventListener("scroll", onScroll, { passive: true });
     return () => el.removeEventListener("scroll", onScroll);
-  }, [listContainerRef]);
+  }, []);
 
-  // 메시지 변경 시 조건부 자동 스크롤
-  useEffect(() => {
+  // ✅ 최초 메시지 로드 후 확실히 맨 아래로
+  useLayoutEffect(() => {
+    if (!msgs.length) return;
     const el = listContainerRef.current;
     if (!el) return;
 
-    const lastId = getLastId(msgs);
+    const scrollToBottom = () => {
+      el.scrollTop = el.scrollHeight;
+    };
 
-    // 1) 최초 1회: 무조건 아래로
-    if (firstLoadRef.current) {
-      firstLoadRef.current = false;
-      bottomRef.current?.scrollIntoView({ behavior: "instant" as any });
-      prevLastIdRef.current = lastId;
-      return;
+    // 즉시
+    scrollToBottom();
+    // 다음 프레임(레이아웃 확정 후)
+    requestAnimationFrame(scrollToBottom);
+    // 이미지/폰트 지연 로딩 대비
+    const t = setTimeout(scrollToBottom, 0);
+    return () => clearTimeout(t);
+  }, [roomId, msgs.length]);
+
+  // ✅ 새 메시지 도착 시: 바닥 근처일 때만 자동으로 아래로
+  useEffect(() => {
+    const el = listContainerRef.current;
+    if (!el) return;
+    if (loadingOlder) return; // 과거 로드 중이면 금지
+
+    if (isNearBottom(el)) {
+      el.scrollTop = el.scrollHeight;
     }
+  }, [msgs, loadingOlder]);
 
-    // 2) 과거 로드 중이면 자동 스크롤 금지
-    if (loadingOlder) {
-      prevLastIdRef.current = lastId;
-      return;
-    }
-
-    // 3) 신규 마지막 메시지 & 사용자가 바닥 근처일 때만 자동 스크롤
-    const lastChanged = lastId != null && lastId !== prevLastIdRef.current;
-    if (lastChanged && isAtBottomRef.current) {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-
-    prevLastIdRef.current = lastId;
-  }, [msgs, loadingOlder, listContainerRef, bottomRef]);
-
-  // 5) 발송 (전역 publish 사용)
+  // 메시지 전송 + 목록 캐시 업데이트
   const send = (text: string) => {
     const body = text.trim();
     if (!body) return;
@@ -183,14 +212,32 @@ export function useChatRoom(roomId: number) {
       console.warn("STOMP not connected");
       return;
     }
+
+    const now = new Date().toISOString();
+
     stompClient.publish(
       "/app/message.send",
       { roomId, text: body },
       { "x-user-id": String(DEV_UID) },
     );
+
+    // ✅ 목록 캐시 갱신
+    queryClient.setQueryData<RoomResponseDTO[]>(["chatRooms"], (prev) => {
+      if (!prev) return prev;
+      return prev.map((room) =>
+        room.roomId === roomId
+          ? {
+              ...room,
+              lastMessagePreview: body,
+              lastMessageDate: now,
+              unreadCount: 0,
+            }
+          : room,
+      );
+    });
   };
 
-  // 6) 과거 메시지 로드 (기존 유지)
+  // 과거 메시지 로드
   const loadOlder = async () => {
     if (loadingOlder || !hasMore || msgs.length === 0) return;
 
@@ -215,6 +262,9 @@ export function useChatRoom(roomId: number) {
         const ids = new Set(prev.map((x) => x.messageId));
         const toPrepend = older
           .map((x) => ({ ...x, content: x.content ?? (x as any).text ?? "" }))
+          .filter((x) => x.messageType === "TEXT")
+          .filter((x) => typeof x.messageId === "number")
+          .filter((x) => typeof x.content === "string" && x.content.trim().length > 0)
           .filter((x) => !ids.has(x.messageId))
           .sort(byCreatedAsc);
         return [...toPrepend, ...prev];
@@ -232,6 +282,75 @@ export function useChatRoom(roomId: number) {
       setLoadingOlder(false);
     }
   };
+
+  // 읽음 동기화
+  function getVisibleLastId(): number | null {
+    const last = msgs.length ? msgs[msgs.length - 1] : null;
+    return last ? last.messageId : null;
+  }
+  function scheduleReadSync(candId: number | null) {
+    if (candId == null) return;
+    if (lastAckedIdRef.current != null && candId <= lastAckedIdRef.current) return;
+
+    if (readTimerRef.current) window.clearTimeout(readTimerRef.current);
+
+    readTimerRef.current = window.setTimeout(async () => {
+      if (lastAckedIdRef.current != null && candId <= lastAckedIdRef.current) return;
+      try {
+        setRoomUnreadZero(queryClient, roomId); // 캐시 낙관적 반영
+        await markRead(roomId, candId);
+        lastAckedIdRef.current = candId;
+      } catch (e) {
+        console.warn("[read-sync] failed", e);
+      }
+    }, READ_DEBOUNCE_MS) as unknown as number;
+  }
+
+  // 진입 직후
+  useEffect(() => {
+    if (!roomId || !msgs.length) return;
+    scheduleReadSync(getVisibleLastId());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomId, msgs.length]);
+
+  // 스크롤 시
+  useEffect(() => {
+    const el = listContainerRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
+      if (distance <= 24) scheduleReadSync(getVisibleLastId());
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, [listContainerRef, msgs]);
+
+  // 새 메시지 도착 시
+  useEffect(() => {
+    const el = listContainerRef.current;
+    if (!el) return;
+    const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (distance <= 24) scheduleReadSync(getVisibleLastId());
+  }, [msgs]);
+
+  // 포커스/언마운트 시
+  useEffect(() => {
+    const onVis = () => scheduleReadSync(getVisibleLastId());
+    const onBlur = () => scheduleReadSync(getVisibleLastId());
+    const onFocus = () => scheduleReadSync(getVisibleLastId());
+
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("blur", onBlur);
+    window.addEventListener("focus", onFocus);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("blur", onBlur);
+      window.removeEventListener("focus", onFocus);
+      scheduleReadSync(getVisibleLastId()); // 마지막 시도
+      if (readTimerRef.current) window.clearTimeout(readTimerRef.current);
+    };
+  }, [roomId, msgs]);
 
   const isDM = room?.roomType === "DM";
 
