@@ -349,7 +349,7 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
                       roomType={r.roomType}
                       startDate={r.startDate ?? undefined}
                       avatarUrl={`/api/chat/view/background/${r.roomId}`}
-                      accentColor="#FBE7D2"
+                      themeColor={r.themeColor as any}
                       onClick={() => openRoom(r)}
                     />
                   ))
@@ -375,7 +375,7 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
                       roomType={r.roomType}
                       startDate={r.startDate ?? undefined}
                       avatarUrl={`/api/chat/view/background/${r.roomId}`}
-                      accentColor="#FBE7D2"
+                      themeColor={r.themeColor as any}
                       onClick={() => openRoom(r)}
                     />
                   ))

@@ -3,27 +3,29 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useMemo, useState } from "react";
 import { createGroupRoom } from "@/services/chat";
 import type { RoomResponseDTO } from "@/types/chat";
-import { Camera, Users, Crown, CircleDollarSign, Calendar } from "lucide-react";
+import { Camera, Users, Crown, CircleDollarSign } from "lucide-react";
 
 type LinkerDetail = { linkerId: number; name: string };
 type RoomType = "LIGHT" | "CLASS";
 
-type ColorItem = { key: string; hex: string; label: string };
+// 색상은 id(1~6)로 식별. label/src/hex는 렌더링용 메타데이터
+type ColorItem = { id: number; label: string; hex: string; src: string };
 
 const COLORS: ColorItem[] = [
-  { key: "color/red.png", hex: "#F8A89F", label: "red" },
-  { key: "color/orange.png", hex: "#F6BF9E", label: "orange" },
-  { key: "color/yellow.png", hex: "#F6DE9E", label: "yellow" },
-  { key: "color/green.png", hex: "#9EF79E", label: "green" },
-  { key: "color/blue.png", hex: "#9FC6F8", label: "blue" },
-  { key: "color/purple.png", hex: "#B99EF7", label: "purple" },
+  { id: 1, label: "red", hex: "#F8A89F", src: "/icons/color/red.png" },
+  { id: 2, label: "orange", hex: "#F6BF9E", src: "/icons/color/orange.png" },
+  { id: 3, label: "yellow", hex: "#F6DE9E", src: "/icons/color/yellow.png" },
+  { id: 4, label: "green", hex: "#9EF79E", src: "/icons/color/green.png" },
+  { id: 5, label: "blue", hex: "#9FC6F8", src: "/icons/color/blue.png" },
+  { id: 6, label: "purple", hex: "#B99EF7", src: "/icons/color/purple.png" },
 ];
 
 export default function RoomCreatePage() {
   const navigate = useNavigate();
   const linker: LinkerDetail | null = (useLocation().state as any)?.linker ?? null;
 
-  const [themeColor, setThemeColor] = useState<string>(COLORS[0].key);
+  // themeColor는 이제 숫자 id로 관리 (1~6)
+  const [themeColor, setThemeColor] = useState<number>(1);
   const [roomType, setRoomType] = useState<RoomType>("LIGHT");
   const [roomName, setRoomName] = useState("");
   const [memo, setMemo] = useState("");
@@ -54,7 +56,7 @@ export default function RoomCreatePage() {
         roomName: roomName.trim(),
         description: description.trim(),
         memo: memo.trim(),
-        themeColor,
+        themeColor, // 숫자(1~6) 그대로 전송
         linkerId: linker?.linkerId,
       };
       if (isClass) {
@@ -74,13 +76,8 @@ export default function RoomCreatePage() {
   function hexToRgba(hex: string, alpha = 0.5) {
     const h = hex.replace("#", "");
     const bigint = parseInt(
-      h.length === 3
-        ? h
-          .split("")
-          .map((c) => c + c)
-          .join("")
-        : h,
-      16,
+      h.length === 3 ? h.split("").map((c) => c + c).join("") : h,
+      16
     );
     const r = (bigint >> 16) & 255;
     const g = (bigint >> 8) & 255;
@@ -88,37 +85,39 @@ export default function RoomCreatePage() {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
-  // ▶ 스샷 느낌의 텍스트박스: 연회색 배경, border 없음, 둥근모서리, inset, 포커스 링
   const inputBase =
     "w-full px-4 py-3 rounded-2xl bg-gray-100 text-gray-900 placeholder:text-gray-400 shadow-inner border-0 focus:outline-none focus:ring-2 focus:ring-gray-300";
   const textareaBase =
     "w-full px-4 py-3 rounded-2xl bg-gray-100 text-gray-900 placeholder:text-gray-400 shadow-inner border-0 focus:outline-none focus:ring-2 focus:ring-gray-300 min-h-32 resize-none";
 
+  const activeColor = COLORS.find((c) => c.id === themeColor);
+
   return (
-    // 푸터와 자연스럽게 이어지도록 바닥 여백만 약간 확보
-    <main className='w-full max-w-md mx-auto px-2 sm:px-0 pb-8'>
+    <main className="w-full max-w-md mx-auto px-2 sm:px-0 pb-8">
       {/* 프리뷰 박스: 정사각형 */}
-      <div className="mt-6 mx-auto w-1/2 aspect-square rounded-2xl flex items-center justify-center">
-        <img
-          src={`/api/chat/view/color/${COLORS.find(c => c.key === themeColor)?.label}`}
-          alt='preview'
-          className='w-full h-full object-cover'
-          draggable={false}
-        />
+      <div className="mt-6 mx-auto w-1/2 aspect-square rounded-2xl flex items-center justify-center overflow-hidden">
+        {activeColor && (
+          <img
+            src={activeColor.src} // /icons/... 절대경로
+            alt={activeColor.label}
+            className="w-full h-full object-cover"
+            draggable={false}
+          />
+        )}
       </div>
 
-      {/* 팔레트 + 카메라 */}
-      <div className='mt-5'>
-        <div className='text-xs text-gray-600 text-left mb-1'>채팅방 테마 선택</div>
-        <div className='flex items-center gap-3'>
+      {/* 팔레트 */}
+      <div className="mt-5">
+        <div className="text-xs text-gray-600 text-left mb-1">채팅방 테마 선택</div>
+        <div className="flex items-center gap-3">
           {COLORS.map((c) => {
-            const isActive = themeColor === c.key;
+            const isActive = themeColor === c.id;
             return (
               <button
-                key={c.key}
-                onClick={() => setThemeColor(c.key)}
+                key={c.id}
+                onClick={() => setThemeColor(c.id)}
                 aria-label={c.label}
-                className='group relative w-8 h-8 rounded-full border-2 bg-white transition'
+                className="group relative w-8 h-8 rounded-full border-2 bg-white transition"
                 style={
                   {
                     borderColor: c.hex,
@@ -128,52 +127,53 @@ export default function RoomCreatePage() {
                 }
               >
                 <span
-                  className={`absolute inset-[1.5px] rounded-full transition-colors duration-150 ${isActive ? "bg-[var(--fill)]" : "bg-transparent [@media(hover:hover)]:group-hover:bg-[var(--hover)]"
+                  className={`absolute inset-[1.5px] rounded-full transition-colors duration-150 ${isActive
+                    ? "bg-[var(--fill)]"
+                    : "bg-transparent [@media(hover:hover)]:group-hover:bg-[var(--hover)]"
                     }`}
                 />
               </button>
             );
           })}
 
-
           <button
-            type='button'
-            title='배경 이미지 업로드(준비중)'
-            className='ml-1 flex items-center justify-center w-8 h-8 rounded-full border-2 bg-white text-gray-500 cursor-not-allowed'
+            type="button"
+            title="배경 이미지 업로드(준비중)"
+            className="ml-1 flex items-center justify-center w-8 h-8 rounded-full border-2 bg-white text-gray-500 cursor-not-allowed"
             style={{ WebkitTapHighlightColor: "transparent", touchAction: "manipulation" }}
           >
-            <Camera className='w-5 h-5' />
+            <Camera className="w-5 h-5" />
           </button>
         </div>
       </div>
 
       {/* 입력값 */}
-      <div className='mt-5 space-y-4'>
+      <div className="mt-5 space-y-4">
         <div>
-          <div className='text-xs text-gray-600 text-left mb-1'>채팅방 이름</div>
+          <div className="text-xs text-gray-600 text-left mb-1">채팅방 이름</div>
           <input
             className={inputBase}
-            placeholder='채팅방 이름'
+            placeholder="채팅방 이름"
             value={roomName}
             onChange={(e) => setRoomName(e.target.value)}
           />
         </div>
 
         <div>
-          <div className='text-xs text-gray-600 text-left mb-1'>태그를 입력해 주세요</div>
+          <div className="text-xs text-gray-600 text-left mb-1">태그를 입력해 주세요</div>
           <input
             className={inputBase}
-            placeholder='#밥친구   #햄버거'
+            placeholder="#밥친구   #햄버거"
             value={memo}
             onChange={(e) => setMemo(e.target.value)}
           />
         </div>
 
         <div>
-          <div className='text-xs text-gray-600 text-left mb-1'>설명을 입력해 주세요</div>
+          <div className="text-xs text-gray-600 text-left mb-1">설명을 입력해 주세요</div>
           <textarea
             className={textareaBase}
-            placeholder=''
+            placeholder=""
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
@@ -181,12 +181,11 @@ export default function RoomCreatePage() {
       </div>
 
       {/* 방 종류 */}
-      <div className='mt-3'>
-        <div className='text-xs text-gray-600 text-left mb-1'>채팅방 종류를 선택해 주세요</div>
-
-        <div className='grid grid-cols-2 gap-3'>
+      <div className="mt-3">
+        <div className="text-xs text-gray-600 text-left mb-1">채팅방 종류를 선택해 주세요</div>
+        <div className="grid grid-cols-2 gap-3">
           <button
-            type='button'
+            type="button"
             onClick={() => setRoomType("LIGHT")}
             className={[
               "h-12 w-full rounded-2xl border px-4",
@@ -196,12 +195,12 @@ export default function RoomCreatePage() {
               roomType === "LIGHT" ? "ring-1 ring-black" : "border-gray-300",
             ].join(" ")}
           >
-            <Users className='w-5 h-5' />
-            <span className='text-[15px] font-medium'>그룹 채팅</span>
+            <Users className="w-5 h-5" />
+            <span className="text-[15px] font-medium">그룹 채팅</span>
           </button>
 
           <button
-            type='button'
+            type="button"
             onClick={() => setRoomType("CLASS")}
             className={[
               "h-12 w-full rounded-2xl border px-4",
@@ -211,61 +210,59 @@ export default function RoomCreatePage() {
               roomType === "CLASS" ? "ring-1 ring-black" : "border-gray-300",
             ].join(" ")}
           >
-            <Crown className='w-5 h-5' />
-            <span className='text-[15px] font-medium'>클래스 톡</span>
+            <Crown className="w-5 h-5" />
+            <span className="text-[15px] font-medium">클래스 톡</span>
           </button>
         </div>
       </div>
 
-      {/* 추가 옵션: CLASS일 때만 노출 */}
+      {/* CLASS 옵션 */}
       {isClass && (
-        <div className='mt-5'>
-          <div className='text-xs text-gray-600 text-left mb-2'>추가 옵션을 입력해 주세요</div>
-
-          <div className='grid grid-cols-1 gap-3'>
-            <div className='w-full rounded-2xl border bg-white px-3 h-12 flex items-center gap-2 shadow-sm border-gray-300'>
-              <span className='inline-flex items-center h-8 rounded-xl bg-gray-100 px-3 font-semibold'>
+        <div className="mt-5">
+          <div className="text-xs text-gray-600 text-left mb-2">추가 옵션을 입력해 주세요</div>
+          <div className="grid grid-cols-1 gap-3">
+            <div className="w-full rounded-2xl border bg-white px-3 h-12 flex items-center gap-2 shadow-sm border-gray-300">
+              <span className="inline-flex items-center h-8 rounded-xl bg-gray-100 px-3 font-semibold">
                 참가비
               </span>
-              <CircleDollarSign className='w-4 h-4 text-gray-500' />
+              <CircleDollarSign className="w-4 h-4 text-gray-500" />
               <input
-                type='number'
+                type="number"
                 min={0}
-                placeholder='5000'
+                placeholder="5000"
                 value={entryFee}
                 onChange={(e) => setEntryFee(e.target.value)}
-                className='flex-1 bg-transparent outline-none border-0 focus:ring-0 text-[15px]'
+                className="flex-1 bg-transparent outline-none border-0 focus:ring-0 text-[15px]"
               />
-              <span className='text-gray-700 pr-1'>원</span>
+              <span className="text-gray-700 pr-1">원</span>
             </div>
 
-            <label className='w-full rounded-2xl border bg-white px-3 h-12 flex items-center gap-2 shadow-sm border-gray-300'>
-              <span className='inline-flex items-center h-8 rounded-xl bg-gray-100 px-3 font-semibold'>
+            <label className="w-full rounded-2xl border bg-white px-3 h-12 flex items-center gap-2 shadow-sm border-gray-300">
+              <span className="inline-flex items-center h-8 rounded-xl bg-gray-100 px-3 font-semibold">
                 시작 일정
               </span>
               <input
-                type='datetime-local'
+                type="datetime-local"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className='flex-1 bg-transparent outline-none border-0 focus:ring-0 text-[15px]'
+                className="flex-1 bg-transparent outline-none border-0 focus:ring-0 text-[15px]"
               />
-
             </label>
           </div>
         </div>
       )}
 
       {/* 액션 버튼*/}
-      <section className='mt-6 mb-4'>
-        <div className='grid grid-cols-2 gap-2'>
+      <section className="mt-6 mb-4">
+        <div className="grid grid-cols-2 gap-2">
           <button
-            className='py-3 rounded-2xl bg-black text-white disabled:opacity-50'
+            className="py-3 rounded-2xl bg-black text-white disabled:opacity-50"
             onClick={() => setConfirmOpen(true)}
             disabled={!canSubmit || submitting}
           >
             생성하기
           </button>
-          <button className='py-3 rounded-2xl bg-gray-100' onClick={() => navigate(-1)}>
+          <button className="py-3 rounded-2xl bg-gray-100" onClick={() => navigate(-1)}>
             취소하기
           </button>
         </div>
@@ -273,22 +270,22 @@ export default function RoomCreatePage() {
 
       {/* 생성 확인 모달 */}
       {confirmOpen && (
-        <div className='fixed inset-0 z-50' aria-modal='true' role='dialog'>
-          <div className='absolute inset-0 bg-black/40' onClick={() => setConfirmOpen(false)} />
-          <div className='absolute inset-0 flex items-center justify-center p-6'>
-            <div className='w-full max-w-xs rounded-2xl bg-white p-5 shadow-lg'>
-              <div className='text-center text-sm mb-4'>채팅방을 생성하시겠습니까?</div>
-              <div className='grid grid-cols-2 gap-2'>
+        <div className="fixed inset-0 z-50" aria-modal="true" role="dialog">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setConfirmOpen(false)} />
+          <div className="absolute inset-0 flex items-center justify-center p-6">
+            <div className="w-full max-w-xs rounded-2xl bg-white p-5 shadow-lg">
+              <div className="text-center text-sm mb-4">채팅방을 생성하시겠습니까?</div>
+              <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={submitCreate}
-                  className='py-2 rounded-lg bg-black text-white disabled:opacity-50'
+                  className="py-2 rounded-lg bg-black text-white disabled:opacity-50"
                   disabled={submitting}
                 >
                   생성
                 </button>
                 <button
                   onClick={() => setConfirmOpen(false)}
-                  className='py-2 rounded-lg bg-gray-100'
+                  className="py-2 rounded-lg bg-gray-100"
                 >
                   취소
                 </button>
