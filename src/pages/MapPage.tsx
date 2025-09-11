@@ -277,6 +277,7 @@ export default function MapPage(): React.ReactElement {
             lng,
           };
 
+
           // 🔥 개별 마커 클릭 이벤트 등록
           if (typeof linkerId === "number") {
             kakao.maps.event.addListener(marker, "click", () => {
@@ -584,14 +585,46 @@ export default function MapPage(): React.ReactElement {
           if (page === 1) {
             searchMarkers.current.forEach((m) => m.setMap(null));
             searchMarkers.current = [];
+
+            // 기존 오버레이 닫기
+            overlaysRef.current.forEach((ov) => ov.setMap(null));
+            overlaysRef.current = [];
           }
 
           const newMarkers = data.map((d) => {
+            const lat = parseFloat(d.y);
+            const lng = parseFloat(d.x);
+            const position = new window.kakao.maps.LatLng(lat, lng);
+
+
             const marker = new window.kakao.maps.Marker({
               map: kakaoMapRef.current!,
               // 🔹 카카오 API에서는 y가 위도, x가 경도
-              position: new window.kakao.maps.LatLng(d.y, d.x),
+              position,
             });
+
+            // 검색 결과 마커에 상호명 띄우기
+            const content = `
+    <div class="custom-wrap">
+      <div class="custom-info">
+        <div class="custom-info-content">${d.place_name}</div>
+      </div>
+    </div>
+  `;
+
+            // ✅ [수정] 오버레이도 같은 position 사용
+            const overlay = new (window.kakao.maps as any).CustomOverlay({
+              content,
+              map: kakaoMapRef.current,
+              position,   // 마커와 동일한 LatLng 객체
+              xAnchor: 0.5,
+              yAnchor: 1.3,
+            });
+
+            // 🔹 저장
+            overlaysRef.current.push(overlay);
+
+
             // 마커 클릭 시 처리하는 함수 리스너로 붙임
             window.kakao.maps.event.addListener(marker, "click", () => {
               handleResultClickMarker({
@@ -621,6 +654,7 @@ export default function MapPage(): React.ReactElement {
   // 상태 추가
   const [filteredLinkers, setFilteredLinkers] = useState<LinkerListItem[]>([]);
   const [listModalOpen, setListModalOpen] = useState(false);
+  const overlaysRef = useRef<any[]>([]);
 
   // 특정 상호명으로 링커 리스트 열기
   const handleOpenLinkerList = (item: SearchResult) => {
@@ -772,6 +806,7 @@ export default function MapPage(): React.ReactElement {
     loadExistingLinkers(kakaoMapRef.current, clustererRef.current, onOpenDetailById);
   }, [mapReady]);
 
+
   return (
 
     <MapWrapper>
@@ -785,8 +820,12 @@ export default function MapPage(): React.ReactElement {
             setSearchOpen(false);
             setSearchQuery("");
             setSearchResults([]);
+
             searchMarkers.current.forEach((m) => m.setMap(null));
             searchMarkers.current = [];
+
+            overlaysRef.current.forEach((ov) => ov.setMap(null));
+            overlaysRef.current = [];
           }}
         />
       )}
