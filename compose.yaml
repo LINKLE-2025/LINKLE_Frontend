@@ -1,0 +1,89 @@
+version: "3.9"
+
+services:
+  # Frontend (React build → Nginx 서빙)
+  frontend:
+    image: linkleteam/linkle-frontend:v1.0.1 # 빌드 & 푸시한 Frontend 이미지
+    container_name: linkle-frontend
+    ports:
+      - "8081:80" # Nginx 기본 포트 80을 호스트의 8081로 매핑
+    depends_on:
+      - backend
+    networks:
+      - linkle-net
+
+  # Backend (Spring Boot)
+  backend:
+    image: linkleteam/linkle-backend:v1.0.0 # 빌드 & 푸시한 Backend 이미지
+    container_name: linkle-backend
+    ports:
+      - "8082:8080" # Spring Boot 기본 포트 8080을 호스트의 8082로 매핑
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: db
+      REDIS_HOST: redis
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      # AI_HOST: python-ai
+    depends_on:
+      - db
+      - redis
+      # - python-ai
+    networks:
+      - linkle-net
+
+  # Database (MariaDB)
+  db:
+    image: mariadb:10.11
+    container_name: linkle-mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpw
+      MYSQL_DATABASE: linkle
+      MYSQL_USER: linkle
+      MYSQL_PASSWORD: 1234
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - linkle-net
+
+  # Redis (세션/캐시)
+  redis:
+    image: redis:7
+    container_name: linkle-redis
+    restart: always
+    networks:
+      - linkle-net
+
+  # Python AI 모듈
+  # python-ai:
+  #   image: linkleteam/linkle-ai:v1.0.0 # 빌드 & 푸시한 Python AI API 서버 이미지
+  #   container_name: linkle-ai
+  #   networks:
+  #     - linkle-net
+
+  # MinIO (파일 저장용 오브젝트 스토리지)
+  minio:
+    image: minio/minio:latest
+    container_name: linkle-minio
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    networks:
+      - linkle-net
+
+volumes:
+  db-data:
+  minio-data:
+
+networks:
+  linkle-net:
+    driver: bridge

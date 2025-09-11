@@ -16,7 +16,7 @@ function ProfileEditHeader({
   return (
     <div className="relative">
       <BackgroundImageUploader
-        currentImage={backgroundUrl}
+        bgPreview={backgroundUrl}
         onChange={onBackgroundChange}
         height={192} // h-48
       />

@@ -148,13 +148,19 @@ export default function ChatPage() {
 
   // 브라우저 포커스/가시성 복귀 시 refetch (놓친 이벤트 동기화)
   useEffect(() => {
+    const onFocus = () => {
+      refetch();
+    };
+
     const onVis = () => {
       if (document.visibilityState === "visible") refetch();
     };
-    window.addEventListener("focus", refetch);
+
+    window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onVis);
+
     return () => {
-      window.removeEventListener("focus", refetch);
+      window.removeEventListener("focus", onFocus);
       document.removeEventListener("visibilitychange", onVis);
     };
   }, [refetch]);
