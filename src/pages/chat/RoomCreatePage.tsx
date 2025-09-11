@@ -86,9 +86,9 @@ export default function RoomCreatePage() {
   }
 
   const inputBase =
-    "w-full px-4 py-3 rounded-2xl bg-gray-100 text-gray-900 placeholder:text-gray-400 shadow-inner border-0 focus:outline-none focus:ring-2 focus:ring-gray-300";
+    "w-full px-4 py-3 rounded-2xl bg-gray-100 text-gray-900 text-base placeholder:text-gray-400 shadow-inner border-0 focus:outline-none focus:ring-2 focus:ring-gray-300";
   const textareaBase =
-    "w-full px-4 py-3 rounded-2xl bg-gray-100 text-gray-900 placeholder:text-gray-400 shadow-inner border-0 focus:outline-none focus:ring-2 focus:ring-gray-300 min-h-32 resize-none";
+    "w-full px-4 py-3 rounded-2xl bg-gray-100 text-gray-900 text-base placeholder:text-gray-400 shadow-inner border-0 focus:outline-none focus:ring-2 focus:ring-gray-300 min-h-32 resize-none";
 
   const activeColor = COLORS.find((c) => c.id === themeColor);
 
@@ -98,7 +98,7 @@ export default function RoomCreatePage() {
       <div className="mt-6 mx-auto w-1/2 aspect-square rounded-2xl flex items-center justify-center overflow-hidden">
         {activeColor && (
           <img
-            src={activeColor.src} // /icons/... 절대경로
+            src={activeColor.src}
             alt={activeColor.label}
             className="w-full h-full object-cover"
             draggable={false}
@@ -128,8 +128,8 @@ export default function RoomCreatePage() {
               >
                 <span
                   className={`absolute inset-[1.5px] rounded-full transition-colors duration-150 ${isActive
-                    ? "bg-[var(--fill)]"
-                    : "bg-transparent [@media(hover:hover)]:group-hover:bg-[var(--hover)]"
+                      ? "bg-[var(--fill)]"
+                      : "bg-transparent [@media(hover:hover)]:group-hover:bg-[var(--hover)]"
                     }`}
                 />
               </button>
@@ -232,7 +232,7 @@ export default function RoomCreatePage() {
                 placeholder="5000"
                 value={entryFee}
                 onChange={(e) => setEntryFee(e.target.value)}
-                className="flex-1 bg-transparent outline-none border-0 focus:ring-0 text-[15px]"
+                className="flex-1 bg-transparent outline-none border-0 focus:ring-0 text-base"
               />
               <span className="text-gray-700 pr-1">원</span>
             </div>
@@ -245,7 +245,7 @@ export default function RoomCreatePage() {
                 type="datetime-local"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="flex-1 bg-transparent outline-none border-0 focus:ring-0 text-[15px]"
+                className="flex-1 bg-transparent outline-none border-0 focus:ring-0 text-base"
               />
             </label>
           </div>
