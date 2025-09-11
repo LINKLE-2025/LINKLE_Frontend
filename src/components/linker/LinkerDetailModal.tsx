@@ -384,7 +384,7 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
                     {/* 참여 전 중앙(상단 여백) 오버레이 */}
                     {isLocked && (
                       <div className="absolute inset-0 z-10 flex items-start justify-center pt-20 sm:pt-12">
-                        <div className="max-w-[90%] rounded-2xl border border-gray-300 bg-gray-50/90 backdrop-blur-sm px-5 py-4 text-center text-[15px] md:text-base font-medium text-gray-700">
+                        <div className="max-w-[90%] rounded-2xl border border-gray-300 bg-white backdrop-blur-sm px-5 py-4 text-center text-[15px] md:text-base font-medium text-black shadow-md">
                           링커에 참여해 보세요!
                           <br />
                           참여 후 채팅방 입장/생성이 가능합니다.
@@ -426,7 +426,7 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
                     {/* 참여 전 중앙(상단 여백) 오버레이 */}
                     {isLocked && (
                       <div className="absolute inset-0 z-10 flex items-start justify-center pt-20 sm:pt-12">
-                        <div className="max-w-[90%] rounded-2xl border border-gray-300 bg-gray-50/90 backdrop-blur-sm px-5 py-4 text-center text-[15px] md:text-base font-medium text-gray-700">
+                        <div className="max-w-[90%] rounded-2xl border border-gray-300 bg-white backdrop-blur-sm px-5 py-4 text-center text-[15px] md:text-base font-medium text-black shadow-md">
                           링커에 참여해 보세요!
                           <br />
                           참여 후 채팅방 입장/생성이 가능합니다.
