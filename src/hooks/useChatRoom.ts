@@ -1,22 +1,21 @@
+// useChatRoom.ts
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Client, IFrame } from "@stomp/stompjs";
 import type { MemberResponseDTO, MessageResponseDTO, RoomResponseDTO } from "../types/chat";
 import { resolveImageUrl } from "../utils/chat";
 import apiClient from "../api/apiClient";
 import { getCurrentUserId } from "../api/authApi";
+import { stompClient } from "@/lib/stompClient";
 
-const WS_URL = import.meta.env.VITE_WS_URL as string;
 const DEV_UID = await getCurrentUserId().catch(() => {});
-
 const PAGE_SIZE = 30 as const;
 
+// --- REST helpers (기존 유지) ---
 async function getRoom(roomId: number) {
   const { data } = await apiClient.get<RoomResponseDTO>(`/chat/room/${roomId}`, {
     headers: { "x-user-id": DEV_UID },
   });
   return data;
 }
-
 async function getMessages(roomId: number, size = PAGE_SIZE) {
   const { data } = await apiClient.get<MessageResponseDTO[]>(`/chat/room/${roomId}/messages`, {
     params: { size },
@@ -24,7 +23,6 @@ async function getMessages(roomId: number, size = PAGE_SIZE) {
   });
   return data;
 }
-
 async function getMembers(roomId: number) {
   const { data } = await apiClient.get<MemberResponseDTO[]>(`/chat/room/${roomId}/members`, {
     headers: { "x-user-id": DEV_UID },
@@ -32,35 +30,28 @@ async function getMembers(roomId: number) {
   return data;
 }
 
-export type PeerInfo = { name: string; avatar?: string | null } | null;
-export type SocketStatus = "connecting" | "open" | "closed" | "error";
+// --- utils ---
+type SocketStatus = "connecting" | "open" | "closed" | "error";
+type PeerInfo = { name: string; avatar?: string | null } | null;
 
 function byCreatedAsc(a: MessageResponseDTO, b: MessageResponseDTO) {
   return new Date(a.createdDate).getTime() - new Date(b.createdDate).getTime();
 }
 
+// --- hook ---
 export function useChatRoom(roomId: number) {
   const [room, setRoom] = useState<RoomResponseDTO | null>(null);
   const [peer, setPeer] = useState<PeerInfo>(null);
   const [msgs, setMsgs] = useState<MessageResponseDTO[]>([]);
   const [status, setStatus] = useState<SocketStatus>("connecting");
   const [membersById, setMembersById] = useState<Record<number, MemberResponseDTO>>({});
-
   const [hasMore, setHasMore] = useState(true);
   const [loadingOlder, setLoadingOlder] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const listContainerRef = useRef<HTMLDivElement | null>(null);
 
-  const clientRef = useRef(
-    new Client({
-      webSocketFactory: () => new WebSocket(WS_URL),
-      reconnectDelay: 2000,
-      debug: () => {},
-    }),
-  );
-
-  // 초기 로드
+  // 1) 초기 로드 (REST)
   useEffect(() => {
     if (!roomId) return;
 
@@ -79,14 +70,14 @@ export function useChatRoom(roomId: number) {
         }
       }
 
-      if (r.roomType === "DM") {
-        setPeer({
-          name: r.friendName ?? "(상대)",
-          avatar: resolveImageUrl((r as any).friendImage) ?? null,
-        });
-      } else {
-        setPeer({ name: r.roomName ?? "그룹 채팅", avatar: null });
-      }
+      setPeer(
+        r.roomType === "DM"
+          ? {
+              name: r.friendName ?? "(상대)",
+              avatar: resolveImageUrl((r as any).friendImage) ?? null,
+            }
+          : { name: r.roomName ?? "그룹 채팅", avatar: null },
+      );
 
       const initial = (m ?? [])
         .map((x) => ({ ...x, content: x.content ?? (x as any).text ?? "" }))
@@ -95,41 +86,42 @@ export function useChatRoom(roomId: number) {
       setMsgs(initial);
       setHasMore((m ?? []).length === PAGE_SIZE);
     })().catch(console.error);
-
-    // STOMP
-    const client = clientRef.current;
-    client.onConnect = (_frame: IFrame) => {
-      setStatus("open");
-      client.subscribe(`/sub/room.${roomId}`, (frame) => {
-        const raw = JSON.parse(frame.body);
-        const evt: MessageResponseDTO = {
-          messageId: raw.messageId ?? Date.now(),
-          roomId: raw.roomId ?? roomId,
-          messageType: raw.messageType ?? "TEXT",
-          content: raw.content ?? raw.text ?? "",
-          createdDate: raw.createdDate ?? new Date().toISOString(),
-          senderId: raw.senderId ?? raw.userId ?? raw.sender?.userId ?? null,
-          senderName: raw.senderName ?? raw.sender?.name ?? null,
-          senderImage: resolveImageUrl(raw.senderImage ?? raw.sender?.image) ?? null,
-        };
-        setMsgs((prev) => {
-          if (prev.some((x) => x.messageId === evt.messageId)) return prev;
-          return [...prev, evt].sort(byCreatedAsc);
-        });
-      });
-    };
-    client.onStompError = () => setStatus("error");
-    client.onWebSocketError = () => setStatus("error");
-    client.onWebSocketClose = () => setStatus("closed");
-
-    client.activate();
-    return () => {
-      void client.deactivate();
-    };
   }, [roomId]);
 
-  // 새 메시지면 하단으로
-  // useChatRoom.ts (추가)
+  // 2) 전역 STOMP 상태 반영
+  useEffect(() => {
+    // 즉시 현재 상태 반영 + 변화 구독
+    const off = stompClient.onStatusChange((s) => setStatus(s));
+    return () => off();
+  }, []);
+
+  // 3) 방 토픽 구독 (전역 싱글톤 사용)
+  useEffect(() => {
+    if (!roomId) return;
+
+    // 연결 여부와 무관하게 subscribe 호출 가능: 싱글톤이 내부에서 재연결 시 자동 재구독 처리
+    const off = stompClient.subscribe(`/sub/room.${roomId}`, (raw) => {
+      const evt: MessageResponseDTO = {
+        messageId: raw?.messageId ?? Date.now(),
+        roomId: raw?.roomId ?? roomId,
+        messageType: raw?.messageType ?? "TEXT",
+        content: raw?.content ?? raw?.text ?? "",
+        createdDate: raw?.createdDate ?? new Date().toISOString(),
+        senderId: raw?.senderId ?? raw?.userId ?? raw?.sender?.userId ?? null,
+        senderName: raw?.senderName ?? raw?.sender?.name ?? null,
+        senderImage: resolveImageUrl(raw?.senderImage ?? raw?.sender?.image) ?? null,
+      };
+
+      setMsgs((prev) => {
+        if (prev.some((x) => x.messageId === evt.messageId)) return prev;
+        return [...prev, evt].sort(byCreatedAsc);
+      });
+    });
+
+    return () => off();
+  }, [roomId]);
+
+  // 4) 자동 스크롤 (기존 로직 유지)
   const isAtBottomRef = useRef(true);
   const firstLoadRef = useRef(true);
   const prevLastIdRef = useRef<number | null>(null);
@@ -137,7 +129,6 @@ export function useChatRoom(roomId: number) {
   function getLastId(list: MessageResponseDTO[]) {
     return list.length ? list[list.length - 1].messageId : null;
   }
-
   function isNearBottom(el: HTMLElement) {
     const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
     return distance <= 24;
@@ -154,14 +145,14 @@ export function useChatRoom(roomId: number) {
     return () => el.removeEventListener("scroll", onScroll);
   }, [listContainerRef]);
 
-  //  기존 "msgs 바뀌면 무조건 아래로" 이펙트 삭제하고, 아래로 대체
+  // 메시지 변경 시 조건부 자동 스크롤
   useEffect(() => {
     const el = listContainerRef.current;
     if (!el) return;
 
     const lastId = getLastId(msgs);
 
-    // 1) 최초 로드: 한 번만 무조건 아래로
+    // 1) 최초 1회: 무조건 아래로
     if (firstLoadRef.current) {
       firstLoadRef.current = false;
       bottomRef.current?.scrollIntoView({ behavior: "instant" as any });
@@ -169,13 +160,13 @@ export function useChatRoom(roomId: number) {
       return;
     }
 
-    // 2) 과거 로드 중에는 자동 스크롤 금지
+    // 2) 과거 로드 중이면 자동 스크롤 금지
     if (loadingOlder) {
       prevLastIdRef.current = lastId;
       return;
     }
 
-    // 3) "새로운 마지막 메시지"가 생겼고, 사용자가 바닥 근처일 때만 자동 스크롤
+    // 3) 신규 마지막 메시지 & 사용자가 바닥 근처일 때만 자동 스크롤
     const lastChanged = lastId != null && lastId !== prevLastIdRef.current;
     if (lastChanged && isAtBottomRef.current) {
       bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -184,25 +175,24 @@ export function useChatRoom(roomId: number) {
     prevLastIdRef.current = lastId;
   }, [msgs, loadingOlder, listContainerRef, bottomRef]);
 
+  // 5) 발송 (전역 publish 사용)
   const send = (text: string) => {
     const body = text.trim();
     if (!body) return;
-    const c = clientRef.current;
-    if (!c.connected) {
+    if (!stompClient.isConnected()) {
       console.warn("STOMP not connected");
       return;
     }
-    c.publish({
-      destination: "/app/message.send",
-      headers: { "x-user-id": DEV_UID },
-      body: JSON.stringify({ roomId, text: body }),
-    });
+    stompClient.publish(
+      "/app/message.send",
+      { roomId, text: body },
+      { "x-user-id": String(DEV_UID) },
+    );
   };
 
-  // 과거 메시지 로드
+  // 6) 과거 메시지 로드 (기존 유지)
   const loadOlder = async () => {
-    if (loadingOlder || !hasMore) return;
-    if (msgs.length === 0) return;
+    if (loadingOlder || !hasMore || msgs.length === 0) return;
 
     setLoadingOlder(true);
     const oldest = msgs[0];
@@ -216,10 +206,7 @@ export function useChatRoom(roomId: number) {
       const { data: older } = await apiClient.get<MessageResponseDTO[]>(
         `/chat/room/${roomId}/messages`,
         {
-          params: {
-            size: PAGE_SIZE,
-            beforeId: oldest.messageId,
-          },
+          params: { size: PAGE_SIZE, beforeId: oldest.messageId },
           headers: { "x-user-id": DEV_UID },
         },
       );

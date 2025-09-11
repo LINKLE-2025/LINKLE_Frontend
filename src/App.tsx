@@ -1,3 +1,5 @@
+// App.tsx
+import { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import MapPage from "./pages/MapPage";
 import LoginPage from "./pages/auth/LoginPage";
@@ -27,9 +29,29 @@ import ErrorPage from "./pages/ErrorPage";
 import TestPage from "./pages/TestPage";
 import PasswordResetPage from "./pages/auth/PasswordResetPage";
 
+import { stompClient } from "@/lib/stompClient";
+import { getCurrentUserId } from "@/api/authApi";
+
 export default function App() {
   // Silent Refresh Hook 적용 -> Refresh Token을 이용해 Access Token 재발급
   useSilentRefresh();
+
+  // 앱 시작 시 1회 STOMP 연결 초기화
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const uid = await getCurrentUserId().catch(() => undefined);
+
+      if (!mounted) return;
+      stompClient.init(import.meta.env.VITE_WS_URL, {
+        "x-user-id": String(uid ?? ""),
+        // Authorization: `Bearer ${accessToken}`,
+      });
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <Routes>
@@ -39,9 +61,7 @@ export default function App() {
         <Route path='/login' element={<LoginPage />} />
         <Route path='/signup' element={<SignUpPage />} />
         <Route path='/password/reset' element={<PasswordResetPage />} />
-
-
-        <Route path="/test" element={<TestPage />} />
+        <Route path='/test' element={<TestPage />} />
       </Route>
 
       {/* 어플리케이션 레이아웃 */}
@@ -50,12 +70,12 @@ export default function App() {
         <Route path='/post' element={<PostCreatePage />} />
         <Route path='/post/:postId' element={<PostDetailPage />} />
       </Route>
+
       {/* 프로필 관련 레이아웃 */}
       <Route element={<ProfileLayout />}>
         <Route path='/profile' element={<ProfilePage />} />
         <Route path='/profile/edit' element={<ProfileEditPage />} />
         <Route path='/profile/edit/:userId' element={<ProfileEditPage />} />
-
       </Route>
 
       {/* 친구 목록 관련 레이아웃 */}
@@ -79,7 +99,7 @@ export default function App() {
       <Route path='/post/:postId' element={<PostDetailPage />} />
 
       {/* 동적 에러 페이지 */}
-      <Route path="/error/:type" element={<ErrorPage />} />
+      <Route path='/error/:type' element={<ErrorPage />} />
     </Routes>
   );
-};
+}
