@@ -1,3 +1,4 @@
+// src/components/modal/LinkerDetailModal.tsx
 import dayjs from "dayjs";
 import React, { useEffect, useMemo, useState } from "react";
 import { Sheet } from "react-modal-sheet";
@@ -282,6 +283,7 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
                 </>
               )}
             </div>
+
             {/* 탭 */}
             <div className="mt-2 border-b">
               <div className="flex items-center justify-around text-sm">
@@ -325,7 +327,7 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
                 ) : (
                   <div
                     className="grid grid-cols-3 gap-1 overflow-auto"
-                    style={{ maxHeight: "190px" }} // 또는 px 단위로 고정 높이
+                    style={{ maxHeight: "190px" }}
                   >
                     {posts.map((p) => (
                       <button
@@ -337,7 +339,9 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
                         {p.imageUrl ? (
                           <img src={p.imageUrl} alt="" className="h-full w-full object-cover" />
                         ) : (
-                          <div className="h-full w-full p-2 text-[11px] text-left line-clamp-2">{p.content ?? "(이미지 없음)"}</div>
+                          <div className="h-full w-full p-2 text-[11px] text-left line-clamp-2">
+                            {p.content ?? "(이미지 없음)"}
+                          </div>
                         )}
                       </button>
                     ))}
@@ -353,21 +357,23 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
                 ) : filteredRooms.filter((r) => r.roomType === "LIGHT").length === 0 ? (
                   <div className="p-6 text-center text-gray-400 text-sm">아직 생성된 그룹 채팅방이 없어요.</div>
                 ) : (
-                  filteredRooms
-                    .filter((r) => r.roomType === "LIGHT")
-                    .map((r) => (
-                      <ChatListItem2
-                        key={r.roomId}
-                        title={r.roomName ?? "그룹 채팅"}
-                        memo={r.memo ?? r.description ?? ""}
-                        memberCount={r.memberCount ?? undefined}
-                        roomType={r.roomType}
-                        startDate={r.startDate ?? undefined}
-                        avatarUrl={`/api/chat/view/background/${r.roomId}`}
-                        themeColor={r.themeColor as any}
-                        onClick={() => openPreview(r)}
-                      />
-                    ))
+                  <div className="space-y-2">
+                    {filteredRooms
+                      .filter((r) => r.roomType === "LIGHT")
+                      .map((r) => (
+                        <ChatListItem2
+                          key={r.roomId}
+                          title={r.roomName ?? "그룹 채팅"}
+                          memo={r.memo ?? r.description ?? ""}
+                          memberCount={r.memberCount ?? undefined}
+                          roomType={r.roomType}
+                          startDate={r.startDate ?? undefined}
+                          avatarUrl={`/api/chat/view/background/${r.roomId}`}
+                          themeColor={r.themeColor as any}
+                          onClick={() => openPreview(r)}
+                        />
+                      ))}
+                  </div>
                 ))}
 
               {/* 클래스채팅 (CLASS) */}
@@ -379,21 +385,23 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
                 ) : filteredRooms.filter((r) => r.roomType === "CLASS").length === 0 ? (
                   <div className="p-6 text-center text-gray-400 text-sm">아직 생성된 클래스톡이 없어요.</div>
                 ) : (
-                  filteredRooms
-                    .filter((r) => r.roomType === "CLASS")
-                    .map((r) => (
-                      <ChatListItem2
-                        key={r.roomId}
-                        title={r.roomName ?? "클래스 채팅"}
-                        memo={r.memo ?? r.description ?? ""}
-                        memberCount={r.memberCount ?? undefined}
-                        roomType={r.roomType}
-                        startDate={r.startDate ?? undefined}
-                        avatarUrl={`/api/chat/view/background/${r.roomId}`}
-                        themeColor={r.themeColor as any}
-                        onClick={() => openPreview(r)} // 
-                      />
-                    ))
+                  <div className="space-y-2">
+                    {filteredRooms
+                      .filter((r) => r.roomType === "CLASS")
+                      .map((r) => (
+                        <ChatListItem2
+                          key={r.roomId}
+                          title={r.roomName ?? "클래스 채팅"}
+                          memo={r.memo ?? r.description ?? ""}
+                          memberCount={r.memberCount ?? undefined}
+                          roomType={r.roomType}
+                          startDate={r.startDate ?? undefined}
+                          avatarUrl={`/api/chat/view/background/${r.roomId}`}
+                          themeColor={r.themeColor as any}
+                          onClick={() => openPreview(r)} //
+                        />
+                      ))}
+                  </div>
                 ))}
             </div>
           </Sheet.Content>
