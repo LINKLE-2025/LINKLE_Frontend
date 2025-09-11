@@ -85,9 +85,11 @@ export default function ChatListItem({
   const avatarSrc = isDM
     ? userProfileUrl(partnerId)
     : colorIconSrc ?? roomBackgroundUrl((item as any).roomId);
-  // -------------------------
 
   const [avatarError, setAvatarError] = useState(false);
+
+  // ✅ 안전한 안읽은 수 계산 
+  const unread = Math.max(0, Number((item as any).unreadCount ?? 0));
 
   return (
     <button
@@ -117,11 +119,20 @@ export default function ChatListItem({
           <span className="font-medium text-gray-900 truncate">{title}</span>
           <span className="text-xs text-gray-400 shrink-0">{when}</span>
         </div>
+
         <div className="flex items-center justify-between gap-2">
           <p className="text-sm text-gray-500 truncate">{preview}</p>
-          {item.unreadCount && item.unreadCount > 0 && (
-            <span className="ml-2 shrink-0 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-xs w-5 h-5">
-              {item.unreadCount > 99 ? "99+" : item.unreadCount}
+
+          {/* 작은 빨간 점 + 숫자 (0이면 렌더 안함) */}
+          {unread > 0 && (
+            <span
+              className="ml-2 shrink-0 inline-flex items-center gap-1.5"
+              aria-label={`안 읽은 메시지 ${unread}개`}
+            >
+              <span className="inline-block w-2 h-2 rounded-full bg-red-500" />
+              <span className="text-xs text-gray-400 tabular-nums">
+                {unread > 99 ? "99+" : unread}
+              </span>
             </span>
           )}
         </div>
