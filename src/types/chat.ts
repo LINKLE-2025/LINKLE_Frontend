@@ -50,3 +50,13 @@ export interface CreateRoomRequestDTO {
   entryFee?: number;
   startDate?: string;
 }
+
+export interface ReadSyncRequestDTO {
+  roomId: number;
+  lastReadMessageId: number;
+}
+
+export interface MyReadStateDTO {
+  lastReadMessageId?: number | null;
+  lastReadAt?: string | null;
+}
