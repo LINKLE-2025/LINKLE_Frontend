@@ -97,6 +97,9 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
       if (!res.ok) throw new Error(`포스트 조회 실패 (${res.status})`);
       const raw: any[] = await res.json();
       const postImageUrl = (postId: number) => `/api/post/${postId}/image`;
+
+      raw.sort((a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime());
+
       setPosts(
         raw.map((p) => ({
           postId: p.postId,
@@ -320,7 +323,10 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
                 ) : posts.length === 0 ? (
                   <div className="p-6 text-center text-gray-400 text-sm">아직 등록된 포스트가 없어요.</div>
                 ) : (
-                  <div className="grid grid-cols-3 gap-1 overflow-auto" style={{ maxHeight: "40vh" }}>
+                  <div
+                    className="grid grid-cols-3 gap-1 overflow-auto"
+                    style={{ maxHeight: "190px" }} // 또는 px 단위로 고정 높이
+                  >
                     {posts.map((p) => (
                       <button
                         key={p.postId}
@@ -331,9 +337,7 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
                         {p.imageUrl ? (
                           <img src={p.imageUrl} alt="" className="h-full w-full object-cover" />
                         ) : (
-                          <div className="h-full w-full p-2 text-[11px] text-left line-clamp-2">
-                            {p.content ?? "(이미지 없음)"}
-                          </div>
+                          <div className="h-full w-full p-2 text-[11px] text-left line-clamp-2">{p.content ?? "(이미지 없음)"}</div>
                         )}
                       </button>
                     ))}
