@@ -92,6 +92,9 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
       if (!res.ok) throw new Error(`포스트 조회 실패 (${res.status})`);
       const raw: any[] = await res.json();
       const postImageUrl = (postId: number) => `/api/post/${postId}/image`;
+
+      raw.sort((a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime());
+
       setPosts(
         raw.map((p) => ({
           postId: p.postId,
@@ -200,8 +203,8 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
     <Sheet
       isOpen={open}
       onClose={onClose}
-      snapPoints={[0.8, 0.6, 0.5]}
-      initialSnap={2}
+      snapPoints={[0.65, 0.6, 0.5]}
+      initialSnap={0}
       style={{ bottom: footerHeight }}
     >
       <Sheet.Container style={{ zIndex: 1500, boxShadow: "none" }}>
@@ -310,7 +313,7 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
               ) : (
                 <div
                   className="grid grid-cols-3 gap-1 overflow-auto"
-                  style={{ maxHeight: "40vh" }} // 또는 px 단위로 고정 높이
+                  style={{ maxHeight: "190px" }} // 또는 px 단위로 고정 높이
                 >
                   {posts.map((p) => (
                     <button
