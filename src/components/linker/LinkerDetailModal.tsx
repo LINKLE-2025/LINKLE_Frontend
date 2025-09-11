@@ -212,6 +212,9 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
     closePreview();
   };
 
+  // 참여 전에는 라이트/클래스 탭 컨텐츠 잠금
+  const isLocked = !participating && !participationLoading;
+
   return (
     <>
       <Sheet
@@ -357,22 +360,37 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
                 ) : filteredRooms.filter((r) => r.roomType === "LIGHT").length === 0 ? (
                   <div className="p-6 text-center text-gray-400 text-sm">아직 생성된 그룹 채팅방이 없어요.</div>
                 ) : (
-                  <div className="space-y-2">
-                    {filteredRooms
-                      .filter((r) => r.roomType === "LIGHT")
-                      .map((r) => (
-                        <ChatListItem2
-                          key={r.roomId}
-                          title={r.roomName ?? "그룹 채팅"}
-                          memo={r.memo ?? r.description ?? ""}
-                          memberCount={r.memberCount ?? undefined}
-                          roomType={r.roomType}
-                          startDate={r.startDate ?? undefined}
-                          avatarUrl={`/api/chat/view/background/${r.roomId}`}
-                          themeColor={r.themeColor as any}
-                          onClick={() => openPreview(r)}
-                        />
-                      ))}
+                  // 리스트와 오버레이를 겹치기 위해 relative 컨테이너 사용
+                  <div className="relative">
+                    {/* 리스트 (잠금 시 흐릿/클릭불가) */}
+                    <div className={`space-y-2 ${isLocked ? "opacity-50 pointer-events-none select-none" : ""}`}>
+                      {filteredRooms
+                        .filter((r) => r.roomType === "LIGHT")
+                        .map((r) => (
+                          <ChatListItem2
+                            key={r.roomId}
+                            title={r.roomName ?? "그룹 채팅"}
+                            memo={r.memo ?? r.description ?? ""}
+                            memberCount={r.memberCount ?? undefined}
+                            roomType={r.roomType}
+                            startDate={r.startDate ?? undefined}
+                            avatarUrl={`/api/chat/view/background/${r.roomId}`}
+                            themeColor={r.themeColor as any}
+                            onClick={() => openPreview(r)}
+                          />
+                        ))}
+                    </div>
+
+                    {/* 참여 전 중앙(상단 여백) 오버레이 */}
+                    {isLocked && (
+                      <div className="absolute inset-0 z-10 flex items-start justify-center pt-20 sm:pt-12">
+                        <div className="max-w-[90%] rounded-2xl border border-gray-300 bg-gray-50/90 backdrop-blur-sm px-5 py-4 text-center text-[15px] md:text-base font-medium text-gray-700">
+                          링커에 참여해 보세요!
+                          <br />
+                          참여 후 채팅방 입장/생성이 가능합니다.
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
 
@@ -385,22 +403,36 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
                 ) : filteredRooms.filter((r) => r.roomType === "CLASS").length === 0 ? (
                   <div className="p-6 text-center text-gray-400 text-sm">아직 생성된 클래스톡이 없어요.</div>
                 ) : (
-                  <div className="space-y-2">
-                    {filteredRooms
-                      .filter((r) => r.roomType === "CLASS")
-                      .map((r) => (
-                        <ChatListItem2
-                          key={r.roomId}
-                          title={r.roomName ?? "클래스 채팅"}
-                          memo={r.memo ?? r.description ?? ""}
-                          memberCount={r.memberCount ?? undefined}
-                          roomType={r.roomType}
-                          startDate={r.startDate ?? undefined}
-                          avatarUrl={`/api/chat/view/background/${r.roomId}`}
-                          themeColor={r.themeColor as any}
-                          onClick={() => openPreview(r)} //
-                        />
-                      ))}
+                  <div className="relative">
+                    {/* 리스트 (잠금 시 흐릿/클릭불가) */}
+                    <div className={`space-y-2 ${isLocked ? "opacity-50 pointer-events-none select-none" : ""}`}>
+                      {filteredRooms
+                        .filter((r) => r.roomType === "CLASS")
+                        .map((r) => (
+                          <ChatListItem2
+                            key={r.roomId}
+                            title={r.roomName ?? "클래스 채팅"}
+                            memo={r.memo ?? r.description ?? ""}
+                            memberCount={r.memberCount ?? undefined}
+                            roomType={r.roomType}
+                            startDate={r.startDate ?? undefined}
+                            avatarUrl={`/api/chat/view/background/${r.roomId}`}
+                            themeColor={r.themeColor as any}
+                            onClick={() => openPreview(r)} //
+                          />
+                        ))}
+                    </div>
+
+                    {/* 참여 전 중앙(상단 여백) 오버레이 */}
+                    {isLocked && (
+                      <div className="absolute inset-0 z-10 flex items-start justify-center pt-20 sm:pt-12">
+                        <div className="max-w-[90%] rounded-2xl border border-gray-300 bg-gray-50/90 backdrop-blur-sm px-5 py-4 text-center text-[15px] md:text-base font-medium text-gray-700">
+                          링커에 참여해 보세요!
+                          <br />
+                          참여 후 채팅방 입장/생성이 가능합니다.
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
             </div>
