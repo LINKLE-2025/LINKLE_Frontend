@@ -200,8 +200,8 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
     <Sheet
       isOpen={open}
       onClose={onClose}
-      snapPoints={[0.8, 0.6, 0.5]}
-      initialSnap={2}
+      snapPoints={[0.65, 0.5, 0.4]}
+      initialSnap={0}
       style={{ bottom: footerHeight }}
     >
       <Sheet.Container style={{ zIndex: 1500, boxShadow: "none" }}>
@@ -308,11 +308,14 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
               ) : posts.length === 0 ? (
                 <div className="p-6 text-center text-gray-400 text-sm">아직 등록된 포스트가 없어요.</div>
               ) : (
-                <div className="grid grid-cols-3 gap-1">
+                <div
+                  className="grid grid-cols-3 gap-1 overflow-auto"
+                  style={{ maxHeight: "40vh" }} // 또는 px 단위로 고정 높이
+                >
                   {posts.map((p) => (
                     <button
                       key={p.postId}
-                      className="aspect-square overflow-hidden bg-gray-100"
+                      className="aspect-square bg-gray-100"
                       title={p.content ?? ""}
                       onClick={() => navigate(`/post/${p.postId}`, { state: { linker: detail } })}
                     >
