@@ -103,7 +103,7 @@ export default function AddressDisplay({
     <Sheet
       isOpen={isOpen}
       onClose={onClose}
-      snapPoints={[0.6, 0.3, 0]}
+      snapPoints={[0.65, 0.3, 0]}
       initialSnap={1}
       style={{ bottom: footerHeight }}
       {...({

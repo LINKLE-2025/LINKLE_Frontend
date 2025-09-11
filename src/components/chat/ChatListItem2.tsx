@@ -11,6 +11,23 @@ function initials(name?: string | null) {
     return p.length === 1 ? p[0]!.slice(0, 2) : `${p[0]![0] ?? ""}${p[1]![0] ?? ""}`;
 }
 
+// BASE_URL 안전 절대경로 생성 (루트/서브디렉토리 배포 모두 대응)
+const asset = (p: string) => {
+    const base = (import.meta.env.BASE_URL || "/").replace(/\/+$/, "");
+    const path = p.replace(/^\/+/, "");
+    return `${base}/${path}`;
+};
+
+// 1~6 → 아이콘 파일명 매핑
+const COLOR_ICON_NAME: Record<number, string> = {
+    1: "red.png",
+    2: "orange.png",
+    3: "yellow.png",
+    4: "green.png",
+    5: "blue.png",
+    6: "purple.png",
+};
+
 type Props = {
     onClick?: () => void;
     /** 제목(방 이름) */
@@ -24,12 +41,15 @@ type Props = {
     /** 시작일 (CLASS 전용) */
     startDate?: string | null;
 
-    /** 아바타 이미지 URL (예: /api/chat/view/background/{roomId}) */
+    /** 아바타 이미지 URL (DM이면 상대 프로필, 그룹이면 room 배경 등) */
     avatarUrl?: string | null;
     /** 아바타 이미지 없을 때 이모지/문자 */
     avatarEmoji?: string;
-    /** 아바타 배경색(이미지 있을 땐 투명 처리) */
+    /** 아바타 배경색(이미지 실패 시 원 배경) */
     accentColor?: string;
+
+    /** 그룹/방일 때 themeColor (1~6이면 컬러 아이콘 사용) */
+    themeColor?: number | string | null;
 
     className?: string;
 };
@@ -43,7 +63,8 @@ export default memo(function ChatListItem2({
     startDate,
     avatarUrl,
     avatarEmoji,
-    accentColor = "#F3F4F6", // gray-100 비슷
+    accentColor = "#F3F4F6",
+    themeColor,
     className,
 }: Props) {
     const [avatarError, setAvatarError] = useState(false);
@@ -58,22 +79,33 @@ export default memo(function ChatListItem2({
     const startLabel =
         isClass && hasStart ? `${dayjs(startDate!).format("M월 D일")}${isDue ? " 마감" : ""}` : null;
 
+    // ----- themeColor → 컬러 아이콘 적용 (첫 번째 코드와 동일한 규칙) -----
+    const colorId =
+        typeof themeColor === "string" ? Number(themeColor) : (themeColor as number | undefined);
+    const colorIconName = colorId ? COLOR_ICON_NAME[colorId] : undefined;
+    const colorIconSrc = colorIconName ? asset(`icons/color/${colorIconName}`) : undefined;
+
+    // 아바타 우선순위
+    // - 그 외: themeColor(1~6)이면 컬러 아이콘 사용, 아니면 avatarUrl(예: room 배경)
+    const finalAvatarSrc =
+        roomType === "DM" ? avatarUrl ?? undefined : colorIconSrc ?? (avatarUrl ?? undefined);
+    // ---------------------------------------------------------------
+
     return (
         <button
             onClick={onClick}
             type="button"
             className={clsx(
-                // ChatListItem과 동일한 래퍼 스타일
                 "w-full text-left px-4 py-3 bg-white rounded-xl shadow-sm border border-gray-100",
                 "hover:bg-gray-50 transition flex items-center gap-3",
                 "active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-gray-100",
                 className,
             )}
         >
-            {/* 동일한 아바타 원 (44px, 동그라미, object-cover + 폴백 이니셜) */}
-            {!avatarError && avatarUrl ? (
+            {/* 동일한 아바타 원 (44px, 동그라미, object-cover + 폴백 이니셜/이모지) */}
+            {!avatarError && finalAvatarSrc ? (
                 <img
-                    src={avatarUrl}
+                    src={finalAvatarSrc}
                     alt={title}
                     className="w-11 h-11 rounded-full object-cover"
                     decoding="async"

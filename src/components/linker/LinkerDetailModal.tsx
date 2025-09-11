@@ -203,7 +203,7 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
     <Sheet
       isOpen={open}
       onClose={onClose}
-      snapPoints={[0.65, 0.6, 0.5]}
+      snapPoints={[0.65, 0.5, 0.4]}
       initialSnap={0}
       style={{ bottom: footerHeight }}
     >
@@ -352,7 +352,7 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
                       roomType={r.roomType}
                       startDate={r.startDate ?? undefined}
                       avatarUrl={`/api/chat/view/background/${r.roomId}`}
-                      accentColor="#FBE7D2"
+                      themeColor={r.themeColor as any}
                       onClick={() => openRoom(r)}
                     />
                   ))
@@ -378,7 +378,7 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
                       roomType={r.roomType}
                       startDate={r.startDate ?? undefined}
                       avatarUrl={`/api/chat/view/background/${r.roomId}`}
-                      accentColor="#FBE7D2"
+                      themeColor={r.themeColor as any}
                       onClick={() => openRoom(r)}
                     />
                   ))
