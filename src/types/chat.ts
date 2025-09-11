@@ -55,8 +55,3 @@ export interface ReadSyncRequestDTO {
   roomId: number;
   lastReadMessageId: number;
 }
-
-export interface MyReadStateDTO {
-  lastReadMessageId?: number | null;
-  lastReadAt?: string | null;
-}
