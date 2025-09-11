@@ -1,5 +1,5 @@
-// ChatPage.tsx
-import { useEffect, useMemo, useState } from "react";
+// src/pages/chat/ChatPage.tsx
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import SegmentTabs, { TAB_DM, TAB_GROUP } from "@/components/chat/SegmentTabs";
@@ -46,6 +46,9 @@ function sortByLastMessage<T extends RoomResponseDTO>(arr: T[]) {
     return tb - ta;
   });
 }
+
+// 안전 비교(숫자/문자 혼용 대비)
+const sameId = (a: unknown, b: unknown) => String(a) === String(b);
 
 export default function ChatPage() {
   const navigate = useNavigate();
@@ -96,69 +99,107 @@ export default function ChatPage() {
     setParams(params, { replace: true });
   };
 
-  // ✅ 실시간 구독: 사용자 단일 토픽 → 캐시 갱신 + 정렬
-  useEffect(() => {
-    if (!currentUserId) return;
+  // ---- 이벤트 핸들러 (공통 적용) ----
+  const applyEventToCache = (evt: any) => {
+    queryClient.setQueryData<RoomResponseDTO[]>(["chatRooms"], (prev) => {
+      if (!prev) return prev;
 
-    // 서버 이벤트 예시 가정:
-    // - { type:"MESSAGE_CREATED", roomId, preview, createdDate, senderId, unreadCount? }
-    // - { type:"ROOM_READ_SYNC", roomId, unreadCount:0, lastMessageDate? }
-    // - { type:"ROOM_LAST_MESSAGE_UPDATED", roomId, preview, sentAt }
-    const topic = `/sub/users.${currentUserId}.room-updates`;
-    const off = stompClient.subscribe(topic, (evt: any) => {
-      queryClient.setQueryData<RoomResponseDTO[]>(["chatRooms"], (prev) => {
-        if (!prev) return prev;
+      const rid = evt?.roomId ?? evt?.room?.id ?? evt?.id;
+      if (rid == null) return prev;
 
-        const idx = prev.findIndex((r) => (r as any).roomId === evt.roomId);
-        if (idx === -1) return prev;
+      const idx = prev.findIndex((r) => sameId((r as any).roomId, rid));
+      if (idx === -1) return prev;
 
-        const before: any = prev[idx];
-        const next = prev.slice();
-        const updated: any = { ...before };
+      const before: any = prev[idx];
+      const updated: any = { ...before };
 
-        // 미리보기/시간
-        const preview = evt.preview ?? evt.lastMessage ?? evt.lastMessagePreview;
-        const when = evt.createdDate ?? evt.sentAt ?? evt.lastMessageDate ?? evt.lastMessageAt;
-        if (typeof preview === "string") updated.lastMessagePreview = preview;
-        if (when) updated.lastMessageDate = when;
+      const type = String(evt?.type ?? evt?.eventType ?? "").toUpperCase();
 
-        // unread 갱신
-        if (typeof evt.unreadCount === "number") {
-          updated.unreadCount = Math.max(0, evt.unreadCount);
-        } else if (evt.type === "ROOM_READ_SYNC" || evt.type === "ROOM_READ") {
-          updated.unreadCount = 0;
-        } else if (evt.type === "MESSAGE_CREATED" || evt.type === "ROOM_LAST_MESSAGE_UPDATED") {
-          // 내가 보낸 메시지는 증가 X (senderId 있으면 판별)
-          const isMine = evt.senderId && currentUserId && evt.senderId === currentUserId;
-          const prevUnread = Number(before.unreadCount ?? 0);
-          updated.unreadCount = isMine ? prevUnread : prevUnread + 1;
-        }
+      // 미리보기/시간 폴백
+      const preview =
+        evt?.preview ??
+        evt?.lastMessage ??
+        evt?.lastMessagePreview ??
+        evt?.text ??
+        (typeof evt?.content === "string" ? evt.content : undefined);
 
-        next[idx] = updated as RoomResponseDTO;
-        return sortByLastMessage(next); // ← 정렬 유지
-      });
+      const when =
+        evt?.createdDate ??
+        evt?.sentAt ??
+        evt?.lastMessageDate ??
+        evt?.lastMessageAt ??
+        null;
+
+      if (typeof preview === "string") updated.lastMessagePreview = preview;
+      if (when) updated.lastMessageDate = when;
+
+      // unread 갱신
+      const looksLikeRead = type.includes("READ") || type.includes("ACK");
+      if (looksLikeRead) {
+        updated.unreadCount = 0;
+      } else if (typeof evt?.unreadCount === "number") {
+        updated.unreadCount = Math.max(0, evt.unreadCount);
+      } else if (type === "MESSAGE_CREATED" || type === "ROOM_LAST_MESSAGE_UPDATED") {
+        const sid = evt?.senderId ?? evt?.sender?.id ?? evt?.userId;
+        const isMine =
+          typeof sid === "number" &&
+          typeof currentUserId === "number" &&
+          sid === currentUserId;
+        const prevUnread = Number(before.unreadCount ?? 0);
+        updated.unreadCount = isMine ? prevUnread : prevUnread + 1;
+      }
+
+      const next = prev.slice();
+      next[idx] = updated as RoomResponseDTO;
+      return sortByLastMessage(next);
     });
+  };
 
+  // ✅ 유저 단일 토픽 구독
+  useEffect(() => {
+    if (!currentUserId || !data?.length) return;
+    const topic = `/sub/users.${currentUserId}.room-updates`;
+    const off = stompClient.subscribe(topic, applyEventToCache);
     return () => {
       try {
         off?.();
       } catch { }
     };
-  }, [currentUserId, queryClient]);
+  }, [currentUserId, data]);
 
-  // 브라우저 포커스/가시성 복귀 시 refetch (놓친 이벤트 동기화)
+  // ✅ 각 방 토픽도 구독 (보강용)
+  const roomSubMapRef = useRef<Map<string, () => void>>(new Map());
   useEffect(() => {
-    const onFocus = () => {
-      refetch();
-    };
+    if (!data?.length) return;
+    const subMap = roomSubMapRef.current;
 
+    for (const r of data) {
+      const rid = String((r as any).roomId);
+      if (subMap.has(rid)) continue;
+
+      const topic = `/sub/room.${rid}`;
+      const off = stompClient.subscribe(topic, applyEventToCache);
+      subMap.set(rid, off);
+    }
+
+    return () => {
+      for (const [, off] of subMap) {
+        try {
+          off?.();
+        } catch { }
+      }
+      subMap.clear();
+    };
+  }, [data]);
+
+  // 브라우저 포커스/가시성 복귀 시 refetch
+  useEffect(() => {
+    const onFocus = () => refetch();
     const onVis = () => {
       if (document.visibilityState === "visible") refetch();
     };
-
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onVis);
-
     return () => {
       window.removeEventListener("focus", onFocus);
       document.removeEventListener("visibilitychange", onVis);
