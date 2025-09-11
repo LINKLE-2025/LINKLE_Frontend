@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
 
   return {
+    base: "/",
     plugins: [
       react(),
       VitePWA({
@@ -82,10 +83,14 @@ export default defineConfig(({ mode }) => {
     server: {
       host: env.VITE_HOST || "0.0.0.0",
       port: Number(env.VITE_PORT) || 3000,
-      https: {
-        key: fs.readFileSync(env.VITE_SSL_KEY),
-        cert: fs.readFileSync(env.VITE_SSL_CERT),
-      },
+      ...(env.VITE_SSL_KEY && env.VITE_SSL_CERT
+        ? {
+            https: {
+              key: fs.readFileSync(env.VITE_SSL_KEY),
+              cert: fs.readFileSync(env.VITE_SSL_CERT),
+            },
+          }
+        : {}),
       proxy: {
         "/api": {
           target: env.VITE_API_SERVER,
