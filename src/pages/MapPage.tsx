@@ -592,8 +592,9 @@ export default function MapPage(): React.ReactElement {
               // 🔹 카카오 API에서는 y가 위도, x가 경도
               position: new window.kakao.maps.LatLng(d.y, d.x),
             });
+            // 마커 클릭 시 처리하는 함수 리스너로 붙임
             window.kakao.maps.event.addListener(marker, "click", () => {
-              handleResultClick({
+              handleResultClickMarker({
                 name: d.place_name,
                 address: d.address_name,
                 lat: parseFloat(d.y), // y = 위도(latitude)
@@ -642,7 +643,7 @@ export default function MapPage(): React.ReactElement {
     if (!kakaoMapRef.current) return;
 
     // 지도 중심 이동
-    kakaoMapRef.current.panTo(new window.kakao.maps.LatLng(item.lat - 0.001, item.lng)); // 약간 위로
+    kakaoMapRef.current.panTo(new window.kakao.maps.LatLng(item.lat - 0.0008, item.lng)); // 약간 위로
     setTimeout(() => {
       kakaoMapRef.current?.setLevel(2);
     }, 400);
@@ -656,6 +657,25 @@ export default function MapPage(): React.ReactElement {
     });
   };
 
+  // 검색 결과 마커 클릭 시 해당 위치로 이동
+  const handleResultClickMarker = (item: SearchResult) => {
+    // 검색 결과 클릭 로직 (기존과 동일)
+    if (!kakaoMapRef.current) return;
+
+    // 지도 중심 이동
+    kakaoMapRef.current.panTo(new window.kakao.maps.LatLng(item.lat, item.lng)); // 약간 위로
+    setTimeout(() => {
+      kakaoMapRef.current?.setLevel(2);
+    }, 400);
+
+    // 모달 초기값 세팅
+    setLinkerInitial({
+      lat: item.lat,
+      lng: item.lng,
+      address: item.address,
+      addressName: item.name, // 🔹 상호명
+    });
+  };
 
   // 내위치 버튼 핸들러
   let userMarker: kakao.maps.Marker | null = null;
@@ -757,7 +777,7 @@ export default function MapPage(): React.ReactElement {
     <MapWrapper>
       {/* ===== 헤더 ===== */}
       {/* 검색창 열렸을 때 뒤로가기 헤더 */}
-      {searchOpen && (
+      {(searchOpen || searchQuery) && (
         <BackTitleHeader
           title='링커 검색'
           onBack={() => {
@@ -784,7 +804,7 @@ export default function MapPage(): React.ReactElement {
       {/* <MainHeader /> */}
       {/* 검색창 열렸을 때 상단 버튼 */}
       {searchOpen && (
-        <div className='absolute top-14 left-0 w-full flex justify-center z-20'>
+        <div className='absolute top-4 left-0 w-full flex justify-center z-20'>
           <button
             className='px-3 py-1.5 text-sm rounded-lg bg-blue-500 text-white shadow'
             onClick={() => handleSearch(1)}
