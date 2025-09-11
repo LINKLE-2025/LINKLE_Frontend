@@ -79,24 +79,26 @@ export default function SearchPanel({
                 <div className='text-sm text-gray-500'>{item.address}</div>
               </div>
               {/* 이미 불러온 링커 중에서 목록 매칭/열기 */}
-              <img
-                src='/icons/mapicon/linkerList.png'
-                alt='링커 리스트'
-                className='w-12 h-12 cursor-pointer'
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenLinkerList(item); // 🔥 여러 개 리스트 모달 열기
-                }}
-              />
-              <img
-                src='/icons/mapicon/linker.png'
-                alt='링커 추가'
-                className='w-12 h-12 cursor-pointer'
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenModal(item); // 🔹 모달 열기
-                }}
-              />
+              <div className="flex flex-row items-center gap-x-4">
+                <img
+                  src='/icons/mapicon/linkerList.png'
+                  alt='링커 리스트'
+                  className='w-12 h-12 cursor-pointer'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenLinkerList(item); // 🔥 여러 개 리스트 모달 열기
+                  }}
+                />
+                <img
+                  src='/icons/mapicon/linker.png'
+                  alt='링커 추가'
+                  className='w-12 h-12 cursor-pointer'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenModal(item); // 🔹 모달 열기
+                  }}
+                />
+              </div>
             </div>
           ))
         ) : (

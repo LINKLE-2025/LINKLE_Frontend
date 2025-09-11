@@ -883,7 +883,7 @@ export default function MapPage(): React.ReactElement {
       <Sheet
         isOpen={searchOpen}
         onClose={() => setSearchOpen(false)}
-        snapPoints={[0.6, 0.3]}
+        snapPoints={[0.65, 0.4, 0.3]}
         initialSnap={0}
         style={{ bottom: footerHeight }}
       >
