@@ -154,7 +154,7 @@ export default function MapPage(): React.ReactElement {
   // 문자열 정규화 유틸 (공백/대소문자 정리) -> 특정 상호명에 생성된 링커 조회에 사용
   const normalize = (s?: string | null) => (s ?? "").trim().replace(/\s+/g, " ").toLowerCase();
 
-  // ===== 4. 🔥 링커 로드 함수 (selectedCategories 의존성 사용) =====
+  // ===== 4. 🔥 링커 상세보기 함수 (selectedCategories 의존성 사용) =====
   // 링커 상세보기
   function onOpenDetailById(linkerId: number) {
     setDetailOpen(true);
@@ -183,7 +183,7 @@ export default function MapPage(): React.ReactElement {
     })();
   }
 
-  // 🔥 수정된 loadExistingLinkers 함수 - 클러스터러 업데이트만 담당하도록 변경
+  // 👑 링커 불러와서 맵에 찍는 함수
   const loadExistingLinkers = async (
     map: kakao.maps.Map,
     clusterer: any, // 클러스터러 인스턴스를 매개변수로 받음
@@ -295,7 +295,6 @@ export default function MapPage(): React.ReactElement {
 
       // 🔥 클러스터러에 새로운 마커들 추가
       clusterer.addMarkers(linkerMarkersRef.current);
-      map.setLevel(2); // 적절한 줌 레벨로 조정
       console.log(`🎯 최종 결과: ${createdMarkerCount}개 마커가 지도에 표시되었습니다.`);
 
     } catch (e) {
@@ -419,14 +418,6 @@ export default function MapPage(): React.ReactElement {
 
           // idle 이벤트는 지도가 완전히 로드되고 유휴 상태가 되었을 때 발생
           let isInitialLoad = true;
-
-          kakao.maps.event.addListener(map, "tilesloaded", () => {
-            if (isInitialLoad && hasSelection) {
-              isInitialLoad = false;
-              console.log("🗺️ 지도 로드 완료, 링커 로드 시작");
-              loadExistingLinkers(map, clusterer, onOpenDetailById);
-            }
-          });
 
           // 지도 준비 완료 상태 설정
           // 포스트에서 링커 바로가기 기능에서 사용
@@ -755,6 +746,12 @@ export default function MapPage(): React.ReactElement {
   const mapH = `calc(var(--app-vh) * 100 - ${headerHeight + footerHeight}px)`;
   const supportsDvh = CSS?.supports?.('height', '100dvh') ?? false;
 
+  // ✅ 지도 생성 후 최초 1회 실행
+  useEffect(() => {
+    if (!mapReady || !kakaoMapRef.current || !clustererRef.current) return;
+    loadExistingLinkers(kakaoMapRef.current, clustererRef.current, onOpenDetailById);
+  }, [mapReady]);
+
   return (
 
     <MapWrapper>
@@ -840,7 +837,11 @@ export default function MapPage(): React.ReactElement {
                 <CircleButton
                   imgSrc='/icons/mapicon/refresh.png'
                   alt='새로고침'
-                  onClick={() => window.location.reload()}
+                  onClick={() => {
+                    if (kakaoMapRef.current && clustererRef.current) {
+                      loadExistingLinkers(kakaoMapRef.current, clustererRef.current, onOpenDetailById);
+                    }
+                  }}
                 />
                 <CircleButton
                   imgSrc='/icons/mapicon/location.png'
@@ -852,9 +853,9 @@ export default function MapPage(): React.ReactElement {
               <>
                 {/* 기본 버튼 리스트 */}
                 <CircleButton
-                  imgSrc='/icons/mapicon/linker2.png'
-                  alt='링커 생성 모드 진입'
-                  onClick={() => setLinkerCreateMode(true)}
+                  imgSrc='/icons/mapicon/search.png'
+                  alt='검색'
+                  onClick={() => setSearchOpen(true)}
                 />
                 <CircleButton
                   imgSrc='/icons/mapicon/info.png'
