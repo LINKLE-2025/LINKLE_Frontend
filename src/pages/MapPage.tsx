@@ -777,7 +777,7 @@ export default function MapPage(): React.ReactElement {
     <MapWrapper>
       {/* ===== 헤더 ===== */}
       {/* 검색창 열렸을 때 뒤로가기 헤더 */}
-      {searchOpen && (
+      {(searchOpen || searchQuery) && (
         <BackTitleHeader
           title='링커 검색'
           onBack={() => {
