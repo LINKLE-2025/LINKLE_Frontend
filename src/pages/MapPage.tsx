@@ -804,7 +804,7 @@ export default function MapPage(): React.ReactElement {
       {/* <MainHeader /> */}
       {/* 검색창 열렸을 때 상단 버튼 */}
       {searchOpen && (
-        <div className='absolute top-14 left-0 w-full flex justify-center z-20'>
+        <div className='absolute top-4 left-0 w-full flex justify-center z-20'>
           <button
             className='px-3 py-1.5 text-sm rounded-lg bg-blue-500 text-white shadow'
             onClick={() => handleSearch(1)}
