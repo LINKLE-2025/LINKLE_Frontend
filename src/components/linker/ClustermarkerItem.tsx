@@ -1,7 +1,7 @@
 // src/components/map/ClusterMarkerList.tsx
 import React from "react";
 import { Sheet } from "react-modal-sheet";
-
+import { useOutletContext } from "react-router-dom";
 interface ClusterMarkerItem {
   marker: any;
   data: any;
@@ -59,9 +59,11 @@ const ClusterMarkerList: React.FC<ClusterMarkerListProps> = ({
   onMarkerClick,
 }) => {
   if (!isOpen) return null;
-
+  type LayoutContext = { headerHeight: number; footerHeight: number };
+  const { footerHeight } = useOutletContext<LayoutContext>();
   return (
-    <Sheet isOpen={isOpen} onClose={onClose} snapPoints={[0.7, 0.4]} initialSnap={0}>
+    <Sheet isOpen={isOpen} onClose={onClose} snapPoints={[0.65, 0.4]} initialSnap={0}
+      style={{ bottom: footerHeight }}>
       <Sheet.Container>
         <Sheet.Header>
           <div className='mx-auto my-2 h-1.5 w-12 rounded-full bg-gray-300' />
@@ -73,7 +75,7 @@ const ClusterMarkerList: React.FC<ClusterMarkerListProps> = ({
         </Sheet.Header>
 
         <Sheet.Content>
-          <div className='px-4 pb-4'>
+          <div className='px-4 pb-4' style={{ maxHeight: "46vh", overflowY: "auto" }}>
             <div className='space-y-3'>
               {markers.map((item, index) => {
                 const categoryName = CATEGORY_NAMES[item.categoryId] || "기타";
