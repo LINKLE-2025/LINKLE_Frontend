@@ -200,8 +200,8 @@ export default function LinkerDetailSheet({ open, onClose, detail, loading, erro
     <Sheet
       isOpen={open}
       onClose={onClose}
-      snapPoints={[0.8, 0.6, 0.5]}
-      initialSnap={2}
+      snapPoints={[0.65, 0.5, 0.4]}
+      initialSnap={0}
       style={{ bottom: footerHeight }}
     >
       <Sheet.Container style={{ zIndex: 1500, boxShadow: "none" }}>
