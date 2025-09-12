@@ -23,19 +23,20 @@ export default function MessageItem({
 
   const renderAvatar = () => {
     if (isMine) return null; // 내 메시지는 아바타 없음
-    if (!showAvatar) return <div className='w-9 h-px flex-shrink-0' />; // 정렬용 스페이서
+    if (!showAvatar) return <div className='w-11 h-px flex-shrink-0' />; // 정렬용 스페이서
 
     if (avatar && !imgFailed) {
       return (
         <img
           src={avatar}
           alt={name ?? ""}
-          className='w-9 h-9 rounded-full object-cover flex-shrink-0 mt-0.5'
+          //shadow
+          className='w-11 h-11 bg-white shadow-sm rounded-full object-cover flex-shrink-0 mt-0.5'
           onError={() => setImgFailed(true)}
         />
       );
     }
-    return <div className='w-9 h-9 rounded-full bg-gray-200 flex-shrink-0 mt-0.5' />;
+    return <div className='w-11 h-11 shadow-sm rounded-full bg-gray-200 flex-shrink-0 mt-0.5' />;
   };
 
   // 🔹 간격 규칙: 첫 메시지는 크게, 연속 메시지는 작게
