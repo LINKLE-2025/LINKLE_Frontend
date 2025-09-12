@@ -133,10 +133,19 @@ export default function ChatPage() {
       if (typeof preview === "string") updated.lastMessagePreview = preview;
       if (when) updated.lastMessageDate = when;
 
-      // unread 갱신
+      // --- unread 갱신 ---
       const looksLikeRead = type.includes("READ") || type.includes("ACK");
       if (looksLikeRead) {
-        updated.unreadCount = 0;
+        // ✅ 내가 읽은 경우에만 0 처리 (남이 읽은 READ 이벤트는 무시)
+        const readerId = evt?.readerId ?? evt?.userId ?? evt?.reader?.id;
+        const isMyRead =
+          typeof readerId === "number" &&
+          typeof currentUserId === "number" &&
+          readerId === currentUserId;
+
+        updated.unreadCount = isMyRead
+          ? 0
+          : Number(before.unreadCount ?? 0); // 남이 읽은 건 유지
       } else if (typeof evt?.unreadCount === "number") {
         updated.unreadCount = Math.max(0, evt.unreadCount);
       } else if (type === "MESSAGE_CREATED" || type === "ROOM_LAST_MESSAGE_UPDATED") {
@@ -148,6 +157,7 @@ export default function ChatPage() {
         const prevUnread = Number(before.unreadCount ?? 0);
         updated.unreadCount = isMine ? prevUnread : prevUnread + 1;
       }
+      // --- end ---
 
       const next = prev.slice();
       next[idx] = updated as RoomResponseDTO;
