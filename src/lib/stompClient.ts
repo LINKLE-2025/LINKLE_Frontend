@@ -4,6 +4,7 @@ type Handler = (data: any, frame: IMessage) => void;
 type Status = "connecting" | "open" | "closed" | "error";
 let client: Client | null = null;
 let status: Status = "closed";
+
 const topicHandlers = new Map<string, Set<Handler>>();
 const activeSubs = new Map<string, StompSubscription>();
 const statusListeners = new Set<(s: Status) => void>();
@@ -29,6 +30,7 @@ function safeParse(body: string) {
     return body;
   }
 }
+
 /**  ws(s) 절대URL로 변환 */
 function resolveWsUrl(pathOrUrl: string) {
   if (!pathOrUrl) throw new Error("VITE_WS_URL is missing");
@@ -36,13 +38,16 @@ function resolveWsUrl(pathOrUrl: string) {
   const wsOrigin = window.location.origin.replace(/^http/, "ws"); // http→ws, https→wss
   return `${wsOrigin}${pathOrUrl}`;
 }
+
 /** 내부적으로 항상 절대 WS URL을 보관 */
 let currentWsUrl: string | null = null;
+
 export const stompClient = {
   /** 앱 시작 시 1회만 호출 */
   init: (url: string, connectHeaders?: Record<string, string>) => {
     if (client) return;
     currentWsUrl = resolveWsUrl(url);
+
     client = new Client({
       brokerURL: currentWsUrl,
       connectHeaders,
@@ -64,11 +69,13 @@ export const stompClient = {
     notifyStatus("connecting");
     client.activate();
   },
+
   /** 토큰/헤더 갱신 필요 시 재연결 */
   reconnectWith: async (connectHeaders?: Record<string, string>) => {
     if (!client) return;
     await client.deactivate();
     activeSubs.clear();
+
     // currentWsUrl은 init 때 절대 URL로 이미 해석됨
     client = new Client({
       brokerURL: currentWsUrl!,
@@ -91,6 +98,7 @@ export const stompClient = {
     notifyStatus("connecting");
     client.activate();
   },
+
   subscribe: (topic: string, handler: Handler): (() => void) => {
     let set = topicHandlers.get(topic);
     if (!set) {

@@ -24,7 +24,7 @@ export default function RoomPreviewModal({ room, isOpen, onClose, onEnter }: Pro
     if (!isOpen || !room) return null;
 
     const isClass = room.roomType === "CLASS";
-    const title = room.roomName ?? (isClass ? "클래스 채팅" : "그룹 채팅");
+    const title = room.roomName ?? (isClass ? "링클 톡" : "그룹 톡");
     const description = room.description ?? "";
     const memo = room.memo ?? "";
     const memberCount = room.memberCount ?? 0;
