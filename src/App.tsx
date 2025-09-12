@@ -10,7 +10,7 @@ import ProfilePage from "@/pages/Profile/ProfilePage";
 import ProfileEditPage from "@/pages/Profile/ProfileEditPage";
 import FriendListPage from "@/pages/friend/FriendsListPage";
 import FriendRequestsPage from "@/pages/friend/FriendRequestsPage";
-import FriendSearchPage from "@/pages/friendSearch/FriendSearchPage";
+import FriendSearchPage from "@/pages/friendSearch/TotalSearchPage";
 import AuthLayout from "./layouts/AuthLayout";
 
 import ProfileLayout from "./layouts/ProfileLayout";
@@ -31,6 +31,8 @@ import PasswordResetPage from "./pages/auth/PasswordResetPage";
 
 import { stompClient } from "@/lib/stompClient";
 import { getCurrentUserId } from "@/api/authApi";
+
+import TestAPI from "./components/recommend/recommend";
 
 export default function App() {
   // Silent Refresh Hook 적용 -> Refresh Token을 이용해 Access Token 재발급
@@ -69,13 +71,12 @@ export default function App() {
         <Route path='/map' element={<MapPage />} />
         <Route path='/post' element={<PostCreatePage />} />
         <Route path='/post/:postId' element={<PostDetailPage />} />
+
       </Route>
 
       {/* 프로필 관련 레이아웃 */}
       <Route element={<ProfileLayout />}>
         <Route path='/profile' element={<ProfilePage />} />
-        <Route path='/profile/edit' element={<ProfileEditPage />} />
-        <Route path='/profile/edit/:userId' element={<ProfileEditPage />} />
       </Route>
 
       {/* 친구 목록 관련 레이아웃 */}
@@ -86,6 +87,7 @@ export default function App() {
 
       <Route element={<FriendListLayout />}>
         <Route path='/search' element={<FriendSearchPage />} />
+        <Route path='/profile/edit' element={<ProfileEditPage />} />
       </Route>
 
       {/* 채팅 관련 레이아웃 */}
@@ -100,6 +102,9 @@ export default function App() {
 
       {/* 동적 에러 페이지 */}
       <Route path='/error/:type' element={<ErrorPage />} />
+
+      <Route path='/test-api' element={<TestAPI />} />
+
     </Routes>
   );
 }

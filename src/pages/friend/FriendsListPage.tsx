@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from "react-router-dom";
 import { Search, Users, ChevronRight } from 'lucide-react';
 
@@ -8,9 +8,11 @@ import { useOutletContext } from "react-router-dom";
 
 import { getFriends, getReceivedFriendRequests } from "@/api/friendApi";
 import { useFriendFilter } from "@/hooks/useFriendFilter";
+import { getCurrentUserId } from '@/api/authApi';
+import SearchBar from '@/components/common/SearchBar';
+import SearchHeader from '@/components/header/SearchHeader';
 
 type OutletContextType = {
-  loggedInUserId: number;
   headerHeight: number;
   footerHeight: number;
 };
@@ -21,8 +23,41 @@ function FriendsListPage() {
   const [friendList, setFriendList] = useState<FriendResponse[]>([]);
   const [receivedCount, setReceivedCount] = useState<number>(0);
 
-  const { loggedInUserId, headerHeight, footerHeight } =
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
+
+
+
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [loggedInUserId, setLoggedInUserId] = useState<number | null>(null);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (headerRef.current) {
+        setHeaderHeight(headerRef.current.offsetHeight);
+      }
+    }, 0); // 다음 tick에서 실행
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const userId = await getCurrentUserId();
+        setLoggedInUserId(userId);
+      } catch (err) {
+        console.error("현재 유저 ID 불러오기 실패:", err);
+      } finally {
+        setIsAuthLoading(false);
+      }
+    })();
+  }, []);
+
+
+  const { footerHeight } =
     useOutletContext<OutletContextType>();
+
+
   const location = useLocation();
 
   useEffect(() => {
@@ -39,14 +74,17 @@ function FriendsListPage() {
   useEffect(() => {
     (async () => {
       try {
+        if (!loggedInUserId) return;
         const data = await getFriends(loggedInUserId);
         setFriendList(data);
       } catch (err) {
         console.error("친구 목록 불러오기 실패:", err);
       }
     })();
+
     (async () => {
       try {
+        if (!loggedInUserId) return;
         const data = await getReceivedFriendRequests(loggedInUserId);
         setReceivedCount(data.length);
       } catch (err) {
@@ -57,33 +95,24 @@ function FriendsListPage() {
 
   return (
     <div
-      className="max-w-md mx-auto bg-gray-50 min-h-screen flex flex-col"
-      style={{ paddingBottom: footerHeight }}
+      className="max-w-full mx-auto bg-gray-50 min-h-screen flex flex-col"
     >
       {/* 검색 헤더 */}
-      <div className="bg-white px-4 py-3 border-b flex items-center gap-2">
-        <div className="relative flex-1">
-          <input
-            type="text"
-            placeholder="친구 검색"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-5 ml-2 pr-4 py-2 bg-gray-100 rounded-full text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <button
-          type="button"
-          className="px-2 py-2 text-sm text-gray-600 hover:text-blue-600 ml-1"
-          onClick={() => setDebouncedQuery(searchQuery)} // 버튼 누르면 즉시 검색
-        >
-          <Search className='w-7 h-7'></Search>
-        </button>
-      </div>
+      <SearchHeader
+        ref={headerRef}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        onSearch={() => setDebouncedQuery(searchQuery)}
+
+      />
 
       {/* 친구 요청 버튼 */}
-      <div className="bg-white mb-2 border-b">
+      <div className="bg-white mb-2 border-b"
+      >
         <Link to="/profile/friend/received" className="text-gray-900 font-medium">
-          <button className="w-full max-w-[calc(100%-2rem)] flex items-center justify-between px-4 py-4 hover:bg-gray-50 rounded-xl shadow-md mb-4 mt-4 ml-4 mr-8" >
+          <button
+            className="fixed w-full flex items-center justify-between px-4 py-4 bg-white hover:bg-gray-50 rounded-xl shadow-md mb-4"
+          >
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 rounded-full flex items-center justify-center mr-2">
 

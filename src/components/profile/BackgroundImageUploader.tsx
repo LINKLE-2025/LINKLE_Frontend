@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 
 interface BackgroundImageUploaderProps {
     onChange: (file: File, previewUrl: string) => void;
@@ -7,6 +7,11 @@ interface BackgroundImageUploaderProps {
     bgPreview: string;
 }
 
+type OutletContextType = {
+    headerHeight: number;
+    footerHeight: number;
+};
+
 export default function BackgroundImageUploader({
     onChange,
     height = 160,
@@ -14,6 +19,7 @@ export default function BackgroundImageUploader({
     bgPreview
 }: BackgroundImageUploaderProps) {
     const inputRef = useRef<HTMLInputElement>(null);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -26,7 +32,7 @@ export default function BackgroundImageUploader({
     };
     const displaySrc = bgPreview || getBackgroundImageSrc;
     return (
-        <div className="relative w-full bg-gray-200" style={{ height }}>
+        <div className="relative max-w-full bg-gray-200" style={{ height }}>
             <img
                 src={displaySrc}
                 alt="배경"

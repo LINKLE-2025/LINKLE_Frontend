@@ -31,7 +31,7 @@ export default function ProfileImageUploader({
 
     return (
         <div
-            className="relative mx-auto -mt-12"
+            className="relative mx-auto -mt-12 max-w-full"
             style={{ width: size, height: size }}
         >
             <img

@@ -1,10 +1,12 @@
-import { useState, type RefObject, type KeyboardEvent } from "react";
+import { useState, type RefObject, type KeyboardEvent, useEffect } from "react";
 import { MessageCircle, Clock, UserPlus, Users, Search } from "lucide-react";
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import { openDm } from "@/services/chat";
 import { sendFriendRequest } from "@/api/friendApi";
 import { FriendSummaryWithProfileType, ProfileType } from "@/types/friend";
 import { useLocation } from "react-router-dom";
+import SearchBar from "../common/SearchBar";
+import SearchHeader from "../header/SearchHeader";
 
 interface SearchLinkerResponseDTO {
     linkerId: number;
@@ -14,10 +16,15 @@ interface SearchLinkerResponseDTO {
     chatRoomCount: number;
     postCount: number;
 }
+type OutletContextType = {
+    loggedInUserId: number
+    headerHeight: number;
+    footerHeight: number;
+};
 
-type OutletContextType = { loggedInUserId: number };
 
-export interface FriendSearchPanelProps {
+
+export interface TotalSearchPanelProps {
     currentUserId: number;
     searchQuery: string;
     setSearchQuery: (q: string) => void;
@@ -25,6 +32,8 @@ export interface FriendSearchPanelProps {
     setSearchResults: React.Dispatch<React.SetStateAction<FriendSummaryWithProfileType[]>>;
     handleSearch: (page?: number) => void;
     inputRef: RefObject<HTMLInputElement | null>;
+    headerHeight: number;
+    footerHeight: number;
 }
 
 const getButtonConfig = (profileType: ProfileType) => {
@@ -41,7 +50,7 @@ const getButtonConfig = (profileType: ProfileType) => {
     }
 };
 
-export default function FriendSearchPanel({
+export default function TotalSearchPanel({
     currentUserId,
     searchQuery,
     setSearchQuery,
@@ -49,14 +58,27 @@ export default function FriendSearchPanel({
     setSearchResults,
     handleSearch,
     inputRef,
-}: FriendSearchPanelProps) {
+}: TotalSearchPanelProps) {
     const navigate = useNavigate();
-    const { loggedInUserId } = useOutletContext<OutletContextType>();
+
     const location = useLocation();
     const pathname = location.pathname;
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState<"friend" | "linker">("friend");
     const [linkerResults, setLinkerResults] = useState<SearchLinkerResponseDTO[]>([]);
+    const { headerHeight, footerHeight } =
+        useOutletContext<OutletContextType>();
+
+
+    const [tabHeight, setTabHeight] = useState(0);
+
+    useEffect(() => {
+        const nav = document.querySelector("nav");
+        if (nav) {
+            setTabHeight(nav.clientHeight);
+        }
+    }, []);
+
 
     const fetchLinkers = async () => {
         try {
@@ -68,6 +90,7 @@ export default function FriendSearchPanel({
         }
     };
 
+
     const handleTabSearch = () => {
         if (activeTab === "friend") {
             handleSearch(1);
@@ -77,7 +100,7 @@ export default function FriendSearchPanel({
     };
 
     const handleMessage = async (targetUserId: number) => {
-        if (loading || targetUserId === loggedInUserId) {
+        if (loading || targetUserId === currentUserId) {
             alert("자기 자신에게는 DM을 보낼 수 없습니다.");
             return;
         }
@@ -94,8 +117,9 @@ export default function FriendSearchPanel({
     };
 
     const handleAddFriend = async (targetUserId: number) => {
+
         try {
-            const data = await sendFriendRequest(loggedInUserId, targetUserId);
+            const data = await sendFriendRequest(currentUserId, targetUserId);
             setSearchResults(prev =>
                 prev.map(user =>
                     user.friendUserid === targetUserId
@@ -157,9 +181,9 @@ export default function FriendSearchPanel({
         }
     };
 
-    // ✅ 검색 결과 없음 UI (중앙 정렬)
+    // 검색 결과 없음 UI (중앙 정렬)
     const renderEmptyState = (message: string) => (
-        <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
+        <div className="flex flex-col items-center text-gray-400">
             <img
                 src="/icons/favicon/favicon.svg"
                 alt="검색 없음"
@@ -171,38 +195,24 @@ export default function FriendSearchPanel({
 
     return (
         <div className="flex flex-col h-full bg-white">
-            {/* 검색창 */}
-            <div className="bg-white px-4 py-3 border-b">
-                <div className="flex items-center gap-2">
-                    <div className="relative flex-1">
-                        <input
-                            id="friend-search-input"
-                            ref={inputRef}
-                            type="text"
-                            placeholder="검색어 입력"
-                            className="w-full pl-5 ml-2 pr-4 py-2 rounded-full bg-gray-100 text-base outline-none focus:ring-2 focus:ring-blue-500"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-                                if (e.key === "Enter") {
-                                    handleTabSearch();
-                                    e.currentTarget.blur();
-                                }
-                            }}
-                        />
-                    </div>
-                    <button
-                        type="button"
-                        onClick={() => handleTabSearch()}
-                        className="px-2 py-2 text-sm text-gray-600 hover:text-blue-600 ml-1"
-                    >
-                        <img src="/icons/mapicon/search.png" className="w-5 h-5" />
-                    </button>
-                </div>
+            <div>
+                {/* 검색창 */}
+                <SearchHeader
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
+                    onSearch={() => {
+                        handleTabSearch();
+                        inputRef?.current?.blur(); // 기존 Enter 키 처리와 동일
+                    }}
+                    placeholder="친구 또는 링커 검색"
+
+                />
             </div>
 
             {/* 탭 버튼 */}
-            <div className="border-b flex text-sm font-medium">
+            <nav
+                className="fixed left-0 right-0 w-full bg-white border-b flex text-sm font-medium z-40"
+            >
                 <button
                     className={`flex-1 px-4 py-2 border-b-2 ${activeTab === "friend" ? "border-black-500" : "border-transparent text-gray-400"}`}
                     onClick={() => setActiveTab("friend")}
@@ -215,18 +225,20 @@ export default function FriendSearchPanel({
                 >
                     링커 검색
                 </button>
-            </div>
+            </nav>
 
             {/* 검색 결과 */}
-            <div className="flex-1 min-h-0 overflow-y-auto p-2 flex flex-col">
+            <div className="flex-1 min-h-0 overflow-y-auto p-2 flex flex-col"
+                style={{ marginTop: `${tabHeight}px` }}
+            >
                 {activeTab === "friend" ? (
                     searchResults.length > 0 ? (
                         searchResults.map((user) => {
                             const isDefaultImage = user.image === "public.png" || !user.image;
                             const profileImageSrc = isDefaultImage
                                 ? user.gender === "남성"
-                                    ? "/icons/public/Man.png"
-                                    : "/icons/public/Woman.png"
+                                    ? "/icons/profile/Man.png"
+                                    : "/icons/profile/Woman.png"
                                 : `/api/user/view/profile/${user.friendUserid}`;
 
                             return (
@@ -248,7 +260,7 @@ export default function FriendSearchPanel({
                                             <img
                                                 src={profileImageSrc}
                                                 alt={`${user.name} 프로필`}
-                                                className={`w-12 h-12 object-cover rounded-full cursor-pointer ${isDefaultImage ? "opacity-20 bg-blue-100" : ""
+                                                className={`w-12 h-12 object-cover rounded-full cursor-pointer ${isDefaultImage ? "opacity-65 bg-blue-100" : ""
                                                     }`}
                                             />
                                         </Link>
@@ -271,7 +283,9 @@ export default function FriendSearchPanel({
                             );
                         })
                     ) : (
-                        renderEmptyState("검색 결과가 없습니다")
+                        <div className="flex flex-1 items-center justify-center">
+                            {renderEmptyState("검색 결과가 없습니다")}
+                        </div>
                     )
                 ) : linkerResults.length > 0 ? (
                     linkerResults.map((linker) => (
@@ -287,7 +301,9 @@ export default function FriendSearchPanel({
                         </div>
                     ))
                 ) : (
-                    renderEmptyState("링커 검색 결과가 없습니다")
+                    <div className="flex flex-1 items-center justify-center">
+                        {renderEmptyState("링커 검색 결과가 없습니다")}
+                    </div>
                 )}
             </div>
         </div>
