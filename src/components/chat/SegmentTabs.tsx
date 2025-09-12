@@ -17,13 +17,13 @@ export default function SegmentTabs({
         className={`${base} ${value === TAB_DM ? active : inactive}`}
         onClick={() => onChange(TAB_DM)}
       >
-        내 DM
+        DM
       </button>
       <button
         className={`${base} ${value === TAB_GROUP ? active : inactive}`}
         onClick={() => onChange(TAB_GROUP)}
       >
-        클래스·번개
+        GROUP
       </button>
     </div>
   );
