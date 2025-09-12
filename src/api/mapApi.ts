@@ -113,3 +113,35 @@ export const checkParticipation = async (linkerId: number, userId: number): Prom
     return false;
   }
 };
+
+// 🔹 유저 잔액 차감
+export const deductUserBalance = async (userId: number, amount: number) => {
+  if (!userId) throw new Error("로그인된 유저가 필요합니다.");
+
+  try {
+    const res = await apiClient.patch(`/balance/${userId}/balance`, { amount });
+    return res.data; // { balance: number } 형태
+  } catch (err: any) {
+    const msg =
+      err.response?.data?.error ||
+      `PATCH /balance/${userId}/balance 실패: ${err.response?.status} ${err.response?.statusText}`;
+    throw new Error(msg);
+  }
+};
+
+// 🔹 링커 created_date 연장 (연장하기)
+export const extendLinkerCreatedDate = async (linkerId: number) => {
+  if (!linkerId) throw new Error("링커 ID가 필요합니다.");
+
+  try {
+    const res = await apiClient.post(`/linker/${linkerId}/extend`, {
+      createdAt: new Date().toISOString(), // 현재 시각으로 연장
+    });
+    return res.data;
+  } catch (err: any) {
+    const msg =
+      err.response?.data?.message ||
+      `POST /linker/${linkerId}/extend 실패: ${err.response?.status} ${err.response?.statusText}`;
+    throw new Error(msg);
+  }
+};

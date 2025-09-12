@@ -128,8 +128,8 @@ export default function RoomCreatePage() {
               >
                 <span
                   className={`absolute inset-[1.5px] rounded-full transition-colors duration-150 ${isActive
-                      ? "bg-[var(--fill)]"
-                      : "bg-transparent [@media(hover:hover)]:group-hover:bg-[var(--hover)]"
+                    ? "bg-[var(--fill)]"
+                    : "bg-transparent [@media(hover:hover)]:group-hover:bg-[var(--hover)]"
                     }`}
                 />
               </button>
@@ -196,7 +196,7 @@ export default function RoomCreatePage() {
             ].join(" ")}
           >
             <Users className="w-5 h-5" />
-            <span className="text-[15px] font-medium">그룹 채팅</span>
+            <span className="text-[15px] font-medium">그룹 톡</span>
           </button>
 
           <button
@@ -211,7 +211,7 @@ export default function RoomCreatePage() {
             ].join(" ")}
           >
             <Crown className="w-5 h-5" />
-            <span className="text-[15px] font-medium">클래스 톡</span>
+            <span className="text-[15px] font-medium">링클 톡</span>
           </button>
         </div>
       </div>

@@ -90,7 +90,7 @@ export function useChatRoom(roomId: number) {
               name: r.friendName ?? "(상대)",
               avatar: resolveImageUrl((r as any).friendImage) ?? null,
             }
-          : { name: r.roomName ?? "그룹 채팅", avatar: null },
+          : { name: r.roomName ?? "그룹 톡", avatar: null },
       );
 
       const initial = (m ?? [])

@@ -5,11 +5,13 @@ import { Sheet } from "react-modal-sheet";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { participateLinker, checkParticipation } from "../../api/mapApi";
 import { getCurrentUserId, refreshToken } from "@/api/authApi";
+import ReactDOM from "react-dom";
 
 import type { RoomResponseDTO } from "@/types/chat";
 import ChatListItem2 from "@/components/chat/ChatListItem2";
 import { getRoomsByLinker, joinRoom } from "@/api/chatApi";
 import RoomPreviewModal from "@/components/modal/RoomPreviewModal";
+import { extendLinkerCreatedDate, deductUserBalance } from "@/api/mapApi";
 
 export type LinkerDetail = {
   linkerId: number;
@@ -40,6 +42,7 @@ type LinkerPost = {
   author?: { name?: string; handle?: string; avatarUrl?: string | null } | null;
 };
 
+
 export default function LinkerDetailModal({ open, onClose, detail, loading, error }: Props) {
   const navigate = useNavigate();
   const { footerHeight } = useOutletContext<{ headerHeight: number; footerHeight: number }>();
@@ -63,6 +66,14 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
   const [previewRoom, setPreviewRoom] = useState<RoomResponseDTO | null>(null);
   const openPreview = (r: RoomResponseDTO) => setPreviewRoom(r);
   const closePreview = () => setPreviewRoom(null);
+
+  const [showExtendModal, setShowExtendModal] = useState(false);
+  const [localDetail, setLocalDetail] = useState<LinkerDetail | null>(detail);
+
+  useEffect(() => {
+    setLocalDetail(detail); // detail이 바뀌면 동기화
+  }, [detail]);
+
 
   // 현재 로그인 유저
   useEffect(() => {
@@ -181,7 +192,9 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
     navigate("/chat/room/create", { state: { linker: detail } });
   };
 
-  const expireDate = detail?.createdDate ? dayjs(detail.createdDate).add(30, "day") : null;
+  const expireDate = localDetail?.createdDate
+    ? dayjs(localDetail.createdDate).add(30, "day")
+    : null;
 
   // 해당 링커의 방만 (filteredRooms)
   const filteredRooms = useMemo(
@@ -214,6 +227,38 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
 
   // 참여 전에는 라이트/클래스 탭 컨텐츠 잠금
   const isLocked = !participating && !participationLoading;
+
+
+
+  // 만료일 연장
+  const handleExtend = async () => {
+    if (!localDetail?.linkerId) return;
+
+    try {
+      // 1️⃣ 현재 로그인 유저 ID 가져오기
+      const userId = await getCurrentUserId();
+      if (!userId) {
+        alert("로그인이 필요합니다.");
+        return;
+      }
+
+      // 2️⃣ 잔액 차감 (5000원)
+      await deductUserBalance(userId, -5000); // 음수 = 차감
+
+      // 3️⃣ 서버에 링커 연장 요청
+      await extendLinkerCreatedDate(localDetail.linkerId);
+
+      // 4️⃣ UI 업데이트
+      setLocalDetail(prev =>
+        prev ? { ...prev, createdDate: new Date().toISOString() } : prev,
+      );
+      setShowExtendModal(false);
+      alert("링커가 연장되었습니다!");
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "잔액이 부족하거나 연장에 실패했습니다.");
+    }
+  };
 
   return (
     <>
@@ -281,7 +326,12 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
                       <span>{rooms.length} 채팅방</span>
                       <span>{posts.length} 포스트</span>
                     </div>
-                    <span>{expireDate ? expireDate.format("YYYY년 MM월 DD일") : ""} 만료 예정</span>
+                    <span
+                      className="cursor-pointer text-blue-500"
+                      onClick={() => setShowExtendModal(true)}
+                    >
+                      {expireDate ? expireDate.format("YYYY년 MM월 DD일") : ""} 만료 예정
+                    </span>
                   </div>
                 </>
               )}
@@ -369,7 +419,7 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
                         .map((r) => (
                           <ChatListItem2
                             key={r.roomId}
-                            title={r.roomName ?? "그룹 채팅"}
+                            title={r.roomName ?? "그룹 톡"}
                             memo={r.memo ?? r.description ?? ""}
                             memberCount={r.memberCount ?? undefined}
                             roomType={r.roomType}
@@ -440,6 +490,32 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
         </Sheet.Container>
         <Sheet.Backdrop style={{ bottom: footerHeight, zIndex: 1490, background: "transparent" }} />
       </Sheet>
+      {/* 만료일 연장 모달 */}
+      {showExtendModal &&
+        ReactDOM.createPortal(
+          <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[2147483647]">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-80">
+              <p className="mb-4 text-center">링커를 30일 연장하시겠습니까?</p>
+              <p className="mb-4 text-center">(5000원이 차감됩니다.)</p>
+              <div className="flex justify-around">
+                <button
+                  className="px-4 py-2 bg-yellow-400 rounded hover:bg-yellow-500 text-white"
+                  onClick={handleExtend}
+                >
+                  예
+                </button>
+                <button
+                  className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                  onClick={() => setShowExtendModal(false)}
+                >
+                  아니오
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body // <-- body 최상단으로 포탈
+        )
+      }
 
       {/* 방 미리보기 모달 */}
       <RoomPreviewModal
