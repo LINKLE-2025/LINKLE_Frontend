@@ -369,7 +369,7 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
                         .map((r) => (
                           <ChatListItem2
                             key={r.roomId}
-                            title={r.roomName ?? "그룹 채팅"}
+                            title={r.roomName ?? "그룹 톡"}
                             memo={r.memo ?? r.description ?? ""}
                             memberCount={r.memberCount ?? undefined}
                             roomType={r.roomType}

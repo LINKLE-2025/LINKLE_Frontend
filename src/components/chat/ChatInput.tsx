@@ -1,5 +1,5 @@
 // src/components/chat/ChatInput.tsx
-import { Send } from "lucide-react";
+import { ArrowRight, SendHorizontal, } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 export default function ChatInput({
@@ -44,15 +44,15 @@ export default function ChatInput({
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && send()}
             placeholder="채팅을 입력하세요"
-            className="flex-1 rounded-2xl bg-gray-100 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100"
+            className="flex-1 rounded-2xl bg-gray-100 px-4 py-1.5 text-base focus:outline-none "
           />
           <button
             onClick={send}
-            className="p-2 rounded-full hover:bg-gray-100 transition"
+            className="p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition"
             aria-label="send"
             type="button"
           >
-            <Send size={20} className="text-gray-600" />
+            <ArrowRight size={20} className="text-linkleGray" />
           </button>
         </div>
       </div>
