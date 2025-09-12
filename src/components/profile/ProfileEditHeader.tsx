@@ -14,7 +14,7 @@ function ProfileEditHeader({
   onBackgroundChange: (file: File, preview: string) => void;
 }) {
   return (
-    <div className="relative">
+    <div className="relative max-w-full">
       <BackgroundImageUploader
         bgPreview={backgroundUrl}
         onChange={onBackgroundChange}

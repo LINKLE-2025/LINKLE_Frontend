@@ -67,7 +67,7 @@ function ProfileBarContent({
           id: "edit",
           label: "프로필 편집",
           type: "link",
-          href: `/profile/edit/${userId}`,
+          href: `/profile/edit`,
           state: { gender, image, background },
           icon: <Settings className="h-5 w-5" />,
         },

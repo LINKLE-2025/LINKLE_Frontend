@@ -1,28 +1,71 @@
-import { useNavigate } from "react-router-dom";
+// components/header/SearchHeader.tsx
+import React, {
+  type RefObject,
+  type KeyboardEvent,
+  forwardRef,
+} from "react";
+import { Search } from "lucide-react";
 
-type Props = {
-  title: string;
-  backTo?: string; // 기본은 뒤로가기, 특정 주소 지정 가능
+type SearchHeaderProps = {
+  searchQuery: string;
+  setSearchQuery: (value: string) => void;
+  onSearch?: () => void;
+  placeholder?: string;
   className?: string;
+  inputRef?: RefObject<HTMLInputElement>;
 };
 
-export default function SearchHeader({ title, backTo, className }: Props) {
-  const navigate = useNavigate();
+// ✅ forwardRef 사용
+const SearchHeader = forwardRef<HTMLDivElement, SearchHeaderProps>(
+  (
+    {
+      searchQuery,
+      setSearchQuery,
+      onSearch,
+      placeholder = "검색어를 입력하세요",
+      className = "",
+      inputRef,
+    },
+    ref
+  ) => {
+    const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter" && onSearch) {
+        onSearch();
+        e.currentTarget.blur();
+      }
+    };
 
-  return (
-    <header
-      className={`fixed top-0 w-full flex items-center justify-center bg-white border-b border-gray-200 px-5 py-3 z-50 ${className}`}
-    >
-      {/* 뒤로가기 버튼 */}
-      <button
-        onClick={() => (backTo ? navigate(backTo) : navigate(-1))}
-        className='absolute left-5 flex items-center'
+    return (
+      <header
+        ref={ref}
+        className={`fixed top-0 w-full bg-white z-50 border-b border-gray-200 ${className}`}
       >
-        <img src='/icons/common/back.svg' alt='뒤로가기' className='h-5 w-5' />
-      </button>
+        <div className="flex items-center px-1 py-3 gap-2">
+          <div className="relative flex-1">
+            <input
+              ref={inputRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={placeholder}
+              onKeyDown={handleKeyDown}
+              className="w-full pl-5 pr-10 py-1 bg-gray-100 rounded-full text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-blue-600"
+              onClick={onSearch}
+            >
+              <Search className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </header>
+    );
+  }
+);
 
-      {/* 중앙 타이틀 */}
-      <h1 className='text-lg font-bold'>{title}</h1>
-    </header>
-  );
-}
+// display name for debugging
+SearchHeader.displayName = "SearchHeader";
+
+export default SearchHeader;

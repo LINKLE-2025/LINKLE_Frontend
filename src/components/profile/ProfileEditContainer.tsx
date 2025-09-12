@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import ProfileForm from "@/components/profile/ProfileEditForm";
 import { type ProfileDTO } from "@/types/user";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate, useOutletContext } from "react-router-dom";
 import { patchUserProfile, getUserProfile, getBackgroundImage } from "@/api/profileApi";
 import ProfileImageUploader from "@/components/profile/ProfileImageUploader";
 import BackgroundImageUploader from "@/components/profile/BackgroundImageUploader";
@@ -21,8 +21,6 @@ export default function ProfileEditContainer({ userId }: { userId: number }) {
   const location = useLocation();
   const { gender, image, background } = location.state || {};
 
-  // console.log(gender, image, background);
-
   const [profileFile, setProfileFile] = useState<File | null>(null);
   const [backgroundFile, setBackgroundFile] = useState<File | null>(null);
 
@@ -31,6 +29,7 @@ export default function ProfileEditContainer({ userId }: { userId: number }) {
 
   const [profilePreview, setProfilePreview] = useState<string>("");
   const [bgPreview, setBgPreview] = useState<string>("");
+
 
   useEffect(() => {
     getUserProfile(userId).then((data) => {
@@ -61,11 +60,12 @@ export default function ProfileEditContainer({ userId }: { userId: number }) {
 
     // 필요하면 친구 목록 갱신
     const updatedFriends = await getFriends(userId);
-    console.log("갱신된 친구 목록:", updatedFriends);
   };
 
+
   return (
-    <div className="max-w-md mx-auto bg-white min-h-screen">
+
+    <div className="max-w-full bg-white min-h-screen">
       {/* 배경 업로더 */}
       <BackgroundImageUploader
         bgPreview={bgPreview}
@@ -88,11 +88,11 @@ export default function ProfileEditContainer({ userId }: { userId: number }) {
       />
 
       {/* 폼 */}
-      <div className="p-4 space-y-4">
-        <ProfileForm
+      <div className="space-y-4">
+        < ProfileForm
           userId={userId}
           profileData={profileData} updateField={updateField} />
-      </div>
+      </div >
 
       <div className="p-4">
         <button
@@ -102,6 +102,6 @@ export default function ProfileEditContainer({ userId }: { userId: number }) {
           완료
         </button>
       </div>
-    </div>
+    </div >
   );
 }

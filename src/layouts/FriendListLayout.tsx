@@ -1,30 +1,12 @@
 import MainFooter from "@/components/footer/MainFooter";
-import { Outlet, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { getCurrentUserId } from "@/api/authApi";
-import MainHeader from "@/components/header/MainHeader";
-import BackTitleHeader from "@/components/header/BackTitleHeader";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Outlet } from "react-router-dom";
 
 export default function FriendLayout() {
-  const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [loggedInUserId, setLoggedInUserId] = useState<number | null>(null);
-  const [headerHeight, setHeaderHeight] = useState(0);
+  const footerRef = useRef<HTMLElement>(null);
   const [footerHeight, setFooterHeight] = useState(0);
+  const [headerHeight, setHeaderHeight] = useState(0);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const userId = await getCurrentUserId();
-        setLoggedInUserId(userId);
-      } catch (err) {
-        console.error("현재 유저 ID 불러오기 실패:", err);
-      } finally {
-        setIsAuthLoading(false);
-      }
-    })();
-  }, []);
-
-  // Header 높이 계산
   useEffect(() => {
     const header = document.querySelector("header");
     if (header) {
@@ -32,7 +14,6 @@ export default function FriendLayout() {
     }
   }, []);
 
-  // Footer 높이 계산
   useEffect(() => {
     const footer = document.querySelector("footer");
     if (footer) {
@@ -40,24 +21,28 @@ export default function FriendLayout() {
     }
   }, []);
 
-  if (isAuthLoading) {
-    return <div className="h-screen bg-white" />;
-  }
+  useLayoutEffect(() => {
+    if (!footerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        setFooterHeight(entry.contentRect.height);
+      }
+    });
+    observer.observe(footerRef.current);
+
+    return () => observer.disconnect();
+  }, []);
+
 
   return (
-    <div className="flex flex-col min-h-[100dvh] text-black">
-      {/* Main: Footer 높이만큼 패딩 확보 */}
+    <div className="flex flex-col min-h-screen text-black">
       <main
-        className="flex-1 flex-col items-center justify-center text-center"
+        className="flex-1"
         style={{ paddingTop: headerHeight, paddingBottom: footerHeight }}
       >
-        <Outlet context={{ loggedInUserId, headerHeight, footerHeight }} />
+        <Outlet context={{ headerHeight, footerHeight }} />
       </main>
-
-      {/* Footer: 항상 화면 하단 고정 */}
-      <footer className="fixed bottom-0 w-full z-50">
-        <MainFooter />
-      </footer>
-    </div>
+      <MainFooter />
+    </div >
   );
 }
