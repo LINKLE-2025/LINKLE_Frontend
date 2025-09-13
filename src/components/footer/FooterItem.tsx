@@ -6,20 +6,27 @@ interface FooterItemProps {
     icon: React.ReactNode;
     label?: string;
     linkerCreateMode?: boolean;
+    setLinkerCreateMode?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export default function FooterItem({ to, icon, label, linkerCreateMode }: FooterItemProps) {
+export default function FooterItem({ to, icon, label, linkerCreateMode, setLinkerCreateMode }: FooterItemProps) {
     const location = useLocation();
     // 현재 경로가 to로 시작하면 active 처리 (링커 생성 모드가 아닐 때만)
     const isActive = !linkerCreateMode && location.pathname.startsWith(to);
 
+    const handleClick = () => {
+        if (linkerCreateMode) {
+            setLinkerCreateMode?.(false); // 다른 버튼 누르면 항상 OFF
+        }
+    };
+
     return (
-        <Link to={to} className="p-3">
+        <Link to={to} onClick={handleClick} className="px-3 py-2">
             <div
-                className={`w-[14vw] flex flex-col items-center rounded-xl px-2 pt-2 pb-1 transition-colors
+                className={`w-[14vw] flex flex-col items-center rounded-xl px-2 pt-2 pb-1 transition-colors duration-200
         ${isActive
-                        ? "bg-gray-200/60 text-black"
-                        : "hover:bg-gray-100 text-gray-900"
+                        ? "bg-gray-100/80 text-black"
+                        : "hover:bg-gray-100/60 text-gray-900"
                     }`}
             >
                 {icon}

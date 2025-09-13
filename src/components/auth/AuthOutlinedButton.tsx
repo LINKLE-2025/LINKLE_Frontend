@@ -20,7 +20,10 @@ export default function AuthOutlinedButton({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`bg-white/75 border border-gray-400/75 text-black hover:bg-gray-100/50 font-bold py-2 rounded-full w-full max-w-sm disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+      className={`bg-white/75 border border-gray-400/75 text-black 
+        hover:bg-gray-100/50 transition-colors
+        font-bold py-2 rounded-full w-full max-w-sm 
+        disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
     >
       {children}
     </button>

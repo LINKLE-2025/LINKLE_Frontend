@@ -1,24 +1,13 @@
 import RandomPastelBackground from "@/components/background/RandomPastelBackground";
 import TeamNameFooter from "@/components/footer/TeamNameFooter";
-import BackTitleHeader from "@/components/header/BackTitleHeader";
 import MainHeader from "@/components/header/MainHeader";
-import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 
 export default function AuthLayout() {
   const location = useLocation();
-  const [headerHeight, setHeaderHeight] = useState(0);
-
-  // Header 뒤쪽 paddingTop 높이 동적으로 조정
-  useEffect(() => {
-    const header = document.querySelector("header");
-    if (header) {
-      setHeaderHeight(header.clientHeight);
-    }
-  }, []);
 
   return (
-    <div className='relative flex flex-col min-h-screen text-black'>
+    <div className='relative flex flex-col min-h-[100dvh] text-black'>
       {/* 배경 */}
       <RandomPastelBackground />
 
@@ -31,14 +20,22 @@ export default function AuthLayout() {
         <MainHeader className='bg-white/60' />
       )}
 
+      {/* 헤더 뒤 paddingTop 보정 + 그라데이션 */}
+      <div className="absolute top-0 left-0 w-full h-[52px] bg-gradient-to-b from-white to-transparent pointer-events-none z-[1]" />
+
       {/* Outlet */}
       <main
-        className={`flex-grow flex flex-col items-center text-center 
-          ${location.pathname === "/signup" ? "justify-start sm:justify-center" : "justify-center"}`}
-        style={{ paddingTop: headerHeight }}
+        className={`flex-grow flex flex-col items-center text-center pt-[52px]
+          ${location.pathname === "/signup" ||
+            location.pathname === "/password/reset" ?
+            "justify-start sm:justify-center" :
+            "justify-center"}`}
       >
         <Outlet />
       </main>
+
+      {/* 푸터 위 paddingBottom 보정 + 그라데이션 */}
+      <div className="absolute bottom-0 left-0 w-full h-[40px] bg-gradient-to-t from-white to-transparent pointer-events-none z-[1]" />
 
       {/* Footer */}
       <TeamNameFooter />

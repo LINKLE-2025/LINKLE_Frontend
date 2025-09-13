@@ -72,7 +72,7 @@ export default function PasswordResetPage() {
             {/* header */}
             <BackTitleHeader
                 title='비밀번호 찾기'
-                className='bg-white/60'
+                className='bg-white'
                 onBack={step > 1 ? () => setStep(step - 1) : undefined}
             />
 

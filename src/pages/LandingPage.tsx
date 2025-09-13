@@ -74,6 +74,12 @@ export default function LandingPage() {
         <figcaption className='sr-only'>LINKLE 로고</figcaption>
       </figure>
 
+
+
+      {!showInstallButton && (
+        <div className='mb-1'></div>
+      )}
+
       {/* 소개 멘트 */}
       <p className='text-gray-600 text-base md:text-lg leading-relaxed mt-1 mb-5'>
         링커에 참여하고 친구들을 만나
@@ -90,11 +96,11 @@ export default function LandingPage() {
 
       {/* 로그인 및 회원가입 이동 버튼 */}
       <p className='text-base md:text-base mb-5'>
-        <Link to='/login' className='font-semibold text-linkleGray hover:text-black'>
+        <Link to='/login' className='font-semibold text-linkleGray hover:text-black transition-colors'>
           로그인
         </Link>
         <span className='text-gray-400'> 또는 </span>
-        <Link to='/signup' className='font-semibold text-linkleGray hover:text-black'>
+        <Link to='/signup' className='font-semibold text-linkleGray hover:text-black transition-colors'>
           가입하기
         </Link>
       </p>
