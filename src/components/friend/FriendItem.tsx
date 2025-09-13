@@ -35,11 +35,6 @@ function FriendItem({ targetUserId, name, nickname, buttonType, friendId, image,
     : gender === "남성"
       ? "/icons/profile/Man.png"
       : "/icons/profile/Woman.png";
-
-
-
-
-  console.log("adad" + profileImageSrc);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const handleMessage = async () => {

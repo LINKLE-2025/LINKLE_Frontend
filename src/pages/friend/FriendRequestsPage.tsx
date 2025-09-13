@@ -18,16 +18,17 @@ import {
 import { getUserProfile } from '@/api/profileApi';
 
 import { useFriendFilter } from "@/hooks/useFriendFilter";
+import { getCurrentUserId } from '@/api/authApi';
+import SearchBar from '@/components/common/SearchBar';
+import SearchHeader from '@/components/header/SearchHeader';
 
 type OutletContextType = {
-  loggedInUserId: number;
   headerHeight: number;
   footerHeight: number;
 };
-
 function FriendRequestsPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState(''); // 🔹 디바운스된 검색어
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [user, setUser] = useState<UserResponseDTO | null>(null);
   const [receivedRequests, setReceivedRequests] = useState<FriendResponse[]>([]);
   const [sentRequests, setSentRequests] = useState<FriendResponse[]>([]);
@@ -75,10 +76,29 @@ function FriendRequestsPage() {
     }
   };
 
-  const { loggedInUserId, headerHeight, footerHeight } =
+  const { headerHeight, footerHeight } =
     useOutletContext<OutletContextType>();
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [loggedInUserId, setLoggedInUserId] = useState<number | null>(null);
+
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const userId = await getCurrentUserId();
+        setLoggedInUserId(userId);
+      } catch (err) {
+        console.error("현재 유저 ID 불러오기 실패:", err);
+      } finally {
+        setIsAuthLoading(false);
+      }
+    })();
+  }, []);
+
+
   const { userId: profileUserIdParam } = useParams<{ userId: string }>();
   const profileUserId = profileUserIdParam ? Number(profileUserIdParam) : loggedInUserId;
+
 
   // 데이터 패칭
   useEffect(() => {
@@ -101,29 +121,15 @@ function FriendRequestsPage() {
 
   return (
     <div
-      className="max-w-md mx-auto bg-gray-50 min-h-screen flex flex-col"
-      style={{ paddingTop: headerHeight, paddingBottom: footerHeight }}
+      className="max-w-full mx-auto bg-white min-h-screen flex flex-col"
     >
       {/* 검색 헤더 - FriendsListPage와 동일 */}
-      <div className="bg-white px-4 py-3 border-b flex items-center gap-2">
-        <div className="relative flex-1">
-          {/* <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" /> */}
-          <input
-            type="text"
-            placeholder="친구 검색"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-5 ml-2 pr-4 py-2 bg-gray-100 rounded-full text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <button
-          type="button"
-          className="px-2 py-2 text-sm text-gray-600 hover:text-blue-600 ml-1"
-          onClick={() => setDebouncedQuery(searchQuery)} // 버튼 누르면 즉시 검색
-        >
-          <Search className='w-7 h-7'></Search>
-        </button>
-      </div>
+      <SearchHeader
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        onSearch={() => setDebouncedQuery(searchQuery)}
+        placeholder="친구 검색"
+      />
 
       {/* 본문 */}
       {isEmpty ? (

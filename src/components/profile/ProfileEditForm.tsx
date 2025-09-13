@@ -27,7 +27,7 @@ function ProfileInputRow({
   options = [],
 }: ProfileInputRowProps) {
   return (
-    <div className="flex justify-between items-center border-b pb-2">
+    <div className="flex justify-between items-center border-b pb-2 max-w-full">
       <label className="text-gray-500 text-sm">{label}</label>
       {as === "select" ? (
         <select
