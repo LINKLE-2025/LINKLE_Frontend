@@ -115,7 +115,7 @@ export default function PostDetailPage(): React.ReactElement {
     <div className='flex flex-col min-h-screen w-full'
       style={{ paddingBottom: `${footerHeight}px` }}>
       <BackTitleHeader
-        title={isEditing ? "새 포스트 만들기" : "포스트"}
+        title={isEditing ? "포스트 수정" : "포스트"}
         onBack={isEditing ? () => setIsEditing(false) : undefined}
       />
 

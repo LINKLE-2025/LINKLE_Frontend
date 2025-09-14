@@ -24,7 +24,7 @@ function MainFooter({ linkerCreateMode, setLinkerCreateMode }: MainFooterProps) 
   };
 
   return (
-    <footer className='w-full bg-white border-t z-[2] border-gray-200 text-gray-400
+    <footer className='w-full bg-white border-t z-40 border-gray-200 text-gray-400
                        text-xs py-0 text-center fixed bottom-0 pb-[env(safe-area-inset-bottom)]'>
       <div className='flex items-center justify-around'>
         <FooterItem

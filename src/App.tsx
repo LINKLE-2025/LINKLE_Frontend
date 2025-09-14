@@ -14,7 +14,6 @@ import FriendSearchPage from "@/pages/friendSearch/TotalSearchPage";
 import AuthLayout from "./layouts/AuthLayout";
 
 import ProfileLayout from "./layouts/ProfileLayout";
-import FriendListLayout from "./layouts/FriendListLayout";
 
 import ChatRoomPage from "./pages/chat/ChatRoomPage";
 import ChatListPage from "./pages/chat/ChatListPage";
@@ -33,6 +32,7 @@ import { stompClient } from "@/lib/stompClient";
 import { getCurrentUserId } from "@/api/authApi";
 
 import TestAPI from "./components/recommend/recommend";
+import FriendListLayout from "./layouts/FriendListLayout";
 
 export default function App() {
   // Silent Refresh Hook 적용 -> Refresh Token을 이용해 Access Token 재발급
@@ -66,12 +66,16 @@ export default function App() {
         <Route path='/test' element={<TestPage />} />
       </Route>
 
-      {/* 어플리케이션 레이아웃 */}
+      {/* 메인 앱 레이아웃 */}
       <Route element={<AppLayout />}>
         <Route path='/map' element={<MapPage />} />
+
         <Route path='/post' element={<PostCreatePage />} />
         <Route path='/post/:postId' element={<PostDetailPage />} />
 
+        <Route path='/chat' element={<ChatListPage />} />
+        <Route path='/chat/room/:roomId' element={<ChatRoomPage />} />
+        <Route path='/chat/room/create' element={<RoomCreatePage />} />
       </Route>
 
       {/* 프로필 관련 레이아웃 */}
@@ -79,32 +83,22 @@ export default function App() {
         <Route path='/profile' element={<ProfilePage />} />
       </Route>
 
-      {/* 친구 목록 관련 레이아웃 */}
       <Route element={<FriendListLayout />}>
+        <Route path='/profile/edit' element={<ProfileEditPage />} />
         <Route path='/profile/friend' element={<FriendListPage />} />
         <Route path='/profile/friend/received' element={<FriendRequestsPage />} />
-      </Route>
 
-      <Route element={<FriendListLayout />}>
         <Route path='/search' element={<FriendSearchPage />} />
-        <Route path='/profile/edit' element={<ProfileEditPage />} />
       </Route>
-
-      {/* 채팅 관련 레이아웃 */}
-      <Route element={<AppLayout />}>
-        <Route path='/chat' element={<ChatListPage />} />
-        <Route path='/chat/room/:roomId' element={<ChatRoomPage />} />
-        <Route path='/chat/room/create' element={<RoomCreatePage />} />
-      </Route>
-
-      <Route path='/point' element={<PointPage />} />
-      <Route path='/post/:postId' element={<PostDetailPage />} />
 
       {/* 동적 에러 페이지 */}
       <Route path='/error/:type' element={<ErrorPage />} />
 
-      <Route path='/test-api' element={<TestAPI />} />
+      {/* 기타 */}
+      <Route path='/point' element={<PointPage />} />
+      <Route path='/post/:postId' element={<PostDetailPage />} />
 
+      <Route path='/test-api' element={<TestAPI />} />
     </Routes>
   );
 }

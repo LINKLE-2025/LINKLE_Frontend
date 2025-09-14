@@ -41,9 +41,10 @@ export default function BackgroundImageUploader({
             />
             <button
                 onClick={() => inputRef.current?.click()}
-                className="absolute bottom-2 right-2 bg-black/60 text-white px-2 py-1 text-xs rounded"
+                className="absolute flex gap-1.5 bottom-3.5 right-3 bg-white hover:bg-gray-100/90 transition-colors text-linkleGray items-center px-2 py-1 text-xs rounded"
             >
-                배경사진 추가
+                <img src="/icons/common/imageUpload.svg" alt="변경" className="w-4 h-4" />
+                <p className="mt-0.5">배경사진 추가</p>
             </button>
             <input
                 ref={inputRef}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Term, terms } from "@/constants/terms";
 import AuthFilledButton from "@/components/auth/AuthFilledButton";
+import { X } from "lucide-react";
 
 type Props = {
   value: boolean[];
@@ -104,10 +105,12 @@ export default function AgreeTermStep({ value, onChange, onNext }: Props) {
 
             {/* 닫기 버튼 */}
             <button
-              className="absolute top-5 right-6 text-gray-500 hover:text-black"
+              className="absolute top-3.5 right-3.5 text-linkleGray hover:text-black"
               onClick={() => setSelectedTerm(null)}
             >
-              ✕
+              <div className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100/60 transition-colors">
+                <X className="w-5 h-5" />
+              </div>
             </button>
 
             {/* 동의 버튼 */}
