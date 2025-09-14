@@ -42,9 +42,9 @@ export default function ProfileImageUploader({
             />
             <button
                 onClick={() => inputRef.current?.click()}
-                className="absolute bottom-0 right-0 bg-white p-1 rounded-full border"
+                className="absolute bottom-0 right-0 bg-white hover:bg-gray-100 transition-colors p-1 rounded-full border"
             >
-                <img src="/icons/user/camera.svg" alt="변경" className="w-4 h-4" />
+                <img src="/icons/common/imageUpload.svg" alt="변경" className="w-5 h-5" />
             </button>
             <input
                 ref={inputRef}
