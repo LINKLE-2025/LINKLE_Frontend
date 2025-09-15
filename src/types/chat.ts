@@ -27,6 +27,7 @@ export interface MemberResponseDTO {
   userId: number;
   name: string;
   image?: string | null;
+  nickname?: string | null;
 }
 
 export type MessageType = "TEXT" | "SYSTEM";
