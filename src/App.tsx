@@ -19,7 +19,6 @@ import ChatRoomPage from "./pages/chat/ChatRoomPage";
 import ChatListPage from "./pages/chat/ChatListPage";
 import RoomCreatePage from "./pages/chat/RoomCreatePage";
 
-import PayPage from "./pages/pay/Point";
 import AppLayout from "./layouts/AppLayout";
 import PostDetailPage from "./pages/post/PostDetailPage";
 import useSilentRefresh from "./hooks/useSilentRefresh";
@@ -27,7 +26,7 @@ import LandingRedirect from "./pages/LandingRedirect";
 import ErrorPage from "./pages/ErrorPage";
 import TestPage from "./pages/TestPage";
 import PasswordResetPage from "./pages/auth/PasswordResetPage";
-
+import BalancePage from "./pages/pay/BalancePage";
 
 
 import { stompClient } from "@/lib/stompClient";
@@ -35,7 +34,10 @@ import { getCurrentUserId } from "@/api/authApi";
 
 import TestAPI from "./components/recommend/recommend";
 import FriendListLayout from "./layouts/FriendListLayout";
+
+import PayRedirectPage from "./pages/pay/PayRedirectPage";
 import ChatLayout from "./layouts/ChatLayout";
+
 
 export default function App() {
   // Silent Refresh Hook 적용 -> Refresh Token을 이용해 Access Token 재발급
@@ -76,10 +78,8 @@ export default function App() {
         <Route path='/post' element={<PostCreatePage />} />
         <Route path='/post/:postId' element={<PostDetailPage />} />
 
-        <Route path='/pay' element={<PayPage />} />
-
-        <Route path='/pay' element={<PayPage />} />
-
+        <Route path='/balance' element={<BalancePage />} />
+        <Route path="/pay" element={<PayRedirectPage />} />
 
       </Route>
 
@@ -112,6 +112,7 @@ export default function App() {
 
       {/* 기타 */}
       <Route path='/post/:postId' element={<PostDetailPage />} />
+
 
       <Route path='/test-api' element={<TestAPI />} />
     </Routes >
