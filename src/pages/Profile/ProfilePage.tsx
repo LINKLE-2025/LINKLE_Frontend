@@ -1,8 +1,7 @@
 // src/pages/ProfilePage.tsx
 import React, { useState, useEffect, useMemo } from "react";
-import { useParams, useLocation, useOutletContext } from "react-router-dom";
-import { Grid, MapPin, Menu } from "lucide-react";
-
+import { useParams, useLocation, useOutletContext, useNavigate } from "react-router-dom";
+import { Grid, MapPin, Menu, Wallet } from "lucide-react";
 import ProfileContent from "@/components/profile/ProfileContent";
 import PostsTab from "@/components/profile/PostsTab";
 import ParticipationTab from "@/components/profile/ParticipationTab";
@@ -26,6 +25,7 @@ import {
 } from "@/api/profileApi";
 import { getFriends } from "@/api/friendApi";
 import { getCurrentUserId } from "@/api/authApi";
+import { CATEGORY_DATA } from "@/constants/categoryData"
 
 
 // 카테고리 이름 + 아이콘 매핑
@@ -84,6 +84,9 @@ const ProfilePage = () => {
     })();
   }, []);
 
+
+  // ✅ navigate 선언
+  const navigate = useNavigate();
 
 
   // 상태 관리
@@ -176,18 +179,14 @@ const ProfilePage = () => {
         return (
           <ParticipationTab
             participations={participations}
-            activities={ACTIVITIES}
-            icons={CATEGORY_ICONS}
-            colors={COLORS}
+          // categories={CATEGORY_DATA}
           />
         );
       case "state":
         return (
           <StateTab
             linkerStats={linkerStats}
-            activities={ACTIVITIES}
-            icons={CATEGORY_ICONS}
-            colors={COLORS}
+            categories={CATEGORY_DATA}
           />
         );
       default:
@@ -259,6 +258,14 @@ const ProfilePage = () => {
               className={`w-5 h-5 ${activeTab === "state" ? "text-gray-900" : "text-gray-400"
                 }`}
             />
+          </button>
+
+          {/* BalanceControl 페이지로 이동 */}
+          <button
+            className="flex-1 py-3 flex items-center justify-center border-b-2 border-transparent"
+            onClick={() => navigate("/balance")}
+          >
+            <Wallet className="w-5 h-5 text-gray-400" />
           </button>
         </div>
       </div>

@@ -3,11 +3,13 @@
 // 유저가 참여한 링커
 export interface UserParticipateLinkerDTO {
   linkerId: number;
-  name: string;
-  participatedDate: string;
-  memo: string;
-  linkerState: string;
-  categoryId?: number; // 카테고리 번호 (백엔드에서 내려옴)
+        name: string;
+        categoryId: number;
+        memo?: string;
+        chatRoomCount: number;
+        postCount: number;
+        state: string;
+        address: string;
 }
 
 // 프로필 수정 요청 DTO

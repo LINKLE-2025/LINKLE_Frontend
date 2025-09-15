@@ -15,6 +15,7 @@ export interface RoomResponseDTO {
   unreadCount?: number | null;
   friendUserId?: number | null;
   friendName?: string | null;
+  friendNickname?: string | null;
   friendImage?: string | null;
   lastMessagePreview?: string | null;
   lastMessageDate?: string | null;
@@ -26,6 +27,7 @@ export interface MemberResponseDTO {
   userId: number;
   name: string;
   image?: string | null;
+  nickname?: string | null;
 }
 
 export type MessageType = "TEXT" | "SYSTEM";

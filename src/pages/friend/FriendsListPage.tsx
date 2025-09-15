@@ -95,7 +95,7 @@ function FriendsListPage() {
 
   return (
     <div
-      className="max-w-full mx-auto bg-gray-50 min-h-screen flex flex-col"
+      className="max-w-full mx-auto bg-white-100 min-h-screen flex flex-col"
     >
       {/* 검색 헤더 */}
       <SearchHeader
@@ -107,7 +107,7 @@ function FriendsListPage() {
       />
 
       {/* 친구 요청 버튼 */}
-      <div className="bg-white mb-2 border-b"
+      <div className="bg-white mb-2 border-b z-10"
       >
         <Link to="/profile/friend/received" className="text-gray-900 font-medium">
           <button
@@ -125,9 +125,12 @@ function FriendsListPage() {
       </div>
 
       {/* 친구 목록 */}
-      <div className="bg-white flex-1">
+      <div
+        style={{ marginTop: headerHeight }}></div>
+      <div className="bg-white flex-1"
+      >
         {(debouncedQuery ? filteredFriends : friendList).length > 0 ? (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-white-100">
             {(debouncedQuery ? filteredFriends : friendList).map((friend) => (
               <FriendItem
                 key={friend.friendId}
@@ -142,11 +145,14 @@ function FriendsListPage() {
             ))}
           </div>
         ) : (
-          <div className="flex items-center justify-center py-20">
+          <div className="flex items-center justify-center py-20"
+
+          >
             <p className="text-gray-400 text-sm">검색 결과가 없습니다</p>
           </div>
         )}
       </div>
+
 
     </div>
   );

@@ -13,7 +13,7 @@ const READ_DEBOUNCE_MS = 400 as const;
 const DEV_UID = await getCurrentUserId().catch(() => {});
 const PAGE_SIZE = 30 as const;
 
-// --- REST helpers ---
+// REST
 async function getRoom(roomId: number) {
   const { data } = await apiClient.get<RoomResponseDTO>(`/chat/room/${roomId}`, {
     headers: { "x-user-id": DEV_UID },
@@ -34,19 +34,17 @@ async function getMembers(roomId: number) {
   return data;
 }
 
-// --- utils ---
+// types
 type SocketStatus = "connecting" | "open" | "closed" | "error";
-type PeerInfo = { name: string; avatar?: string | null } | null;
+type PeerInfo = { name: string; nick?: string | null; id?: number | null } | null;
 
 function byCreatedAsc(a: MessageResponseDTO, b: MessageResponseDTO) {
   return new Date(a.createdDate).getTime() - new Date(b.createdDate).getTime();
 }
-
 function isNearBottom(el: HTMLElement, threshold = 24) {
   return el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
 }
 
-// --- hook ---
 export function useChatRoom(roomId: number) {
   const [room, setRoom] = useState<RoomResponseDTO | null>(null);
   const [peer, setPeer] = useState<PeerInfo>(null);
@@ -61,7 +59,6 @@ export function useChatRoom(roomId: number) {
 
   const queryClient = useQueryClient();
 
-  // 읽음 관리
   const lastAckedIdRef = useRef<number | null>(null);
   const readTimerRef = useRef<number | null>(null);
 
@@ -70,28 +67,31 @@ export function useChatRoom(roomId: number) {
     if (!roomId) return;
 
     (async () => {
-      const [r, m] = await Promise.all([getRoom(roomId), getMessages(roomId, PAGE_SIZE)]);
+      const [r, m, mem] = await Promise.all([
+        getRoom(roomId),
+        getMessages(roomId, PAGE_SIZE),
+        getMembers(roomId),
+      ]);
+
       setRoom(r);
 
-      if (r.roomType !== "DM") {
-        try {
-          const members = await getMembers(roomId);
-          const map: Record<number, MemberResponseDTO> = {};
-          members.forEach((u) => (map[u.userId] = u));
-          setMembersById(map);
-        } catch {
-          setMembersById({});
-        }
-      }
+      // membersById 구성
+      const map: Record<number, MemberResponseDTO> = {};
+      (mem ?? []).forEach((u) => (map[u.userId] = u));
+      setMembersById(map);
 
-      setPeer(
-        r.roomType === "DM"
-          ? {
-              name: r.friendName ?? "(상대)",
-              avatar: resolveImageUrl((r as any).friendImage) ?? null,
-            }
-          : { name: r.roomName ?? "그룹 톡", avatar: null },
-      );
+      if (r.roomType === "DM") {
+        const me = Number(DEV_UID);
+        const partner = (mem ?? []).find((u) => u.userId !== me) ?? (mem ?? [])[0] ?? null;
+        const partnerId = partner?.userId ?? r.friendUserId ?? null;
+        setPeer({
+          name: partner?.name ?? r.friendName ?? "(상대)",
+          nick: (r as any).dmPartnerNickname ?? (partnerId != null ? String(partnerId) : null),
+          id: partnerId,
+        });
+      } else {
+        setPeer({ name: r.roomName ?? "그룹 톡", nick: null, id: null });
+      }
 
       const initial = (m ?? [])
         .map((x) => ({ ...x, content: x.content ?? (x as any).text ?? "" }))
@@ -120,20 +120,13 @@ export function useChatRoom(roomId: number) {
     if (!roomId) return;
 
     const off = stompClient.subscribe(`/sub/room.${roomId}`, (raw: any) => {
-      // 1) 이벤트 타입 식별
       const type = raw?.type ?? raw?.eventType ?? null;
+      if (type && type !== "MESSAGE_CREATED" && type !== "NEW_MESSAGE") return;
 
-      // 2) 메시지 이벤트만 통과 (예: MESSAGE_CREATED, NEW_MESSAGE)
-      if (type && type !== "MESSAGE_CREATED" && type !== "NEW_MESSAGE") {
-        return; // 읽음/타이핑/입장 등 무시
-      }
-
-      // 3) 내용/ID 검증 (빈 내용 메시지 방지)
       const contentRaw = raw?.content ?? raw?.text ?? "";
       if (typeof raw?.messageId !== "number") return;
       if (typeof contentRaw !== "string" || contentRaw.trim().length === 0) return;
 
-      // 4) messageType도 TEXT만 통과
       const mt = (raw?.messageType as any) ?? "TEXT";
       if (mt !== "TEXT") return;
 
@@ -148,10 +141,9 @@ export function useChatRoom(roomId: number) {
         senderImage: resolveImageUrl(raw.senderImage ?? raw.sender?.image) ?? null,
       };
 
-      setMsgs((prev) => {
-        if (prev.some((x) => x.messageId === evt.messageId)) return prev;
-        return [...prev, evt].sort(byCreatedAsc);
-      });
+      setMsgs((prev) =>
+        prev.some((x) => x.messageId === evt.messageId) ? prev : [...prev, evt].sort(byCreatedAsc),
+      );
     });
 
     return () => {
@@ -161,86 +153,59 @@ export function useChatRoom(roomId: number) {
     };
   }, [roomId]);
 
-  // --- 자동 스크롤 ---
-
-  // 스크롤 이벤트로 "바닥 근처" 상태 추적 (필요 시 확장 가능)
+  // 스크롤 & 자동스크롤 로직 그대로…
   useEffect(() => {
     const el = listContainerRef.current;
     if (!el) return;
-    const onScroll = () => {
-      /* 상태 추적이 필요하면 여기에 */
-    };
+    const onScroll = () => {};
     el.addEventListener("scroll", onScroll, { passive: true });
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
 
-  // ✅ 최초 메시지 로드 후 확실히 맨 아래로
   useLayoutEffect(() => {
     if (!msgs.length) return;
     const el = listContainerRef.current;
     if (!el) return;
-
     const scrollToBottom = () => {
       el.scrollTop = el.scrollHeight;
     };
-
-    // 즉시
     scrollToBottom();
-    // 다음 프레임(레이아웃 확정 후)
     requestAnimationFrame(scrollToBottom);
-    // 이미지/폰트 지연 로딩 대비
     const t = setTimeout(scrollToBottom, 0);
     return () => clearTimeout(t);
   }, [roomId, msgs.length]);
 
-  // ✅ 새 메시지 도착 시: 바닥 근처일 때만 자동으로 아래로
   useEffect(() => {
     const el = listContainerRef.current;
-    if (!el) return;
-    if (loadingOlder) return; // 과거 로드 중이면 금지
-
-    if (isNearBottom(el)) {
-      el.scrollTop = el.scrollHeight;
-    }
+    if (!el || loadingOlder) return;
+    if (isNearBottom(el)) el.scrollTop = el.scrollHeight;
   }, [msgs, loadingOlder]);
 
-  // 메시지 전송 + 목록 캐시 업데이트
   const send = (text: string) => {
     const body = text.trim();
     if (!body) return;
-    if (!stompClient.isConnected()) {
-      console.warn("STOMP not connected");
-      return;
-    }
+    if (!stompClient.isConnected()) return console.warn("STOMP not connected");
 
     const now = new Date().toISOString();
-
     stompClient.publish(
       "/app/message.send",
       { roomId, text: body },
       { "x-user-id": String(DEV_UID) },
     );
 
-    // ✅ 목록 캐시 갱신
-    queryClient.setQueryData<RoomResponseDTO[]>(["chatRooms"], (prev) => {
-      if (!prev) return prev;
-      return prev.map((room) =>
-        room.roomId === roomId
-          ? {
-              ...room,
-              lastMessagePreview: body,
-              lastMessageDate: now,
-              unreadCount: 0,
-            }
-          : room,
-      );
-    });
+    queryClient.setQueryData<RoomResponseDTO[]>(["chatRooms"], (prev) =>
+      !prev
+        ? prev
+        : prev.map((r) =>
+            r.roomId === roomId
+              ? { ...r, lastMessagePreview: body, lastMessageDate: now, unreadCount: 0 }
+              : r,
+          ),
+    );
   };
 
-  // 과거 메시지 로드
   const loadOlder = async () => {
     if (loadingOlder || !hasMore || msgs.length === 0) return;
-
     setLoadingOlder(true);
     const oldest = msgs[0];
 
@@ -271,7 +236,6 @@ export function useChatRoom(roomId: number) {
       });
 
       setHasMore(older.length === PAGE_SIZE);
-
       requestAnimationFrame(() => {
         const newScrollHeight = scroller.scrollHeight;
         scroller.scrollTop = newScrollHeight - prevScrollHeight + prevScrollTop;
@@ -283,7 +247,7 @@ export function useChatRoom(roomId: number) {
     }
   };
 
-  // 읽음 동기화
+  // 읽음 동기화 그대로…
   function getVisibleLastId(): number | null {
     const last = msgs.length ? msgs[msgs.length - 1] : null;
     return last ? last.messageId : null;
@@ -291,13 +255,11 @@ export function useChatRoom(roomId: number) {
   function scheduleReadSync(candId: number | null) {
     if (candId == null) return;
     if (lastAckedIdRef.current != null && candId <= lastAckedIdRef.current) return;
-
     if (readTimerRef.current) window.clearTimeout(readTimerRef.current);
-
     readTimerRef.current = window.setTimeout(async () => {
       if (lastAckedIdRef.current != null && candId <= lastAckedIdRef.current) return;
       try {
-        setRoomUnreadZero(queryClient, roomId); // 캐시 낙관적 반영
+        setRoomUnreadZero(queryClient, roomId);
         await markRead(roomId, candId);
         lastAckedIdRef.current = candId;
       } catch (e) {
@@ -305,15 +267,11 @@ export function useChatRoom(roomId: number) {
       }
     }, READ_DEBOUNCE_MS) as unknown as number;
   }
-
-  // 진입 직후
   useEffect(() => {
     if (!roomId || !msgs.length) return;
     scheduleReadSync(getVisibleLastId());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId, msgs.length]);
-
-  // 스크롤 시
   useEffect(() => {
     const el = listContainerRef.current;
     if (!el) return;
@@ -324,30 +282,24 @@ export function useChatRoom(roomId: number) {
     el.addEventListener("scroll", onScroll, { passive: true });
     return () => el.removeEventListener("scroll", onScroll);
   }, [listContainerRef, msgs]);
-
-  // 새 메시지 도착 시
   useEffect(() => {
     const el = listContainerRef.current;
     if (!el) return;
     const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
     if (distance <= 24) scheduleReadSync(getVisibleLastId());
   }, [msgs]);
-
-  // 포커스/언마운트 시
   useEffect(() => {
     const onVis = () => scheduleReadSync(getVisibleLastId());
     const onBlur = () => scheduleReadSync(getVisibleLastId());
     const onFocus = () => scheduleReadSync(getVisibleLastId());
-
     document.addEventListener("visibilitychange", onVis);
     window.addEventListener("blur", onBlur);
     window.addEventListener("focus", onFocus);
-
     return () => {
       document.removeEventListener("visibilitychange", onVis);
       window.removeEventListener("blur", onBlur);
       window.removeEventListener("focus", onFocus);
-      scheduleReadSync(getVisibleLastId()); // 마지막 시도
+      scheduleReadSync(getVisibleLastId());
       if (readTimerRef.current) window.clearTimeout(readTimerRef.current);
     };
   }, [roomId, msgs]);

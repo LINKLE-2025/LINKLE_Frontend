@@ -7,6 +7,8 @@ import { FriendSummaryWithProfileType, ProfileType } from "@/types/friend";
 import { useLocation } from "react-router-dom";
 import SearchBar from "../common/SearchBar";
 import SearchHeader from "../header/SearchHeader";
+import { searchLinkers } from "@/api/searchApi";
+import LinkerCardItem from "../linker/LinkerCardItem";
 
 interface SearchLinkerResponseDTO {
     linkerId: number;
@@ -15,14 +17,15 @@ interface SearchLinkerResponseDTO {
     memo: string;
     chatRoomCount: number;
     postCount: number;
+    state: string;
+    address: string;
 }
+
 type OutletContextType = {
     loggedInUserId: number
     headerHeight: number;
     footerHeight: number;
 };
-
-
 
 export interface TotalSearchPanelProps {
     currentUserId: number;
@@ -82,14 +85,12 @@ export default function TotalSearchPanel({
 
     const fetchLinkers = async () => {
         try {
-            const res = await fetch(`/api/search/linker?word=${searchQuery}`);
-            const data = await res.json();
+            const data = await searchLinkers(searchQuery); // word 파라미터 전달
             setLinkerResults(data);
         } catch (err) {
             console.error("링커 검색 실패:", err);
         }
     };
-
 
     const handleTabSearch = () => {
         if (activeTab === "friend") {
@@ -289,15 +290,18 @@ export default function TotalSearchPanel({
                     )
                 ) : linkerResults.length > 0 ? (
                     linkerResults.map((linker) => (
-                        <div key={linker.linkerId} className="p-3 border-b">
-                            <div className="font-medium text-gray-800">{linker.name}</div>
-                            <div className="text-sm text-gray-500">
-                                카테고리: {linker.categoryId}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                                채팅방 수: {linker.chatRoomCount}, 포스트 수: {linker.postCount}
-                            </div>
-                            <div className="text-sm text-gray-400 mt-1">{linker.memo}</div>
+                        <div
+                            key={linker.linkerId}
+                            onClick={() =>
+                                navigate("/map", { state: { openLinkerId: linker.linkerId } })
+                            }
+                        >
+                            <LinkerCardItem
+                                linker={{
+                                    ...linker,
+
+                                }}
+                            />
                         </div>
                     ))
                 ) : (

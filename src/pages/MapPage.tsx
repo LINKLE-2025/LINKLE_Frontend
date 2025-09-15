@@ -28,6 +28,7 @@ import CategoryFilterButton from "@/components/category/CategoryFilterButton";
 import { on } from "events";
 import { useViewportHeight } from "@/hooks/useViewportHeight";
 import { set } from "date-fns";
+import { getCurrentUserId } from "@/api/authApi";
 
 interface LayoutContext {
   linkerCreateMode: boolean;
@@ -807,6 +808,20 @@ export default function MapPage(): React.ReactElement {
   }, [mapReady]);
 
 
+  // AI 추천을 위한 아이디값 설정
+  const [loggedInUserId, setLoggedInUserId] = useState<number | null>(null);
+  useEffect(() => {
+    (async () => {
+      try {
+        const userId = await getCurrentUserId();
+        setLoggedInUserId(userId);
+      } catch (err) {
+        console.error("현재 유저 ID 불러오기 실패:", err);
+      } finally {
+      }
+    })();
+  }, []);
+
   return (
 
     <MapWrapper>
@@ -937,6 +952,7 @@ export default function MapPage(): React.ReactElement {
         isOpen={showAddress}
         onClose={() => setShowAddress(false)}
         activeLinkers={activeLinkers}
+        loggedInUserId={loggedInUserId}
       />
       {/* 나머지 모달들 (기존과 동일) */}
       <Sheet
@@ -983,6 +999,8 @@ export default function MapPage(): React.ReactElement {
           setSearchResults([]);
           searchMarkers.current.forEach((m) => m.setMap(null));
           searchMarkers.current = [];
+          overlaysRef.current.forEach((ov) => ov.setMap(null));
+          overlaysRef.current = [];
         }}
         onSubmit={handleSaveLinker}
       />
