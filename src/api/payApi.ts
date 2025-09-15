@@ -25,10 +25,10 @@ export const chargeComplete = async (imp_uid: string, paid_amount: number) => {
 };
 
 /** 출금 */
-export const withdrawBalance = async (userId: string, amount: number) => {
+export const withdrawBalance = async (userId: string, amount: number, memo: string) => {
   const res = await apiClient.patch(
     `/balance/${userId}/balance`,
-    { amount: -Math.abs(amount) }, //항상 음수로 전송
+    { amount: -Math.abs(amount), memo }, //항상 음수로 전송
     { withCredentials: true },
   );
   return res.data;

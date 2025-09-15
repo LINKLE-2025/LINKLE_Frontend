@@ -13,6 +13,7 @@ import { getRoomsByLinker, joinRoom } from "@/api/chatApi";
 import RoomPreviewModal from "@/components/modal/RoomPreviewModal";
 import { extendLinkerCreatedDate, deductUserBalance } from "@/api/mapApi";
 import { Button } from "@/components/ui/button"
+import { withdrawBalance } from "@/api/payApi";
 
 export type LinkerDetail = {
   linkerId: number;
@@ -244,7 +245,7 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
       }
 
       // 2️⃣ 잔액 차감 (5000원)
-      await deductUserBalance(userId, -5000); // 음수 = 차감
+      await withdrawBalance(userId, -5000, "링커 수명 연장"); // 음수 = 차감
 
       // 3️⃣ 서버에 링커 연장 요청
       await extendLinkerCreatedDate(localDetail.linkerId);
