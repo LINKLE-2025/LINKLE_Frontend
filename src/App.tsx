@@ -36,7 +36,6 @@ import TestAPI from "./components/recommend/recommend";
 import FriendListLayout from "./layouts/FriendListLayout";
 
 import PayRedirectPage from "./pages/pay/PayRedirectPage";
-
 import ChatLayout from "./layouts/ChatLayout";
 
 
@@ -81,9 +80,6 @@ export default function App() {
 
         <Route path='/balance' element={<BalancePage />} />
         <Route path="/pay" element={<PayRedirectPage />} />
-
-        <Route path='/pay' element={<PayPage />} />
-
 
       </Route>
 
