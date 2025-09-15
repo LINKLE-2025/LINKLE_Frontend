@@ -33,6 +33,9 @@ import { getCurrentUserId } from "@/api/authApi";
 
 import TestAPI from "./components/recommend/recommend";
 import FriendListLayout from "./layouts/FriendListLayout";
+import AccountPage from "./pages/account/AccountPage";
+import AccountEditPage from "./pages/account/AccountEditPage";
+import AccountLayout from "./layouts/AccountLayout";
 
 export default function App() {
   // Silent Refresh Hook 적용 -> Refresh Token을 이용해 Access Token 재발급
@@ -89,6 +92,12 @@ export default function App() {
         <Route path='/profile/friend/received' element={<FriendRequestsPage />} />
 
         <Route path='/search' element={<FriendSearchPage />} />
+      </Route>
+
+      {/* 계좌 관련 레이아웃 */}
+      <Route element={<AccountLayout />}>
+        <Route path='/profile/account' element={<AccountPage />} />
+        <Route path='/profile/account/edit' element={<AccountEditPage />} />
       </Route>
 
       {/* 동적 에러 페이지 */}
