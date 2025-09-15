@@ -12,6 +12,7 @@ import ChatListItem2 from "@/components/chat/ChatListItem2";
 import { getRoomsByLinker, joinRoom } from "@/api/chatApi";
 import RoomPreviewModal from "@/components/modal/RoomPreviewModal";
 import { extendLinkerCreatedDate, deductUserBalance } from "@/api/mapApi";
+import { Button } from "@/components/ui/button"
 
 export type LinkerDetail = {
   linkerId: number;
@@ -380,7 +381,7 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
                 ) : (
                   <div
                     className="grid grid-cols-3 gap-1 overflow-auto"
-                    style={{ maxHeight: "190px" }}
+                    style={{ maxHeight: "37vh" }}
                   >
                     {posts.map((p) => (
                       <button
@@ -496,21 +497,14 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[2147483647]">
             <div className="bg-white p-6 rounded-lg shadow-lg w-80">
               <p className="mb-4 text-center">링커를 30일 연장하시겠습니까?</p>
-              <p className="mb-4 text-center">(5000원이 차감됩니다.)</p>
-              <div className="flex justify-around">
-                <button
-                  className="px-4 py-2 bg-yellow-400 rounded hover:bg-yellow-500 text-white"
-                  onClick={handleExtend}
-                >
-                  예
-                </button>
-                <button
-                  className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-                  onClick={() => setShowExtendModal(false)}
-                >
-                  아니오
-                </button>
+              <p className="mb-4 text-center pb-2">(5000원이 차감됩니다.)</p>
+              <div className="flex justify-center gap-24">
+                <Button onClick={handleExtend}>확인</Button>
+                <Button variant="outline" onClick={() => setShowExtendModal(false)}>
+                  취소
+                </Button>
               </div>
+
             </div>
           </div>,
           document.body // <-- body 최상단으로 포탈
