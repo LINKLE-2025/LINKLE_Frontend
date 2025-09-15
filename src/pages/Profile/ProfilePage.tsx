@@ -25,9 +25,8 @@ import {
   getLinkerParticipations,
 } from "@/api/profileApi";
 import { getFriends } from "@/api/friendApi";
+import { getCurrentUserId } from "@/api/authApi";
 
-// Context에서 로그인 유저 ID 받아오기
-type OutletContextType = { loggedInUserId: number };
 
 // 카테고리 이름 + 아이콘 매핑
 const ACTIVITIES = [
@@ -68,6 +67,25 @@ const COLORS = [
 const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState<"posts" | "participation" | "state">("posts");
 
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [loggedInUserId, setLoggedInUserId] = useState<number | null>(null);
+
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const userId = await getCurrentUserId();
+        setLoggedInUserId(userId);
+      } catch (err) {
+        console.error("현재 유저 ID 불러오기 실패:", err);
+      } finally {
+        setIsAuthLoading(false);
+      }
+    })();
+  }, []);
+
+
+
   // 상태 관리
   const [user, setUser] = useState<UserResponseDTO | null>(null);
   const [posts, setPosts] = useState<ProfilePostDTO[]>([]);
@@ -77,10 +95,10 @@ const ProfilePage = () => {
 
   // 파라미터 & 라우팅 상태
   const { userId: profileUserIdParam } = useParams<{ userId: string }>();
-  const { loggedInUserId } = useOutletContext<OutletContextType>();
   const location = useLocation();
 
-  const { results, setResults } = useFriendSearch(loggedInUserId);
+  const { results, setResults } = useFriendSearch(loggedInUserId ?? 0);
+
 
   const state = location.state as {
     type?: string;
@@ -102,7 +120,7 @@ const ProfilePage = () => {
 
   // 데이터 패칭
   useEffect(() => {
-    if (!profileUserId) return;
+    if (!profileUserId || loggedInUserId === null) return;
 
     (async () => {
       try {
@@ -124,14 +142,18 @@ const ProfilePage = () => {
         console.error("프로필 데이터 불러오기 실패:", err);
       }
     })();
-  }, [profileUserId]);
+  }, [profileUserId, loggedInUserId]);
 
   // 프로필 타입 결정
   const profileType: ProfileType = useMemo(() => {
+    if (!loggedInUserId || !profileUserId) return "stranger"; // fallback
+
     if (state?.profileType) return state.profileType;
     if (type === "sent" || type === "received") return "wait";
+
     return determineProfileType(loggedInUserId, profileUserId, friendList);
   }, [loggedInUserId, profileUserId, friendList, type, state?.profileType]);
+
 
   const friendListProcessed = useMemo(
     () =>
@@ -174,9 +196,9 @@ const ProfilePage = () => {
   };
 
   return (
-    <div key={profileUserIdParam} className="flex flex-col min-h-screen bg-white">
+    <div key={profileUserIdParam} className="flex flex-col bg-white">
       {/* 프로필 상단 */}
-      {user ? (
+      {user && profileUserId !== null && loggedInUserId !== null ? (
         <ProfileContent
           userId={profileUserId}
           profileType={profileType}
@@ -206,10 +228,10 @@ const ProfilePage = () => {
       )}
 
       {/* 탭 선택 */}
-      <div className="bg-white border-b pt-1 sticky top-0 z-10">
+      <div className="bg-white border sticky top-0 z-10">
         <div className="flex">
           <button
-            className={`flex-1 py-3 flex items-center justify-center border-b-2 ${activeTab === "posts" ? "border-black-500" : "border-transparent"
+            className={`flex-1 py-3 mx-3 flex items-center justify-center border-b-2 ${activeTab === "posts" ? "border-gray-200" : "border-transparent"
               }`}
             onClick={() => setActiveTab("posts")}
           >
@@ -219,7 +241,7 @@ const ProfilePage = () => {
             />
           </button>
           <button
-            className={`flex-1 py-3 flex items-center justify-center border-b-2 ${activeTab === "participation" ? "border-black-500" : "border-transparent"
+            className={`flex-1 py-3 mx-3 flex items-center justify-center border-b-2 ${activeTab === "participation" ? "border-gray-200" : "border-transparent"
               }`}
             onClick={() => setActiveTab("participation")}
           >
@@ -229,7 +251,7 @@ const ProfilePage = () => {
             />
           </button>
           <button
-            className={`flex-1 py-3 flex items-center justify-center border-b-2 ${activeTab === "state" ? "border-black-500" : "border-transparent"
+            className={`flex-1 py-3 mx-3 flex items-center justify-center border-b-2 ${activeTab === "state" ? "border-gray-200" : "border-transparent"
               }`}
             onClick={() => setActiveTab("state")}
           >
@@ -242,7 +264,7 @@ const ProfilePage = () => {
       </div>
 
       {/* 탭 컨텐츠 */}
-      <div className="flex-1 pb-24">{renderTabContent()}</div>
+      <div className="flex-1 z-10 bg-white">{renderTabContent()}</div>
     </div>
   );
 };

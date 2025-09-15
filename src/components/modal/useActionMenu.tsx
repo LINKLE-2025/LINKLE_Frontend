@@ -156,7 +156,7 @@ export function useActionMenu() {
               </div>
               <button
                 onClick={() => close(null)}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border"
+                className="flex h-9 w-9 items-center justify-center rounded-xl border hover:bg-gray-100 transition-colors"
                 aria-label="닫기"
               >
                 <X className="h-5 w-5" />
@@ -198,9 +198,9 @@ export function useActionMenu() {
                   key={a.id}
                   onClick={() => handleAction(a)}
                   disabled={busyId === a.id}
-                  className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left text-sm ${a.danger
-                    ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100/60"
-                    : "border-gray-200 bg-gray-50 hover:bg-gray-100/80"
+                  className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left text-sm transition-colors ${a.danger
+                    ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100/80"
+                    : "border-gray-200 bg-gray-50 hover:bg-gray-100"
                     } disabled:opacity-60`}
                 >
                   <span className="flex items-center gap-2">

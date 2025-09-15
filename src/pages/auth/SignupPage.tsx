@@ -122,7 +122,7 @@ export default function SignupPage() {
       {/* header */}
       <BackTitleHeader
         title='회원가입'
-        className='bg-white/60'
+        className='bg-white'
         onBack={step > 1 ? () => setStep(step - 1) : undefined}
       />
 
@@ -196,7 +196,7 @@ export default function SignupPage() {
       </div>
       {/* 로그인 이동 링크 */}
       <div className='text-base sm:mb-10'>
-        <Link to='/login' className='text-base font-bold text-linkleGray hover:text-black'>
+        <Link to='/login' className='text-base font-bold text-linkleGray hover:text-black transition-colors'>
           이미 계정이 있습니다
         </Link>
       </div>

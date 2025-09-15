@@ -31,9 +31,6 @@ export default function AppLayout() {
 
   return (
     <div className='relative flex flex-col min-h-screen text-black'>
-      {/* 배경 */}
-      {/* <RandomPastelBackground /> */}
-
       {/* Header */}
       {location.pathname.startsWith("/post") ? (
         <BackTitleHeader title='포스트' className='bg-white' />
