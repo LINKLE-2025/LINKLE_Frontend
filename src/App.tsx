@@ -35,6 +35,7 @@ import { getCurrentUserId } from "@/api/authApi";
 
 import TestAPI from "./components/recommend/recommend";
 import FriendListLayout from "./layouts/FriendListLayout";
+import ChatLayout from "./layouts/ChatLayout";
 
 export default function App() {
   // Silent Refresh Hook 적용 -> Refresh Token을 이용해 Access Token 재발급
@@ -77,6 +78,13 @@ export default function App() {
 
         <Route path='/pay' element={<PayPage />} />
 
+        <Route path='/pay' element={<PayPage />} />
+
+
+      </Route>
+
+      {/* 채팅 관련 레이아웃 */}
+      <Route element={<ChatLayout />}>
         <Route path='/chat' element={<ChatListPage />} />
         <Route path='/chat/room/:roomId' element={<ChatRoomPage />} />
         <Route path='/chat/room/create' element={<RoomCreatePage />} />
