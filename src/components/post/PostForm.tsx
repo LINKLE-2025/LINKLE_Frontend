@@ -75,13 +75,6 @@ export default function PostForm({
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const reset = () => {
-    setText("");
-    setFile(null);
-    if (preview && preview.startsWith("blob:")) URL.revokeObjectURL(preview);
-    setPreview(null);
-  };
-
   //링커 바로가기
   const ClickLinker =
     onClickLinker ??

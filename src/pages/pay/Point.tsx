@@ -1,6 +1,14 @@
-import { getCurrentUserId } from "@/api/authApi";
-import React, { useState, useEffect, use } from "react";
+// src/pages/pay/Point.tsx
+
+import React, { useState, useEffect } from "react";
 import { ArrowUpCircle, ArrowDownCircle, PlusCircle } from "lucide-react";
+import { getCurrentUserInfo } from "@/api/authApi"; // ✅ 여기서 불러오기
+import {
+    getBalance,
+    getBalanceHistory,
+    chargeComplete,
+    withdrawBalance,
+} from "@/api/payApi";
 
 type HistoryItem = {
     accountId: number;
@@ -13,148 +21,115 @@ type UserInfo = {
     userId: number;
     email: string;
     name: string;
-}
-
-
-
+};
 
 const BalanceControl = () => {
-    const [userId, setCurrentUserId] = useState<string | null>(null);
+    const [userId, setUserId] = useState<string | null>(null);
+    const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
 
-    //아임포트.js 동적 로딩
+    const [amount, setAmount] = useState(0);
+    const [balance, setBalance] = useState<number | null>(null);
+    const [history, setHistory] = useState<HistoryItem[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    // 아임포트.js 동적 로딩
     useEffect(() => {
         const script = document.createElement("script");
         script.src = "https://cdn.iamport.kr/v1/iamport.js";
         script.async = true;
         document.body.appendChild(script);
-
         return () => {
             document.body.removeChild(script);
         };
     }, []);
 
-
+    // 유저 정보 + 잔액/내역 로딩
     useEffect(() => {
         (async () => {
             try {
-                const userId = await getCurrentUserId();
-                setCurrentUserId(String(userId));
-            } catch (e) {
-                console.error("현재 사용자 정보 불러오기 실패", e);
+                const info = await getCurrentUserInfo(); // ✅ authApi 사용
+                setUserInfo(info);
+                setUserId(String(info.userId)); // ✅ userId도 세팅
+                await refreshData(String(info.userId));
+            } catch (err) {
+                console.error("데이터 불러오기 실패:", err);
             }
         })();
     }, []);
 
-
-    const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
-
-    useEffect(() => {
-        if (!userId) return;
-
-        fetch(`https://192.168.0.129:7777/api/users/${userId}`)
-            .then((res) => res.json())
-            .then((data) => setUserInfo(data))
-            .catch((err) => console.error("유저 정보 불러오기 실패:", err));
-    }, [userId]);
-
-    const [amount, setAmount] = useState(0);
-    const [balance, setBalance] = useState<number | null>(null);
-    const [history, setHistory] = useState<HistoryItem[]>([]);
-
-    useEffect(() => {
-        if (!userId) return;
-
-        fetch(`https://192.168.0.129:7777/api/balance/${userId}`)
-            .then((res) => res.json())
-            .then((data) => setBalance(data.balance));
-
-        fetch(`https://192.168.0.129:7777/api/balance/${userId}/history`)
-            .then((res) => res.json())
-            .then((data) => setHistory(data));
-    }, [userId]);
-
-    const refreshData = async (userId: string) => {
-        const [balanceRes, historyRes] = await Promise.all([
-            fetch(`https://192.168.0.129:7777/api/balance/${userId}`).then((res) =>
-                res.json()
-            ),
-            fetch(
-                `https://192.168.0.129:7777/api/balance/${userId}/history`
-            ).then((res) => res.json()),
-        ]);
-        setBalance(balanceRes.balance);
-        setHistory(historyRes);
+    // 잔액/내역 새로고침
+    const refreshData = async (id: string) => {
+        try {
+            const bal = await getBalance(id);
+            const hist = await getBalanceHistory(id);
+            setBalance(bal.balance);
+            setHistory(hist);
+        } catch (err) {
+            console.error("잔액/내역 불러오기 실패:", err);
+        }
     };
 
-
-    // 아임포트 연동(충전)
+    // 충전
     const handleCharge = async () => {
-        if (!userId) return;
-
-        if (!window.IMP) {
-            alert("결제 모듈이 아직 로드되지 않았습니다.");
-            return;
-        }
+        if (!userId || !window.IMP) return alert("결제 모듈이 아직 로드되지 않았습니다.");
+        if (amount <= 0) return alert("1원 이상 입력해주세요.");
 
         const { IMP } = window;
-        IMP.init("imp82813442");//현재는 테스트모드 이므로, 샘플키 사용 
+        IMP.init("imp82813442");
 
+        setLoading(true);
         IMP.request_pay(
             {
-                pg: "tosspayments", //테스트 모드
+                pg: "tosspayments",
                 pay_method: "card",
                 merchant_uid: `mid_${new Date().getTime()}`,
                 name: "포인트 충전",
-                amount: amount,
+                amount,
                 buyer_email: userInfo?.email || "",
                 buyer_name: userInfo?.name || "",
-
-                m_redirect_url: "http://192.168.0.129.:3000/pay", //모바일 결제 후 리다이렉트 주소
+                m_redirect_url: `${window.location.origin}/pay`,
             },
             async (rsp: any) => {
                 if (rsp.success) {
-                    // 결제 서버 검증 호출
-                    await fetch("https://192.168.0.129:7777/api/balance/charge-complete", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            imp_uid: rsp.imp_uid,
-                            paid_amount: rsp.paid_amount,
-                        }),
-                    });
-                    refreshData(userId);
+                    try {
+                        await chargeComplete(rsp.imp_uid, rsp.paid_amount);
+                        refreshData(userId);
+                    } catch {
+                        alert("충전 처리 실패");
+                    }
                 } else {
                     alert("결제 실패: " + rsp.error_msg);
                 }
+                setLoading(false);
             }
         );
     };
+
+    // 출금
     const handleWithdraw = async () => {
         if (!userId) return;
-        const res = await fetch(
-            `https://192.168.0.129:7777/api/balance/${userId}/balance`,
-            {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ amount: -amount }),
-            }
-        );
-        const data = await res.json();
-        if (!data.error) {
+        if (amount <= 0) return alert("출금 금액을 입력하세요.");
+        setLoading(true);
+        try {
+            await withdrawBalance(userId, amount);
             refreshData(userId);
+        } catch {
+            alert("출금 실패");
+        } finally {
+            setLoading(false);
         }
     };
 
+
     return (
         <div className="flex flex-col items-center w-full min-h-screen bg-gray-100 p-4 sm:p-6 space-y-6">
-            {/* 💰 잔액 카드 */}
+            {/* 💰 잔액 */}
             <div className="w-[100%] sm:max-w-md bg-white rounded-2xl shadow-lg p-6 text-center">
                 <h3 className="text-lg font-medium text-gray-500 mb-2">현재 잔액</h3>
                 <p className="text-3xl font-bold text-indigo-600">
                     {balance !== null ? balance.toLocaleString() : "로딩중..."} P
                 </p>
 
-                {/* 입력 + 버튼 */}
                 <div className="mt-6 flex flex-col sm:flex-row gap-3 w-full">
                     <input
                         type="number"
@@ -166,13 +141,15 @@ const BalanceControl = () => {
                     <div className="flex flex-row sm:flex-row gap-2 w-full sm:w-auto">
                         <button
                             onClick={handleCharge}
-                            className="flex items-center justify-center gap-1 bg-indigo-500 hover:bg-indigo-600 text-white font-medium px-4 py-2 rounded-lg transition w-full sm:w-auto"
+                            disabled={loading}
+                            className="flex items-center justify-center gap-1 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white font-medium px-4 py-2 rounded-lg transition w-full sm:w-auto"
                         >
                             <PlusCircle size={18} /> 충전
                         </button>
                         <button
                             onClick={handleWithdraw}
-                            className="flex items-center justify-center gap-1 bg-red-500 hover:bg-red-600 text-white font-medium px-4 py-2 rounded-lg transition w-full sm:w-auto"
+                            disabled={loading}
+                            className="flex items-center justify-center gap-1 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white font-medium px-4 py-2 rounded-lg transition w-full sm:w-auto"
                         >
                             <ArrowDownCircle size={18} /> 출금
                         </button>
