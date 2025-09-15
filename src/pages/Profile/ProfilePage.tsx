@@ -266,7 +266,7 @@ const ProfilePage = () => {
           {/* BalanceControl 페이지로 이동 */}
           <button
             className="flex-1 py-3 flex items-center justify-center border-b-2 border-transparent"
-            onClick={() => navigate("/pay")}
+            onClick={() => navigate("/balance")}
           >
             <Wallet className="w-5 h-5 text-gray-400" />
           </button>
