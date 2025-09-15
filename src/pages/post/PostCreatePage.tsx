@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import PostForm, { LinkerLite } from "@/components/post/PostForm";
 import { createPost, getLinker } from "@/api/postApi";
-import { getCurrentUserId, getCurrentUserInfo } from "@/api/authApi";
+import { getCurrentUserInfo } from "@/api/authApi";
 
 export default function PostCreatePage(): React.ReactElement {
   const { footerHeight } = useOutletContext<{ headerHeight: number; footerHeight: number }>();
@@ -15,22 +15,24 @@ export default function PostCreatePage(): React.ReactElement {
   const [linker, setLinker] = useState<LinkerLite | null>(location.state?.linker ?? null);
   const [submitting, setSubmitting] = useState(false);
 
-
-  //현재 로그인한 사용자 ID 상태
+  // 로그인한 사용자 정보 상태
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [name, setUserName] = useState<string | null>(null);
+  const [userNickname, setUserNickname] = useState<string | null>(null);
 
   // 로그인 사용자 정보 가져오기
   useEffect(() => {
     (async () => {
       try {
-        const userId = await getCurrentUserId(); // 실제 숫자 or 문자열
-        setCurrentUserId(String(userId));        // FormData에 안전하게 string으로 변환
+        const info = await getCurrentUserInfo();
+        setCurrentUserId(String(info.userId));
+        setUserName(info.name);
+        setUserNickname(info.nickname);
       } catch (e) {
         console.error("현재 사용자 정보 불러오기 실패", e);
       }
     })();
   }, []);
-
 
   useEffect(() => {
     if (!linkerId) {
@@ -80,16 +82,17 @@ export default function PostCreatePage(): React.ReactElement {
   };
 
   return (
-    <div className='flex w-full flex-col'>
-      {/* 헤더 */}
+    <div className="flex w-full flex-col">
       <PostForm
         linker={linker ?? undefined}
         submitting={submitting}
-        submitLabel='작성하기'
+        submitLabel="작성하기"
         onClickLinker={goToLinkerOnMap}
         onSubmit={handleSubmit}
         footerOffset={footerHeight}
         showDeleteButton={false}
+        name={name ?? "알 수 없는 사용자"}
+        userNickname={userNickname ?? "알 수 없는 사용자"}
       />
     </div>
   );

@@ -19,7 +19,7 @@ import ChatRoomPage from "./pages/chat/ChatRoomPage";
 import ChatListPage from "./pages/chat/ChatListPage";
 import RoomCreatePage from "./pages/chat/RoomCreatePage";
 
-import PointPage from "./pages/pointPage";
+import PayPage from "./pages/pay/Point";
 import AppLayout from "./layouts/AppLayout";
 import PostDetailPage from "./pages/post/PostDetailPage";
 import useSilentRefresh from "./hooks/useSilentRefresh";
@@ -27,6 +27,8 @@ import LandingRedirect from "./pages/LandingRedirect";
 import ErrorPage from "./pages/ErrorPage";
 import TestPage from "./pages/TestPage";
 import PasswordResetPage from "./pages/auth/PasswordResetPage";
+
+
 
 import { stompClient } from "@/lib/stompClient";
 import { getCurrentUserId } from "@/api/authApi";
@@ -74,6 +76,10 @@ export default function App() {
         <Route path='/post' element={<PostCreatePage />} />
         <Route path='/post/:postId' element={<PostDetailPage />} />
 
+        <Route path='/pay' element={<PayPage />} />
+
+        <Route path='/pay' element={<PayPage />} />
+
 
       </Route>
 
@@ -97,14 +103,17 @@ export default function App() {
         <Route path='/search' element={<FriendSearchPage />} />
       </Route>
 
+
+      <Route path='/post/:postId' element={<PostDetailPage />} />
+
+
       {/* 동적 에러 페이지 */}
       <Route path='/error/:type' element={<ErrorPage />} />
 
       {/* 기타 */}
-      <Route path='/point' element={<PointPage />} />
       <Route path='/post/:postId' element={<PostDetailPage />} />
 
       <Route path='/test-api' element={<TestAPI />} />
-    </Routes>
+    </Routes >
   );
 }
