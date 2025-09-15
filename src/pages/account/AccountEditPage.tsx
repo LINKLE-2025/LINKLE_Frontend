@@ -87,7 +87,7 @@ export default function AccountEditPage() {
                         <p className="text-sm text-linkleGray font-bold pl-1 mb-1">은행사</p>
                         <input type="text" placeholder="하단에서 은행사를 선택해주세요" readOnly
                             value={selectedBank ? selectedBank : ""}
-                            className="w-full text-linkleGray font-bold
+                            className="w-full text-linkleGray
                                     bg-gray-100/40 border border-gray-200 rounded-lg 
                                     focus:outline-none focus:border-black/15 px-3 py-2.5"
                         />
