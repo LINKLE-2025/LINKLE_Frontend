@@ -3,7 +3,7 @@ import { useEffect } from "react";
 
 export default function TestAPI() {
     useEffect(() => {
-        axios.get("https://localhost/recommend?user_id=2", {
+        axios.get("https://localhost:7777/api/recommend?userId=7777", {
             withCredentials: true, // 쿠키가 필요하면 true
         })
             .then(res => console.log("✅ 연결 성공:", res.data))
