@@ -14,11 +14,13 @@ export const getBalanceHistory = async (userId: string) => {
   return res.data;
 };
 
-/** 충전 완료 처리 */
-export const chargeComplete = async (imp_uid: string, paid_amount: number) => {
+/** 충전 완료 처리 (V2) */
+export const chargeComplete = async (paymentId: string, userId: number) => {
+  console.log("[API CALL] chargeComplete 실행:", paymentId, userId); // ✅ 찍기
+
   const res = await apiClient.post(
     `/balance/charge-complete`,
-    { imp_uid, paid_amount },
+    { paymentId, userId }, // ✅ imp_uid, paid_amount ❌
     { withCredentials: true },
   );
   return res.data;
