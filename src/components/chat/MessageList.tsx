@@ -56,24 +56,34 @@ export default function MessageList({
       ref={listContainerRef}
       className="w-full bg-[#fafafa] overflow-y-auto"
       style={{
-        // 헤더/푸터/인풋/안전영역 제외한 영역만 스크롤
         height: `calc(100dvh - ${headerHeightPx}px - ${footerHeightPx}px - ${inputHeightPx}px - env(safe-area-inset-bottom, 0px))`,
-        // 인풋 뒤에 메시지가 가려지지 않도록 바닥 패딩
         paddingBottom: 0,
         overscrollBehavior: "contain",
       }}
     >
       <main className="w-full max-w-[768px] mx-auto px-4 box-border">
         {loadingOlder && (
-          <div className="text-center text-xs text-gray-500 py-1">
-            이전 메시지 불러오는 중…
-          </div>
+          <div className="text-center text-xs text-gray-500 py-1">이전 메시지 불러오는 중…</div>
         )}
 
         {msgs.map((m, i) => {
           const prev = msgs[i - 1];
+
+          // SYSTEM 메시지(입장/퇴장) 표시
+          if (m.messageType === "SYSTEM") {
+            return (
+              <div key={m.messageId} className="w-full flex justify-center my-2">
+                <span className="px-8 py-2 rounded-full text-sm text-gray-600 bg-gray-100">
+                  {m.content}
+                </span>
+              </div>
+            );
+          }
+
+          // 일반(TEXT) 메시지
           const isMine = m.senderId === meId;
           const isFirstOfBlock = !prev || prev.senderId !== m.senderId;
+          const afterSystem = prev?.messageType === "SYSTEM";
 
           const member = m.senderId != null ? membersById[m.senderId] : undefined;
           const name =
@@ -91,6 +101,8 @@ export default function MessageList({
               showAvatar={!isMine && isFirstOfBlock}
               name={name}
               avatar={avatar}
+              // 시스템 메시지 직후면 간격을 더 촘촘하게
+              compactAfterSystem={afterSystem}
             />
           );
         })}

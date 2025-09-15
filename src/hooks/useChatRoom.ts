@@ -1,4 +1,3 @@
-// src/hooks/useChatRoom.ts
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { MemberResponseDTO, MessageResponseDTO, RoomResponseDTO } from "../types/chat";
 import { resolveImageUrl } from "../utils/chat";
@@ -95,7 +94,8 @@ export function useChatRoom(roomId: number) {
 
       const initial = (m ?? [])
         .map((x) => ({ ...x, content: x.content ?? (x as any).text ?? "" }))
-        .filter((x) => x.messageType === "TEXT")
+        // TEXT + SYSTEM 모두 허용
+        .filter((x) => x.messageType === "TEXT" || x.messageType === "SYSTEM")
         .filter((x) => typeof x.messageId === "number")
         .filter((x) => typeof x.content === "string" && x.content.trim().length > 0)
         .sort(byCreatedAsc);
@@ -128,7 +128,8 @@ export function useChatRoom(roomId: number) {
       if (typeof contentRaw !== "string" || contentRaw.trim().length === 0) return;
 
       const mt = (raw?.messageType as any) ?? "TEXT";
-      if (mt !== "TEXT") return;
+      // TEXT, SYSTEM만 통과
+      if (mt !== "TEXT" && mt !== "SYSTEM") return;
 
       const evt: MessageResponseDTO = {
         messageId: raw.messageId,
@@ -153,7 +154,7 @@ export function useChatRoom(roomId: number) {
     };
   }, [roomId]);
 
-  // 스크롤 & 자동스크롤 로직 그대로…
+  // 스크롤 & 자동스크롤
   useEffect(() => {
     const el = listContainerRef.current;
     if (!el) return;
@@ -227,7 +228,8 @@ export function useChatRoom(roomId: number) {
         const ids = new Set(prev.map((x) => x.messageId));
         const toPrepend = older
           .map((x) => ({ ...x, content: x.content ?? (x as any).text ?? "" }))
-          .filter((x) => x.messageType === "TEXT")
+          // TEXT + SYSTEM 모두
+          .filter((x) => x.messageType === "TEXT" || x.messageType === "SYSTEM")
           .filter((x) => typeof x.messageId === "number")
           .filter((x) => typeof x.content === "string" && x.content.trim().length > 0)
           .filter((x) => !ids.has(x.messageId))
@@ -247,7 +249,7 @@ export function useChatRoom(roomId: number) {
     }
   };
 
-  // 읽음 동기화 그대로…
+  // 읽음 동기화
   function getVisibleLastId(): number | null {
     const last = msgs.length ? msgs[msgs.length - 1] : null;
     return last ? last.messageId : null;
