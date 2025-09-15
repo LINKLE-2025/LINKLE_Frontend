@@ -1,5 +1,5 @@
 // src/components/chat/RoomMemberSheet.tsx
-import { Info, BellOff, Users } from "lucide-react";
+import { Info, Users } from "lucide-react";
 import type { MemberResponseDTO, RoomResponseDTO } from "@/types/chat";
 import { useMemo, useState } from "react";
 import { userProfileUrl, resolveImageUrl } from "@/utils/chat";
@@ -13,23 +13,19 @@ type Props = {
     onLeave: () => Promise<void>;
     headerHeight?: number;
     footerHeight?: number;
+    currentUserId?: number;
 };
 
-function pickMemberAvatar(m: any): string {
-    const raw = m?.image ?? m?.profileImageUrl ?? m?.userImage ?? null;
-    return resolveImageUrl(raw ?? undefined) ?? userProfileUrl(m?.userId);
+function pickMemberAvatar(m: MemberResponseDTO): string {
+    const raw = (m as any)?.image ?? (m as any)?.profileImageUrl ?? (m as any)?.userImage ?? null;
+    return resolveImageUrl(raw ?? undefined) ?? userProfileUrl(m.userId);
 }
-function pickMemberNick(m: any, room: RoomResponseDTO): string {
-    const ownNick = m?.nickname ?? m?.nick ?? m?.userNickname;
-    if (typeof ownNick === "string" && ownNick.trim()) return ownNick;
-    if (room.roomType === "DM") {
-        const partnerId = room.friendUserId ?? (room as any).dmPartnerId;
-        if (partnerId && Number(partnerId) === Number(m?.userId)) {
-            const dmNick = (room as any).dmPartnerNickname ?? (room as any).friendNickname ?? null;
-            if (typeof dmNick === "string" && dmNick.trim()) return dmNick;
-        }
-    }
-    return String(m?.userId ?? "");
+
+function pickMemberNick(m: MemberResponseDTO): string {
+    if (typeof m.nickname === "string" && m.nickname.trim()) return m.nickname.trim();
+    const alt = (m as any).nick ?? (m as any).userNickname;
+    if (typeof alt === "string" && alt.trim()) return alt.trim();
+    return String(m.userId);
 }
 
 export default function RoomMemberSheet({
@@ -40,25 +36,35 @@ export default function RoomMemberSheet({
     onLeave,
     headerHeight = 0,
     footerHeight = 0,
+    currentUserId,
 }: Props) {
     const [leaving, setLeaving] = useState(false);
-    const [memoOpen, setMemoOpen] = useState(false); // ✅ 추가
+    const [memoOpen, setMemoOpen] = useState(false);
 
     const countLabel = useMemo(() => {
         const n = members?.length ?? room.memberCount ?? 0;
         return `${n}명 참여 중`;
     }, [members, room.memberCount]);
 
-    const normalizedMembers = useMemo(
-        () =>
-            (members ?? []).map((m) => ({
+    // 멤버 정규화 + 내 계정 표시 + "나 먼저" 정렬
+    const normalizedMembers = useMemo(() => {
+        const base = (members ?? []).map((m) => {
+            const isSelf = currentUserId != null && Number(m.userId) === Number(currentUserId);
+            return {
                 id: m.userId,
                 name: m.name,
                 avatar: pickMemberAvatar(m),
-                nick: pickMemberNick(m as any, room),
-            })),
-        [members, room],
-    );
+                nick: pickMemberNick(m),
+                isSelf,
+            };
+        });
+        // 나(본인) 최상단, 나머지는 이름 오름차순(원하면 제거/변경 가능)
+        base.sort((a, b) => {
+            if (a.isSelf !== b.isSelf) return a.isSelf ? -1 : 1;
+            return a.name.localeCompare(b.name);
+        });
+        return base;
+    }, [members, currentUserId]);
 
     const handleLeave = async () => {
         if (leaving) return;
@@ -99,15 +105,17 @@ export default function RoomMemberSheet({
                         <span className="font-medium truncate">{countLabel}</span>
                     </div>
 
-                    {/* ✅ Info 아이콘을 버튼으로 변경해서 메모 모달 열기 */}
-                    <button
-                        type="button"
-                        onClick={() => setMemoOpen(true)}
-                        className="w-8 h-8 inline-flex items-center justify-center rounded-md hover:bg-gray-100"
-                        aria-label="방 메모 보기"
-                    >
-                        <Info className="w-5 h-5 text-gray-500" />
-                    </button>
+                    {/* DM 방에서는 Info 버튼 숨김 */}
+                    {room.roomType !== "DM" && (
+                        <button
+                            type="button"
+                            onClick={() => setMemoOpen(true)}
+                            className="w-8 h-8 inline-flex items-center justify-center rounded-md hover:bg-gray-100"
+                            aria-label="방 메모 보기"
+                        >
+                            <Info className="w-5 h-5 text-gray-500" />
+                        </button>
+                    )}
                 </div>
 
                 {/* 참여자 리스트 */}
@@ -123,7 +131,17 @@ export default function RoomMemberSheet({
                                     draggable={false}
                                 />
                                 <div className="min-w-0 flex-1 leading-tight">
-                                    <div className="text-sm font-semibold text-gray-900 truncate">{m.name}</div>
+                                    <div className="flex items-center gap-1 text-sm font-semibold text-gray-900 truncate">
+                                        <span className="truncate">{m.name}</span>
+                                        {m.isSelf && (
+                                            <img
+                                                src="/icons/profile/isSelf.svg"
+                                                alt="본인 프로필"
+                                                className="inline-block w-4 h-4 shrink-0"
+                                                draggable={false}
+                                            />
+                                        )}
+                                    </div>
                                     <div className="text-[11px] text-gray-500 truncate">@{m.nick}</div>
                                 </div>
                             </li>
@@ -135,8 +153,6 @@ export default function RoomMemberSheet({
                 <div className="border-t border-gray-200 px-4 py-3 bg-white">
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2 text-gray-600">
-                            {/* 단순 표시용 */}
-                            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M13 17h-1v-4h-1m1-4h.01M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z" /></svg>
                             <span className="text-sm">알림 끄기</span>
                         </div>
                         <div className="w-10 h-6 rounded-full bg-gray-200" />
@@ -152,14 +168,9 @@ export default function RoomMemberSheet({
                 </div>
             </aside>
 
-            {/* ✅ 방 메모 모달 (시트 위에 뜸) */}
-            <RoomMemoModal
-                room={room}
-                isOpen={memoOpen}
-                onClose={() => setMemoOpen(false)}
-            />
+            {/* 방 메모 모달 */}
+            <RoomMemoModal room={room} isOpen={memoOpen} onClose={() => setMemoOpen(false)} />
 
-            {/* animations */}
             <style>{`
         .animate-fadeIn { animation: fadeIn .15s ease-out; }
         @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }

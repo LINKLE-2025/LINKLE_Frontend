@@ -6,10 +6,10 @@ import MessageList from "./MessageList";
 import ChatInput from "./ChatInput";
 import type { ChatOutletContext } from "@/layouts/ChatLayout";
 
-// ▼ 사이드 시트 & 나가기 API
-import RoomMemberSheet from "./RoomMemberSheet";          // 경로는 사용하는 위치에 맞게 조정
+// 사이드 시트 & 나가기 API
+import RoomMemberSheet from "./RoomMemberSheet";
 import { leaveRoom } from "@/api/chatApi";
-import RoomMemoModal from "../modal/RoomMemoModal";
+import { getCurrentUserInfo } from "@/api/authApi";
 
 export default function ChatWindow({ roomId }: { roomId: number }) {
   const navigate = useNavigate();
@@ -24,16 +24,30 @@ export default function ChatWindow({ roomId }: { roomId: number }) {
 
   const [inputHeight, setInputHeight] = useState(56);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [memoOpen, setMemoOpen] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<number | undefined>(undefined);
 
   const peerName = useMemo(() => peer?.name ?? null, [peer]);
   const members = useMemo(() => Object.values(membersById ?? {}), [membersById]);
 
-  // 헤더 구성 + 메뉴(⋯) 클릭 → 사이드시트 열기
+  // 현재 로그인 유저 ID 로드 (아이콘/정렬용)
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const { userId } = await getCurrentUserInfo();
+        if (mounted && typeof userId === "number") setCurrentUserId(userId);
+      } catch {
+        setCurrentUserId(undefined);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  // 헤더 구성 + 메뉴(⋯) 클릭 → 사이드 시트 토글
   useEffect(() => {
     if (!room) return;
 
-    const onMenuClick = () => setSheetOpen((v) => !v);
+    const onMenuClick = () => setSheetOpen(v => !v);
 
     if (room.roomType === "DM") {
       setRoomHeader({
@@ -99,12 +113,9 @@ export default function ChatWindow({ roomId }: { roomId: number }) {
         onLeave={handleLeave}
         headerHeight={headerHeight}
         footerHeight={footerHeight}
+        currentUserId={currentUserId}
       />
-      <RoomMemoModal
-        room={room}
-        isOpen={memoOpen}
-        onClose={() => setMemoOpen(false)}
-      />
+
       {status !== "open" && (
         <div className="fixed left-1/2 -translate-x-1/2 bottom-20 text-xs text-gray-500 bg-white/80 px-2 py-1 rounded">
           {status === "connecting" ? "연결 중..." : status === "closed" ? "연결 종료" : "에러"}
