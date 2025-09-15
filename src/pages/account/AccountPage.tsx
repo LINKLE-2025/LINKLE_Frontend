@@ -29,15 +29,16 @@ export default function AccountPage() {
                 <div className="flex justify-between items-center">
                     <div className="flex flex-row items-center">
                         {/* 은행사별 동적 아이콘 */}
-                        {/* <img className="w-9 h-9 *:rounded-full mr-3"
+                        <img className="w-9 h-9 *:rounded-full mr-3"
                             src="/icons/account/Shinhan_Symbol.png"
                             alt="신한아이콘"
-                        /> */}
+                        />
                         {/* 은행사 정보 없을 경우 */}
-                        <div className="w-9 h-9 rounded-full mr-3 bg-gray-200/60" />
+                        {/* <div className="w-9 h-9 rounded-full mr-3 bg-gray-200/60" /> */}
                         <div className="flex flex-col items-start">
                             <p className="text-sm"><span className="font-bold">홍길동</span>님의 계좌</p>
                             <p className="text-xs text-black/50">신한 123-456-789012</p>
+                            {/* <p className="text-xs text-black/50">계좌를 등록해주세요</p> */}
                         </div>
                     </div>
                     <button onClick={onEditProfile} className="p-2 rounded-xl hover:bg-gray-100/80">
