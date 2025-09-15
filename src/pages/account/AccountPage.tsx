@@ -78,41 +78,41 @@ export default function AccountPage() {
                     <div className="flex justify-between">
                         <div className="items-start justify-start text-left">
                             <p className="text-xs text-black/50">2023-10-01 오후 2:30</p>
-                            <p className="text-lg">클래스톡 참여비</p>
+                            <p className="xxs:text-lg">클래스톡 참여비</p>
                         </div>
                         <div className="items-start justify-start text-right">
                             <p className="text-xs font-bold text-blue-600/90">입금</p>
-                            <p className="text-lg font-bold text-blue-600/90">20,000원</p>
+                            <p className="xxs:text-lg font-bold text-blue-600/90">20,000원</p>
                         </div>
                     </div>
                     <div className="flex justify-between">
                         <div className="items-start justify-start text-left">
                             <p className="text-xs text-black/50">2023-10-01 오후 2:30</p>
-                            <p className="text-lg">링커 유지기간 연장</p>
+                            <p className="xxs:text-lg">링커 유지기간 연장</p>
                         </div>
                         <div className="items-start justify-start text-right">
                             <p className="text-xs font-bold text-red-600/90">출금</p>
-                            <p className="text-lg font-bold text-red-600/90">5,000원</p>
+                            <p className="xxs:text-lg font-bold text-red-600/90">5,000원</p>
                         </div>
                     </div>
                     <div className="flex justify-between">
                         <div className="items-start justify-start text-left">
                             <p className="text-xs text-black/50">2023-10-01 오후 2:30</p>
-                            <p className="text-lg">내 계좌로 출금</p>
+                            <p className="xxs:text-lg">내 계좌로 출금</p>
                         </div>
                         <div className="items-start justify-start text-right">
                             <p className="text-xs font-bold text-red-600/90">출금</p>
-                            <p className="text-lg font-bold text-red-600/90">300,000원</p>
+                            <p className="xxs:text-lg font-bold text-red-600/90">300,000원</p>
                         </div>
                     </div>
                     <div className="flex justify-between">
                         <div className="items-start justify-start text-left">
                             <p className="text-xs text-black/50">2023-10-01 오후 2:30</p>
-                            <p className="text-lg">클래스톡 참여비</p>
+                            <p className="xxs:text-lg">클래스톡 참여비</p>
                         </div>
                         <div className="items-start justify-start text-right">
                             <p className="text-xs font-bold text-blue-600/90">입금</p>
-                            <p className="text-lg font-bold text-blue-600/90">20,000원</p>
+                            <p className="xxs:text-lg font-bold text-blue-600/90">20,000원</p>
                         </div>
                     </div>
 
