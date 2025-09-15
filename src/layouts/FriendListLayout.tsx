@@ -2,7 +2,7 @@ import MainFooter from "@/components/footer/MainFooter";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Outlet } from "react-router-dom";
 
-export default function FriendLayout() {
+export default function FriendListLayout() {
   const footerRef = useRef<HTMLElement>(null);
   const [footerHeight, setFooterHeight] = useState(0);
   const [headerHeight, setHeaderHeight] = useState(0);

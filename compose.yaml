@@ -3,7 +3,7 @@ version: "3.9"
 services:
   # Frontend (React build → Nginx 서빙)
   frontend:
-    image: linkleteam/linkle-frontend:v1.0.1 # 빌드 & 푸시한 Frontend 이미지
+    image: linkleteam/linkle-frontend:v1.0.0 # 빌드 & 푸시한 Frontend 이미지
     container_name: linkle-frontend
     ports:
       - "8081:80" # Nginx 기본 포트 80을 호스트의 8081로 매핑
@@ -22,8 +22,8 @@ services:
       SPRING_PROFILES_ACTIVE: prod
       DB_HOST: db
       REDIS_HOST: redis
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
       # AI_HOST: python-ai
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
     depends_on:
       - db
       - redis
@@ -64,7 +64,7 @@ services:
   # MinIO (파일 저장용 오브젝트 스토리지)
   minio:
     image: minio/minio:latest
-    container_name: linkle-minio
+    container_name: minio
     restart: always
     ports:
       - "9000:9000"

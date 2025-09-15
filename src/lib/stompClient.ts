@@ -1,9 +1,7 @@
 // src/lib/stompClient.ts
 import { Client, IMessage, StompSubscription } from "@stomp/stompjs";
-
 type Handler = (data: any, frame: IMessage) => void;
 type Status = "connecting" | "open" | "closed" | "error";
-
 let client: Client | null = null;
 let status: Status = "closed";
 
@@ -14,7 +12,6 @@ const notifyStatus = (s: Status) => {
   status = s;
   statusListeners.forEach((fn) => fn(s));
 };
-
 function realSubscribe(topic: string) {
   if (!client || !client.connected) return;
   if (activeSubs.has(topic)) return;
@@ -26,7 +23,6 @@ function realSubscribe(topic: string) {
   });
   activeSubs.set(topic, sub);
 }
-
 function safeParse(body: string) {
   try {
     return JSON.parse(body);
@@ -70,7 +66,6 @@ export const stompClient = {
         activeSubs.clear();
       },
     });
-
     notifyStatus("connecting");
     client.activate();
   },
@@ -100,7 +95,6 @@ export const stompClient = {
         activeSubs.clear();
       },
     });
-
     notifyStatus("connecting");
     client.activate();
   },
@@ -125,7 +119,6 @@ export const stompClient = {
       }
     };
   },
-
   publish: (destination: string, body: any, headers?: Record<string, string>) => {
     if (!client || !client.connected) return;
     client.publish({
@@ -134,7 +127,6 @@ export const stompClient = {
       body: typeof body === "string" ? body : JSON.stringify(body),
     });
   },
-
   onStatusChange: (fn: (s: Status) => void): (() => void) => {
     statusListeners.add(fn);
     fn(status);
@@ -142,7 +134,6 @@ export const stompClient = {
       statusListeners.delete(fn);
     };
   },
-
   getStatus: () => status,
   isConnected: () => !!client?.connected,
 };

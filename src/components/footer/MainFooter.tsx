@@ -4,7 +4,7 @@ import FooterItem from "./FooterItem";
 
 interface MainFooterProps {
   linkerCreateMode?: boolean;
-  setLinkerCreateMode?: React.Dispatch<React.SetStateAction<boolean>>; // 🔹 추가
+  setLinkerCreateMode?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 function MainFooter({ linkerCreateMode, setLinkerCreateMode }: MainFooterProps) {
@@ -24,7 +24,7 @@ function MainFooter({ linkerCreateMode, setLinkerCreateMode }: MainFooterProps) 
   };
 
   return (
-    <footer className='w-full bg-white border-t z-[2] border-gray-200 text-gray-400
+    <footer className='w-full bg-white border-t z-40 border-gray-200 text-gray-400
                        text-xs py-0 text-center fixed bottom-0 pb-[env(safe-area-inset-bottom)]'>
       <div className='flex items-center justify-around'>
         <FooterItem
@@ -32,17 +32,19 @@ function MainFooter({ linkerCreateMode, setLinkerCreateMode }: MainFooterProps) 
           icon={<Home className="w-6 h-6" />}
           label="홈"
           linkerCreateMode={linkerCreateMode}
+          setLinkerCreateMode={setLinkerCreateMode}
         />
         <FooterItem
           to="/search"
           icon={<Search className="w-6 h-6" />}
           label="검색"
           linkerCreateMode={linkerCreateMode}
+          setLinkerCreateMode={setLinkerCreateMode}
         />
         <button
           type="button"
           onClick={handleLinkerButton}
-          className="p-3 text-gray-900"
+          className="px-3 py-2 text-gray-900"
         >
           <div className='w-[14vw] flex flex-col items-center rounded-xl hover:bg-gray-100 p-2.5 transition-colors'>
             <img
@@ -58,14 +60,17 @@ function MainFooter({ linkerCreateMode, setLinkerCreateMode }: MainFooterProps) 
         </button>
         <FooterItem
           to="/chat"
-          icon={<Send className="w-6 h-6" />}
+          icon={<Send className="w-6 h-6" strokeWidth={1.7} />}
           label="채팅"
-          linkerCreateMode={linkerCreateMode} />
+          linkerCreateMode={linkerCreateMode}
+          setLinkerCreateMode={setLinkerCreateMode}
+        />
         <FooterItem
           to="/profile"
-          icon={<CircleUserRound className="w-6 h-6" />}
+          icon={<CircleUserRound className="w-6 h-6" strokeWidth={1.65} />}
           label="프로필"
           linkerCreateMode={linkerCreateMode}
+          setLinkerCreateMode={setLinkerCreateMode}
         />
       </div >
     </footer >

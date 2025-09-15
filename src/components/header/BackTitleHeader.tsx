@@ -1,3 +1,4 @@
+import { ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 type Props = {
@@ -12,7 +13,7 @@ export default function BackTitleHeader({ title, backTo, className, onBack }: Pr
 
   return (
     <header
-      className={`fixed top-0 w-full flex items-center justify-center bg-white border-b border-gray-200 px-5 py-3 z-50 ${className}`}
+      className={`fixed top-0 w-full flex items-center justify-center bg-white border-b border-gray-200 py-3 z-50 ${className}`}
     >
       {/* 뒤로가기 버튼 */}
       <button
@@ -23,9 +24,13 @@ export default function BackTitleHeader({ title, backTo, className, onBack }: Pr
             backTo ? navigate(backTo) : navigate(-1);
           }
         }}
-        className='absolute left-5 flex items-center'
+        className='absolute left-0 flex items-center'
       >
-        <img src='/icons/common/back.svg' alt='뒤로가기' className='h-5 w-5' />
+        <div className='flex items-center justify-center w-14 h-12 mx-0.5'>
+          <div className='flex items-center justify-center rounded-xl hover:bg-gray-100/60 transition-colors p-1'>
+            <ChevronLeft className="w-8 h-8 text-black" strokeWidth={1.5} />
+          </div>
+        </div>
       </button>
 
       {/* 중앙 타이틀 */}

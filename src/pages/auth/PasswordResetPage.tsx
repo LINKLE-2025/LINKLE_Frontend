@@ -72,7 +72,7 @@ export default function PasswordResetPage() {
             {/* header */}
             <BackTitleHeader
                 title='비밀번호 찾기'
-                className='bg-white/60'
+                className='bg-white'
                 onBack={step > 1 ? () => setStep(step - 1) : undefined}
             />
 
@@ -112,7 +112,7 @@ export default function PasswordResetPage() {
             </div>
             {/* 로그인 이동 링크 */}
             <div className='text-base sm:mb-10'>
-                <Link to='/login' className='text-base font-bold text-linkleGray hover:text-black'>
+                <Link to='/login' className='text-base font-bold text-linkleGray hover:text-black transition-colors'>
                     로그인으로 돌아가기
                 </Link>
             </div>
