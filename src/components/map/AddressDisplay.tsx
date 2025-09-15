@@ -3,6 +3,10 @@ import { useEffect, useState } from "react";
 import { Sheet } from "react-modal-sheet";
 import { useOutletContext } from "react-router-dom";
 import { convertToXY } from "@/utils/convertToXY";
+import { getCurrentUserInfo } from "@/api/authApi";
+import { getRecommend } from "@/api/pythonAPI";
+import { CATEGORY_DATA } from "@/constants/categoryData";
+import LinkerCardItem from "../linker/LinkerCardItem";
 
 declare global {
   interface Window {
@@ -15,6 +19,7 @@ interface AddressDisplayProps {
   isOpen: boolean;
   onClose: () => void;
   activeLinkers: any[];
+  loggedInUserId: number | null;
 }
 
 interface WeatherData {
@@ -22,17 +27,50 @@ interface WeatherData {
   rainType: string;
 }
 
+interface SearchLinkerResponseDTO {
+  linkerId: number;
+  name: string;
+  categoryId: number;
+  memo: string;
+  chatRoomCount: number;
+  postCount: number;
+  state: string;
+  address: string;
+}
+
 export default function AddressDisplay({
   map,
   isOpen,
   onClose,
   activeLinkers,
+  loggedInUserId,
 }: AddressDisplayProps) {
   const [address, setAddress] = useState("");
   const [weather, setWeather] = useState<WeatherData | null>(null);
 
   type LayoutContext = { headerHeight: number; footerHeight: number };
   const { footerHeight } = useOutletContext<LayoutContext>();
+
+  // 링커 추천
+  const fetchLinkers = async () => {
+    try {
+      const data = await getRecommend(loggedInUserId!); // userId 전달
+      console.log(loggedInUserId, data, "asd");
+      setLinkerResults(data);
+    } catch (err) {
+      console.error("링커 조회", err);
+    }
+  };
+  useEffect(() => {
+    if (isOpen && loggedInUserId) {
+      fetchLinkers();
+    }
+  }, [isOpen, loggedInUserId]);
+  console.log(loggedInUserId)
+
+  // AI  추천을 위한 정보 전달
+  const [linkerResults, setLinkerResults] = useState<SearchLinkerResponseDTO[]>([]);
+
 
   // 🔹 시/도 이름 통일 함수 (반드시 포함)
   const normalizeRegion = (raw: string) => {
@@ -57,7 +95,6 @@ export default function AddressDisplay({
     };
     return map[raw] || raw;
   };
-
   useEffect(() => {
     if (!map || !isOpen) return;
 
@@ -151,6 +188,16 @@ export default function AddressDisplay({
                 </span>
               )}
             </div>
+          </div>
+
+          <div>
+            {linkerResults.length > 0 ? (
+              linkerResults.map((linker) => (
+                <LinkerCardItem key={linker.linkerId} linker={linker} />
+              ))
+            ) : (
+              <div className="p-3 text-sm text-gray-400">추천된 링커가 없습니다.</div>
+            )}
           </div>
         </Sheet.Content>
       </Sheet.Container>
