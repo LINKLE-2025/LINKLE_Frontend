@@ -983,6 +983,8 @@ export default function MapPage(): React.ReactElement {
           setSearchResults([]);
           searchMarkers.current.forEach((m) => m.setMap(null));
           searchMarkers.current = [];
+          overlaysRef.current.forEach((ov) => ov.setMap(null));
+          overlaysRef.current = [];
         }}
         onSubmit={handleSaveLinker}
       />
