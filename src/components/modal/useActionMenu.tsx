@@ -138,14 +138,14 @@ export function useActionMenu() {
   // === 포털 요소 (요소 또는 null) ===
   const ActionMenu = state.isOpen
     ? createPortal(
-      <div className="fixed inset-0 z-50">
+      <div className="fixed inset-0 z-20">
         {/* Overlay */}
         <div
           className="absolute inset-0 bg-black/50"
           onClick={state.closeOnOverlay ? () => close(null) : undefined}
         />
         {/* Container */}
-        <div className="absolute bottom-0 left-0 right-0 mx-auto w-full max-w-md rounded-t-2xl bg-white p-4 shadow-2xl">
+        <div className="absolute bottom-0 left-0 right-0 mx-auto w-full max-w-md rounded-t-2xl bg-white p-4 pb-[calc(env(safe-area-inset-bottom)+6rem)] shadow-2xl">
           {/* Header */}
           {(state.title || state.message) && (
             <div className="mb-3 flex items-center justify-between">
