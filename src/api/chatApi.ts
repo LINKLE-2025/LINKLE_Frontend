@@ -84,3 +84,11 @@ export async function joinRoom(roomId: number) {
   });
   return data;
 }
+/** 방 나가기 */
+export async function leaveRoom(roomId: number) {
+  const uid = await getCurrentUserId().catch(() => undefined);
+  const { data } = await apiClient.post(`/chat/room/${roomId}/leave`, null, {
+    headers: { "x-user-id": uid },
+  });
+  return data;
+}
