@@ -25,6 +25,7 @@ import {
 } from "@/api/profileApi";
 import { getFriends } from "@/api/friendApi";
 import { getCurrentUserId } from "@/api/authApi";
+import { CATEGORY_DATA } from "@/constants/categoryData"
 
 
 // 카테고리 이름 + 아이콘 매핑
@@ -178,18 +179,14 @@ const ProfilePage = () => {
         return (
           <ParticipationTab
             participations={participations}
-            activities={ACTIVITIES}
-            icons={CATEGORY_ICONS}
-            colors={COLORS}
+          // categories={CATEGORY_DATA}
           />
         );
       case "state":
         return (
           <StateTab
             linkerStats={linkerStats}
-            activities={ACTIVITIES}
-            icons={CATEGORY_ICONS}
-            colors={COLORS}
+            categories={CATEGORY_DATA}
           />
         );
       default:

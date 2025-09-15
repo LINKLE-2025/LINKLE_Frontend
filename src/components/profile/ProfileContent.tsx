@@ -157,7 +157,8 @@ function ProfileContent({
           <img
             src={profileBackgroundSrc}
             alt="background"
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover cursor-pointer"
+            onClick={() => setPreviewImage(profileBackgroundSrc)} // 👈 추가
           />
         </div>
         {/* 상단 바 */}
