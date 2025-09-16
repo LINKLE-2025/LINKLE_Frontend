@@ -1,5 +1,3 @@
-// src/api/authApi.ts
-
 import apiClient from "./apiClient";
 
 // 로그인
