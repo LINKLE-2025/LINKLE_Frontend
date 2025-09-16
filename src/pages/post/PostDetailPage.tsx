@@ -6,6 +6,7 @@ import { getPost, updatePost, deletePost } from "@/api/postApi";
 import { getCurrentUserId } from "@/api/authApi";
 import BackTitleHeader from "@/components/header/BackTitleHeader";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { get } from "http";
 
 type PostDTO = {
   postId: number;
@@ -67,7 +68,9 @@ export default function PostDetailPage(): React.ReactElement {
       await updatePost(postId, text, file ?? null);
       alert("수정 완료");
       setIsEditing(false);
-      navigate("/post/" + postId, { replace: true });
+
+      const updated = await getPost(postId);
+      setPost(updated);
     } catch (e: any) {
       alert(e?.message ?? "수정 실패");
     } finally {
@@ -98,6 +101,7 @@ export default function PostDetailPage(): React.ReactElement {
       <BackTitleHeader title={isEditing ? "포스트 수정" : "포스트"} onBack={isEditing ? () => setIsEditing(false) : undefined} />
 
       <PostForm
+        key={`${post.postId}-${isEditing ? "edit" : "view"}`}
         linker={post.linker}
         initialText={post.memo ?? ""}
         initialImageUrl={post.image ? `/api/post/${post.postId}/image?v=${Date.now()}` : null}
