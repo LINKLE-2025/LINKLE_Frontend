@@ -15,7 +15,7 @@ type SearchHeaderProps = {
   inputRef?: RefObject<HTMLInputElement>;
 };
 
-// ✅ forwardRef 사용
+// forwardRef 사용
 const SearchHeader = forwardRef<HTMLDivElement, SearchHeaderProps>(
   (
     {
@@ -30,6 +30,10 @@ const SearchHeader = forwardRef<HTMLDivElement, SearchHeaderProps>(
   ) => {
     const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Enter" && onSearch) {
+        if (searchQuery.trim() === "") {
+          e.preventDefault();
+          return;
+        }
         onSearch();
         e.currentTarget.blur();
       }
@@ -54,7 +58,11 @@ const SearchHeader = forwardRef<HTMLDivElement, SearchHeaderProps>(
             <button
               type="button"
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-blue-600"
-              onClick={onSearch}
+              onClick={() => {
+                if (searchQuery.trim() !== "" && onSearch) {
+                  onSearch();
+                }
+              }}
             >
               <Search className="w-5 h-5" />
             </button>
