@@ -155,6 +155,10 @@ export default function AccountPage() {
         if (numAmount < 100) return alert("출금 금액은 100원 이상이어야 합니다.");
         setLoading(true);
         try {
+            if (!window.confirm("정말 출금하시겠습니까?")) {
+                setLoading(false);
+                return;
+            }
             await withdrawBalance(userId, numAmount, "잔액 출금");
             refreshData(userId);
         } catch {
