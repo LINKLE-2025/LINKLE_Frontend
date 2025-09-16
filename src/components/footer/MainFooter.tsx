@@ -46,16 +46,18 @@ function MainFooter({ linkerCreateMode, setLinkerCreateMode }: MainFooterProps) 
           onClick={handleLinkerButton}
           className="px-3 py-2 text-gray-900"
         >
-          <div className='w-[14vw] flex flex-col items-center rounded-xl hover:bg-gray-100 p-2.5 transition-colors'>
-            <img
-              src={
-                linkerCreateMode
-                  ? "/icons/common/footerLinkerOn.svg"   // ON 상태
-                  : "/icons/common/footerLinkerOff.svg"  // OFF 상태
-              }
-              alt="링커 생성"
-              className="text-gray-900"
-            />
+          <div className='w-[14vw] flex flex-col items-center rounded-xl hover:bg-gray-100/60 '>
+            <div className="w-full h-full flex flex-col items-center p-2.5 active:scale-95 transition-all duration-100">
+              <img
+                src={
+                  linkerCreateMode
+                    ? "/icons/common/footerLinkerOn.svg"   // ON 상태
+                    : "/icons/common/footerLinkerOff.svg"  // OFF 상태
+                }
+                alt="링커 생성"
+                className="text-gray-900"
+              />
+            </div>
           </div>
         </button>
         <FooterItem
