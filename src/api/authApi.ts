@@ -1,10 +1,9 @@
-// src/api/authApi.ts
-
 import apiClient from "./apiClient";
+import plainApiClient from "./plainApiClient";
 
 // 로그인
 export const login = async (email: string, password: string) => {
-  const res = await apiClient.post(`/auth/login`, { email, password });
+  const res = await plainApiClient.post(`/auth/login`, { email, password });
   return res.data;
 };
 
@@ -19,37 +18,37 @@ export const signup = async (data: {
   nickname: string;
   agree: boolean[];
 }) => {
-  const res = await apiClient.post(`/auth/signup`, data);
+  const res = await plainApiClient.post(`/auth/signup`, data);
   return res.data;
 };
 
 // 이메일 중복 검사
 export const checkEmail = async (email: string) => {
-  const res = await apiClient.get(`/auth/email/${encodeURIComponent(email)}`);
+  const res = await plainApiClient.get(`/auth/email/${encodeURIComponent(email)}`);
   return res.data;
 };
 
 // 이메일 인증 코드 발송
 export const sendEmailCode = async (email: string) => {
-  const res = await apiClient.post(`/auth/email/${encodeURIComponent(email)}`);
+  const res = await plainApiClient.post(`/auth/email/${encodeURIComponent(email)}`);
   return res.data;
 };
 
 // 이메일 인증 코드 검증
 export const verifyEmailCode = async (email: string, code: string) => {
-  const res = await apiClient.post(`/auth/email/${encodeURIComponent(email)}/code/${code}`);
+  const res = await plainApiClient.post(`/auth/email/${encodeURIComponent(email)}/code/${code}`);
   return res.data;
 };
 
 // 닉네임 중복 검사
 export const checkNickname = async (nickname: string) => {
-  const res = await apiClient.get(`/auth/nickname/${encodeURIComponent(nickname)}`);
+  const res = await plainApiClient.get(`/auth/nickname/${encodeURIComponent(nickname)}`);
   return res.data;
 };
 
 // 비밀번호 재설정
 export const resetPassword = async (data: { email: string; code: string; password: string }) => {
-  const res = await apiClient.post(`/auth/password/reset`, data);
+  const res = await plainApiClient.post(`/auth/password/reset`, data);
   return res.data;
 };
 
@@ -76,6 +75,6 @@ export const logout = async () => {
 
 // 토큰 갱신
 export const refreshToken = async () => {
-  const res = await apiClient.post(`/auth/refresh`);
+  const res = await plainApiClient.post(`/auth/refresh`);
   return res.data;
 };

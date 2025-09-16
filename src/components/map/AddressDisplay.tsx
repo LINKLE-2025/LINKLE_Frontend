@@ -66,7 +66,6 @@ export default function AddressDisplay({
       fetchLinkers();
     }
   }, [isOpen, loggedInUserId]);
-  console.log(loggedInUserId)
 
   // AI  추천을 위한 정보 전달
   const [linkerResults, setLinkerResults] = useState<SearchLinkerResponseDTO[]>([]);
