@@ -208,10 +208,10 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
   );
 
   // 실제 입장 (모달의 '참여' 버튼에서 호출)
-  const openRoom = async (r: RoomResponseDTO) => {
+  const openRoom = async (r: RoomResponseDTO, alreadyJoined = false) => {
     try {
-      if (r.roomType !== "DM") {
-        await joinRoom(r.roomId);
+      if (!alreadyJoined && r.roomType !== "DM") {
+        await joinRoom(r.roomId); // DM 방이 아니면 필요할 때만 join
       }
       navigate(`/chat/room/${r.roomId}`);
     } catch (e) {
@@ -223,8 +223,26 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
   // 모달에서 참여 누르기
   const handleEnterFromPreview = async () => {
     if (!previewRoom) return;
-    await openRoom(previewRoom);
-    closePreview();
+
+    console.log("handleEnterFromPreview", previewRoom);
+
+    try {
+      const res = await joinRoom(previewRoom.roomId);
+
+      if (res.balance !== undefined) {
+        alert(`입장료가 차감되었습니다. 남은 잔액: ${res.balance.toLocaleString()}원`);
+      }
+
+      // ✅ 이미 join 했으니까 openRoom에 알려줌
+      await openRoom(res.room, true);
+      closePreview();
+    } catch (err: any) {
+      if (err.response?.status === 400 && err.response.data?.error) {
+        alert(err.response.data.error);
+      } else {
+        alert("방 입장 중 오류가 발생했습니다.");
+      }
+    }
   };
 
   // 참여 전에는 라이트/클래스 탭 컨텐츠 잠금

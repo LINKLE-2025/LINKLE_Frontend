@@ -35,3 +35,18 @@ export const withdrawBalance = async (userId: string, amount: number, memo: stri
   );
   return res.data;
 };
+
+/** 송금 */
+export const transferBalance = async (
+  fromUserId: string,
+  toUserId: string,
+  amount: number,
+  memo: string,
+) => {
+  const res = await apiClient.patch(
+    `/balance/${fromUserId}/transfer/${toUserId}`,
+    { amount, memo },
+    { withCredentials: true },
+  );
+  return res.data;
+};
