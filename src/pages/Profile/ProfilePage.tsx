@@ -47,6 +47,7 @@ const CATEGORY_ICONS = [
   "/icons/profile/hospital.png",   // 10
   "/icons/profile/game.png",       // 11
   "/icons/profile/travel.png",     // 12
+  "/icons/profile/shinhan.png",     // 13
 ];
 
 const COLORS = [
@@ -100,7 +101,14 @@ const ProfilePage = () => {
   const { userId: profileUserIdParam } = useParams<{ userId: string }>();
   const location = useLocation();
 
-  const { results, setResults } = useFriendSearch(loggedInUserId ?? 0);
+  const {
+    results,
+    setResults,
+    page,
+    totalPages,
+    handleSearch,
+  } = useFriendSearch(loggedInUserId ?? 0);
+
 
 
   const state = location.state as {
@@ -120,6 +128,19 @@ const ProfilePage = () => {
   const profileUserId = profileUserIdParam
     ? Number(profileUserIdParam)
     : state?.userId ?? loggedInUserId;
+
+
+
+  const refetchFriendList = async () => {
+    if (profileUserId == null) return; // null 또는 undefined 방지
+
+    try {
+      const updatedFriends = await getFriends(profileUserId);
+      setFriendList(updatedFriends);
+    } catch (err) {
+      console.error("친구 목록 재요청 실패:", err);
+    }
+  };
 
   // 데이터 패칭
   useEffect(() => {
@@ -215,13 +236,15 @@ const ProfilePage = () => {
           loggedInUserId={loggedInUserId}
           setSearchResults={setResults}
           pathname={pathname}
+
+          page={page}
+          totalPages={totalPages}
+          handleSearch={handleSearch}
+          onFriendRequestSuccess={refetchFriendList}
         />
       ) : (
         <>
-          {/* 배경 placeholder */}
           <div className="h-60 bg-gray-100 animate-pulse" />
-
-          {/* 프로필 정보 placeholder */}
           <div className="bg-white px-4 mt-3 rounded-t-3xl min-h-[120px] animate-pulse" />
         </>
       )}
@@ -258,14 +281,6 @@ const ProfilePage = () => {
               className={`w-5 h-5 ${activeTab === "state" ? "text-gray-900" : "text-gray-400"
                 }`}
             />
-          </button>
-
-          {/* BalanceControl 페이지로 이동 */}
-          <button
-            className="flex-1 py-3 flex items-center justify-center border-b-2 border-transparent"
-            onClick={() => navigate("/balance")}
-          >
-            <Wallet className="w-5 h-5 text-gray-400" />
           </button>
         </div>
       </div>

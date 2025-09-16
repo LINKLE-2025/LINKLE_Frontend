@@ -106,6 +106,7 @@ export default function MapPage(): React.ReactElement {
     if (linkerCreateMode && !linkerCreateModeRef.current) {
       setSearchOpen(false);     // 검색창 닫기
       setSearchOpen(false) // 하단바 닫기
+      setShowAddress(false); // 주소 표시 닫기
     }
 
     // 항상 최신 상태 저장
@@ -154,6 +155,7 @@ export default function MapPage(): React.ReactElement {
     10: "/icons/category/hospital.png",
     11: "/icons/category/game.png",
     12: "/icons/category/travel.png",
+    13: "/icons/category/shinhan.png",
   };
 
   // 전체 활성 링커를 메모리에 보관
@@ -251,8 +253,8 @@ export default function MapPage(): React.ReactElement {
           return;
         }
 
-        // 🔥 커스텀 훅의 selectedCategories 사용
-        if (!selectedCategories.has(categoryId as any)) {
+        // 🔥 커스텀 훅의 selectedCategories 사용, 13번은 항상 보임
+        if (categoryId !== 13 && !selectedCategories.has(categoryId as any)) {
           console.log(`🚫 카테고리 필터로 제외됨: ${m.name} (카테고리 ${categoryId})`);
           return;
         }
@@ -763,21 +765,7 @@ export default function MapPage(): React.ReactElement {
       alert("이 브라우저는 위치 정보를 지원하지 않습니다.");
     }
   };
-  const saveNewSpot = ({ alias, category }: { alias: string; category: string }) => {
-    if (!createDraft) return;
-    const { lat, lng } = createDraft;
-    const id = spotIdFromLatLng(lat, lng, 4);
-    setSpots((prev) => {
-      const next: StoredSpots = {
-        ...prev,
-        [id]: { lat, lng, alias, category, photos: [], messages: [] },
-      };
-      save(STORAGE_KEY, next);
-      return next;
-    });
-    setCreateDraft(null);
-    setActiveId(id);
-  };
+
 
 
   // 검색 후 링커 생성 모달열기

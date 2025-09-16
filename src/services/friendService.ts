@@ -1,17 +1,13 @@
+import { getFriendSearchResults } from "@/api/searchApi";
 import { FriendResponse } from "../types/friend";
 
 
 export const fetchFriendSearchResults = async (
     query: string,
-    currentUserId: number
-): Promise<FriendResponse[]> => {
-    const res = await fetch(
-        `/api/search/user?word=${encodeURIComponent(query)}&currentUserId=${currentUserId}`
-    );
-
-
-    if (!res.ok) throw new Error("검색 실패");
-    const data = await res.json();
-    return Array.isArray(data) ? data : [data];
-};
-
+    currentUserId: number,
+    page: number = 0,
+    size: number = 10
+  ) => {
+    return await getFriendSearchResults(query, currentUserId, page, size);
+    // Page 객체 그대로 넘김
+  };

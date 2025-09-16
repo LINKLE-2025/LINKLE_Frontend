@@ -1,4 +1,4 @@
-import { useState, type RefObject, type KeyboardEvent, useEffect } from "react";
+import { useState, type RefObject, type KeyboardEvent, useEffect, useRef, useCallback } from "react";
 import { MessageCircle, Clock, UserPlus, Users, Search } from "lucide-react";
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import { openDm } from "@/services/chat";
@@ -37,6 +37,11 @@ export interface TotalSearchPanelProps {
     inputRef: RefObject<HTMLInputElement | null>;
     headerHeight: number;
     footerHeight: number;
+    isSearching?: boolean;
+    hasSearched?: boolean;
+    page: number;
+    totalPages: number;
+    setPage: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const getButtonConfig = (profileType: ProfileType) => {
@@ -53,6 +58,7 @@ const getButtonConfig = (profileType: ProfileType) => {
     }
 };
 
+
 export default function TotalSearchPanel({
     currentUserId,
     searchQuery,
@@ -61,6 +67,11 @@ export default function TotalSearchPanel({
     setSearchResults,
     handleSearch,
     inputRef,
+    isSearching,
+    hasSearched,
+    page,
+    totalPages,
+    setPage,
 }: TotalSearchPanelProps) {
     const navigate = useNavigate();
 
@@ -69,11 +80,32 @@ export default function TotalSearchPanel({
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState<"friend" | "linker">("friend");
     const [linkerResults, setLinkerResults] = useState<SearchLinkerResponseDTO[]>([]);
-    const { headerHeight, footerHeight } =
-        useOutletContext<OutletContextType>();
+    // const { headerHeight, footerHeight } =
+    //     useOutletContext<OutletContextType>();
+    const [totalPage, setTotalPages] = useState(0);
 
-
+    const [linkerPage, setLinkerPage] = useState(0);
+    const [linkerTotalPages, setLinkerTotalPages] = useState(0);
     const [tabHeight, setTabHeight] = useState(0);
+
+
+    const scrollRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+
+        const handleScroll = () => {
+            const { scrollTop, scrollHeight, clientHeight } = el;
+
+            const bottomThreshold = scrollHeight - clientHeight * 1.1; // 90% 이하 도달
+            if (scrollTop > bottomThreshold && !loading && page + 1 < totalPages) {
+                handleSearch(page + 1);
+            }
+        };
+
+        el.addEventListener("scroll", handleScroll);
+        return () => el.removeEventListener("scroll", handleScroll);
+    }, [loading, page, totalPages, searchQuery]);
 
     useEffect(() => {
         const nav = document.querySelector("nav");
@@ -83,10 +115,12 @@ export default function TotalSearchPanel({
     }, []);
 
 
-    const fetchLinkers = async () => {
+    const fetchLinkers = async (pageToFetch = 0) => {
         try {
-            const data = await searchLinkers(searchQuery); // word 파라미터 전달
-            setLinkerResults(data);
+            const data = await searchLinkers(searchQuery, pageToFetch, 10);
+            setLinkerResults(data.content);
+            setLinkerPage(data.number);
+            setLinkerTotalPages(data.totalPages);
         } catch (err) {
             console.error("링커 검색 실패:", err);
         }
@@ -184,44 +218,55 @@ export default function TotalSearchPanel({
 
     // 검색 결과 없음 UI (중앙 정렬)
     const renderEmptyState = (message: string) => (
-        <div className="flex flex-col items-center text-gray-400">
+        <div className="flex flex-col items-center text-gray-300 pt-24 xxs:pt-52">
             <img
                 src="/icons/favicon/favicon.svg"
                 alt="검색 없음"
-                className="w-24 h-24 opacity-20 mb-4"
+                className="w-44 h-44 xxs:w-56 xxs:h-56 opacity-10 mb-4"
             />
-            <p className="text-center text-sm">{message}</p>
+            <p className="text-center text-xl xxs:text-[23px]">{message}</p>
         </div>
     );
 
+    const [headerHeight, setHeaderHeight] = useState(0);
+    useEffect(() => {
+        const header = document.querySelector("header");
+        if (header) {
+            setHeaderHeight(header.clientHeight);
+        }
+    }, []);
     return (
         <div className="flex flex-col h-full bg-white">
-            <div>
-                {/* 검색창 */}
-                <SearchHeader
-                    searchQuery={searchQuery}
-                    setSearchQuery={setSearchQuery}
-                    onSearch={() => {
-                        handleTabSearch();
-                        inputRef?.current?.blur(); // 기존 Enter 키 처리와 동일
-                    }}
-                    placeholder="친구 또는 링커 검색"
-
-                />
-            </div>
+            {/* 검색창 */}
+            <SearchHeader
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                onSearch={() => {
+                    handleTabSearch();
+                    inputRef?.current?.blur();
+                }}
+                placeholder="친구 또는 링커 검색"
+            />
 
             {/* 탭 버튼 */}
             <nav
-                className="fixed left-0 right-0 w-full bg-white border-b flex text-sm font-medium z-40"
+                className="fixed left-0 right-0 w-full bg-white border-b border-gray-200 flex text-[15px] font-medium z-40"
+                style={{ marginTop: headerHeight }}
             >
                 <button
-                    className={`flex-1 px-4 py-2 border-b-2 ${activeTab === "friend" ? "border-black-500" : "border-transparent text-gray-400"}`}
+                    className={`flex-1 px-4 py-2 border-b-2 mx-4 ${activeTab === "friend"
+                        ? "border-linkleGray/25 text-black"
+                        : "border-transparent text-gray-400"
+                        }`}
                     onClick={() => setActiveTab("friend")}
                 >
                     친구 검색
                 </button>
                 <button
-                    className={`flex-1 px-4 py-2 border-b-2 ${activeTab === "linker" ? "border-black-500" : "border-transparent text-gray-400"}`}
+                    className={`flex-1 px-4 py-2 border-b-2 mx-4 ${activeTab === "linker"
+                        ? "border-linkleGray/25 text-black"
+                        : "border-transparent text-gray-400"
+                        }`}
                     onClick={() => setActiveTab("linker")}
                 >
                     링커 검색
@@ -230,86 +275,132 @@ export default function TotalSearchPanel({
 
             {/* 검색 결과 */}
             <div className="flex-1 min-h-0 overflow-y-auto p-2 flex flex-col"
-                style={{ marginTop: `${tabHeight}px` }}
+                style={{ marginTop: headerHeight + tabHeight }}
             >
                 {activeTab === "friend" ? (
-                    searchResults.length > 0 ? (
-                        searchResults.map((user) => {
-                            const isDefaultImage = user.image === "public.png" || !user.image;
-                            const profileImageSrc = isDefaultImage
-                                ? user.gender === "남성"
-                                    ? "/icons/profile/Man.png"
-                                    : "/icons/profile/Woman.png"
-                                : `/api/user/view/profile/${user.friendUserid}`;
+                    <>
+                        {searchResults.length > 0 ? (
+                            <>
+                                {searchResults.map((user) => {
+                                    const isDefaultImage = user.image === "public.png" || !user.image;
+                                    const profileImageSrc = isDefaultImage
+                                        ? user.gender === "남성"
+                                            ? "/icons/profile/Man.png"
+                                            : "/icons/profile/Woman.png"
+                                        : `/api/user/view/profile/${user.friendUserid}`;
 
-                            return (
-                                <div
-                                    key={user.friendUserid}
-                                    className="flex justify-between items-center py-2 border-b border-gray-200 px-2 gap-x-4"
-                                >
-                                    <div className="flex items-center gap-3 flex-1">
-                                        <Link
-                                            to={`/profile`}
-                                            state={{
-                                                userId: user.friendUserid,
-                                                gender: user.gender,
-                                                friendId: user.friendUserid,
-                                                profileType: user.profileType,
-                                                pathname,
+                                    return (
+                                        <div
+                                            key={user.friendUserid}
+                                            className="flex justify-between items-center py-2 border-b border-gray-200 px-2 gap-x-4"
+                                        >
+                                            <div className="flex items-center gap-3 flex-1">
+                                                <Link
+                                                    to={`/profile`}
+                                                    state={{
+                                                        userId: user.friendUserid,
+                                                        gender: user.gender,
+                                                        friendId: user.friendUserid,
+                                                        profileType: user.profileType,
+                                                        pathname,
+                                                    }}
+                                                >
+                                                    <img
+                                                        src={profileImageSrc}
+                                                        alt={`${user.name} 프로필`}
+                                                        className={`w-12 h-12 object-cover rounded-full cursor-pointer ${isDefaultImage ? "opacity-65 bg-blue-100" : ""
+                                                            }`}
+                                                    />
+                                                </Link>
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-medium text-gray-900">{user.name}</span>
+                                                        {user.profileType === "friend" && (
+                                                            <span className="px-2 py-0.5 bg-blue-100 text-blue-600 text-xs rounded-full">
+                                                                친구
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-sm text-gray-500">@{user.nickname}</p>
+                                                </div>
+                                            </div>
+                                            {renderButton(user)}
+                                        </div>
+                                    );
+                                })}
+
+                                {/* 페이지네이션 */}
+                                {totalPages > 1 && (
+                                    <div className="flex justify-center mt-3 gap-2">
+                                        <button
+                                            disabled={page === 0}
+                                            onClick={() => {
+                                                setPage(page - 1);
+                                                handleSearch(page - 1);
                                             }}
                                         >
-                                            <img
-                                                src={profileImageSrc}
-                                                alt={`${user.name} 프로필`}
-                                                className={`w-12 h-12 object-cover rounded-full cursor-pointer ${isDefaultImage ? "opacity-65 bg-blue-100" : ""
-                                                    }`}
-                                            />
-                                        </Link>
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-medium text-gray-900">
-                                                    {user.name}
-                                                </span>
-                                                {user.profileType === "friend" && (
-                                                    <span className="px-2 py-0.5 bg-blue-100 text-blue-600 text-xs rounded-full">
-                                                        친구
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <p className="text-sm text-gray-500">@{user.nickname}</p>
-                                        </div>
+                                            이전
+                                        </button>
+                                        <button
+                                            disabled={page === totalPages - 1}
+                                            onClick={() => {
+                                                setPage(page + 1);
+                                                handleSearch(page + 1);
+                                            }}
+                                        >
+                                            다음
+                                        </button>
                                     </div>
-                                    {renderButton(user)}
-                                </div>
-                            );
-                        })
-                    ) : (
-                        <div className="flex flex-1 items-center justify-center">
-                            {renderEmptyState("검색 결과가 없습니다")}
-                        </div>
-                    )
-                ) : linkerResults.length > 0 ? (
-                    linkerResults.map((linker) => (
-                        <div
-                            key={linker.linkerId}
-                            onClick={() =>
-                                navigate("/map", { state: { openLinkerId: linker.linkerId } })
-                            }
-                        >
-                            <LinkerCardItem
-                                linker={{
-                                    ...linker,
-
-                                }}
-                            />
-                        </div>
-                    ))
+                                )}
+                            </>
+                        ) : (
+                            <div className="flex flex-1 items-center justify-center">
+                                {renderEmptyState("검색 결과가 없습니다")}
+                            </div>
+                        )}
+                    </>
                 ) : (
-                    <div className="flex flex-1 items-center justify-center">
-                        {renderEmptyState("링커 검색 결과가 없습니다")}
-                    </div>
+                    <>
+                        {linkerResults.length > 0 ? (
+                            <>
+                                {linkerResults.map((linker) => (
+                                    <div
+                                        key={linker.linkerId}
+                                        onClick={() =>
+                                            navigate("/map", { state: { openLinkerId: linker.linkerId } })
+                                        }
+                                    >
+                                        <LinkerCardItem linker={{ ...linker }} />
+                                    </div>
+                                ))}
+
+                                {/* 페이지네이션 */}
+                                {linkerTotalPages > 1 && (
+                                    <div className="flex justify-center mt-3 gap-2">
+                                        <button
+                                            disabled={linkerPage === 0}
+                                            onClick={() => fetchLinkers(linkerPage - 1)}
+                                        >
+                                            이전
+                                        </button>
+                                        <button
+                                            disabled={linkerPage === linkerTotalPages - 1}
+                                            onClick={() => fetchLinkers(linkerPage + 1)}
+                                        >
+                                            다음
+                                        </button>
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <div className="flex flex-1 items-center justify-center">
+                                {renderEmptyState("링커 검색 결과가 없습니다")}
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
+
         </div>
     );
 }

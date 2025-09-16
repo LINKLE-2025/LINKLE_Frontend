@@ -9,6 +9,7 @@ const apiClient = axios.create({
 apiClient.interceptors.response.use(
   (res) => res,
   (err) => {
+    console.log("💥 API 오류 응답 인터셉터");
     if (!navigator.onLine || err.code === "ERR_NETWORK") {
       window.location.href = "/error/network";
     } else if (err.response?.status >= 500) {

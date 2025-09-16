@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { CalendarDays, MapPinCheck, MapPinned, UserRoundPlus, Users } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import ProfileBarContent from '../../components/profile/ProfileBarContent';
 import { FriendSummaryWithProfileType, ProfileType } from "@/types/friend";
 import { getProfileImageSrc } from '@/utils/profileUtils';
 import { sendFriendRequest } from '@/api/friendApi';
+import { getCurrentUserId } from '@/api/authApi';
+import { openDm } from "@/services/chat";
 
 interface FriendSummary {
   friendUserId: number;
@@ -30,7 +32,13 @@ interface ProfileContentProps {
   loggedInUserId: number;
   setSearchResults: React.Dispatch<React.SetStateAction<FriendSummaryWithProfileType[]>>;
   pathname: string;
+  page?: number;
+  totalPages?: number;
+  handleSearch?: (query: string, pageNum?: number) => void;
+  onFriendRequestSuccess?: () => void;
 }
+
+const DEV_UID = await getCurrentUserId().catch(() => { });
 
 function ProfileContent({
   userId,
@@ -48,18 +56,43 @@ function ProfileContent({
   loggedInUserId,
   setSearchResults,
   pathname,
+  onFriendRequestSuccess,
 }: ProfileContentProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   // profileType을 로컬 상태로 관리
-  const [currentType, setCurrentType] = useState<ProfileType>(profileType);
+  // const [currentType, setCurrentType] = useState<ProfileType>(profileType);
+
+  // 채팅 연결 구현
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const handleMessage = async () => {
+    if (loading) return;
+    if (userId === DEV_UID) {
+      alert("자기 자신에게는 DM을 보낼 수 없습니다.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const room = await openDm(userId);
+      navigate(`/chat/room/${room.roomId}`);
+    } catch (e) {
+      console.error(e);
+      alert("DM을 여는 중 오류가 발생했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
 
   // 부모에서 내려오는 profileType이 바뀌면 동기화
-  useEffect(() => {
-    setCurrentType(profileType);
-  }, [profileType]);
+  // useEffect(() => {
+  //   if (currentType !== 'stranger') {
+  //     setCurrentType(profileType);
+  //   }
+  // }, [profileType]);
+
 
   const isDefaultBackground = background === 'public.png' || !background;
   const { src: profileImageSrc, isDefault } = getProfileImageSrc(userId, image, gender, true);
@@ -81,10 +114,11 @@ function ProfileContent({
 
   const handleAddFriend = async (targetUserId: number) => {
     try {
+
       const data = await sendFriendRequest(loggedInUserId, targetUserId);
 
       // 현재 프로필의 상태도 업데이트
-      setCurrentType(data.state === "ACCEPTED" ? "friend" : "wait");
+      // setCurrentType(data.state === "ACCEPTED" ? "friend" : "wait");
 
       // 검색 결과 리스트도 업데이트
       setSearchResults(prev =>
@@ -94,6 +128,10 @@ function ProfileContent({
             : user
         )
       );
+
+      if (onFriendRequestSuccess) {
+        onFriendRequestSuccess();
+      }
     } catch (err) {
       console.error("친구 요청 중 오류:", err);
       alert("친구 요청 실패");
@@ -105,7 +143,7 @@ function ProfileContent({
     : `/api/user/view/background/${userId}?v=${Date.now()}`;
 
   const renderButton = () => {
-    switch (currentType) {
+    switch (profileType) {
       case 'self':
         return (
           <Link
@@ -129,8 +167,12 @@ function ProfileContent({
         );
       case 'friend':
         return (
-          <button className="px-3.5 py-1.5 bg-gray-50 text-gray-700 text-xs xxs:text-sm font-bold rounded-lg border flex items-center hover:bg-gray-100 transition-colors">
-            메시지
+          <button
+            onClick={handleMessage}
+            disabled={loading}
+            className='px-4 py-2 text-sm rounded-lg bg-blue-500 text-white disabled:opacity-60'
+          >
+            {loading ? "여는 중…" : "메시지"}
           </button>
         );
       case 'wait':
@@ -165,13 +207,30 @@ function ProfileContent({
         <div className="absolute top-0 left-0 w-full z-30">
           <ProfileBarContent
             userId={userId}
-            profileType={currentType}
+            profileType={profileType}
             isVerified={isVerified}
             friendId={friendId}
             gender={gender}
             image={image}
             background={background}
             pathname={pathname}
+            onFriendDeleted={() => {
+              console.log("onFriendDeleted 호출됨");
+              // 프로필의 상태 변경
+              // setCurrentType("stranger");
+
+              // 검색 결과 목록도 반영
+              setSearchResults(prev =>
+                prev.map(user =>
+                  user.friendUserid === userId
+                    ? { ...user, profileType: "stranger" }
+                    : user
+                )
+              );
+
+              // ✅ 친구 목록 다시 패칭
+              onFriendRequestSuccess?.()
+            }}
           />
         </div>
       </div>
@@ -197,7 +256,7 @@ function ProfileContent({
               <div className="flex flex-col">
                 <h1 className="flex flex-grow gap-1 font-bold text-black text-base xxs:text-xl leading-tight">
                   {name}
-                  {currentType === 'self' && (<img src="/icons/profile/isSelf.svg" alt={`본인 프로필`} />)}
+                  {profileType === 'self' && (<img src="/icons/profile/isSelf.svg" alt={`본인 프로필`} />)}
                 </h1>
                 <p className="text-sm text-gray-500 leading-tight">@{nickname}</p>
               </div>

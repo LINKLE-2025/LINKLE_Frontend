@@ -177,33 +177,40 @@ export default function AddressDisplay({
       style={{ bottom: footerHeight }}
       {...({ onSpringEnd: (snapIndex: number) => { if (snapIndex === 0) onClose(); } } as any)}
     >
-      <Sheet.Container style={{ zIndex: 1, boxShadow: "none" }}>
-        <Sheet.Header />
+      <Sheet.Container>
+        <Sheet.Header>
+          <div className="mx-auto my-2 h-1.5 w-12 rounded-full bg-gray-300" />
+        </Sheet.Header>
         <Sheet.Content>
-          <div className="flex items-center gap-3 p-4 border">
-            <img src="/icons/mapicon/linker.png" alt="Pin Icon" className="w-10 h-10 rounded-full" />
-            <div className="flex flex-col">
-              <span className="text-sm font-medium">{address || "주소를 불러오는 중..."}</span>
-              <span className="text-xs text-gray-500">{linkerCount}개의 링커 활성화 됨</span>
-              {weather && (
-                <span className="text-xs text-gray-500">
-                  🌡 {weather.temp.toFixed(1)}°C · {weather.rainType}
-                </span>
+          <div className="flex flex-col">
+            {/* 링커 요약 정보 */}
+            <div className="flex items-center gap-3 p-4 border-b border-t">
+              <img src="/icons/mapicon/linker.png" alt="Pin Icon" className="w-10 h-10 rounded-full" />
+              <div className="flex flex-col">
+                <span className="text-sm font-medium">{address || "주소를 불러오는 중..."}</span>
+                <span className="text-xs text-gray-500">{linkerCount}개의 링커 활성화 됨</span>
+                {weather && (
+                  <span className="text-xs text-gray-500">
+                    🌡 {weather.temp.toFixed(1)}°C · {weather.rainType}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* 링커 리스트 */}
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              {linkerResults.length > 0 ? (
+                linkerResults.map((linker) => (
+                  <LinkerCardItem key={linker.linkerId} linker={linker} />
+                ))
+              ) : (
+                <div className="p-3 text-sm text-gray-400">추천된 링커가 없습니다.</div>
               )}
             </div>
-          </div>
-
-          <div>
-            {linkerResults.length > 0 ? (
-              linkerResults.map((linker) => (
-                <LinkerCardItem key={linker.linkerId} linker={linker} />
-              ))
-            ) : (
-              <div className="p-3 text-sm text-gray-400">추천된 링커가 없습니다.</div>
-            )}
           </div>
         </Sheet.Content>
       </Sheet.Container>
     </Sheet>
   );
+
 }
