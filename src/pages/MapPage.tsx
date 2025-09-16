@@ -106,6 +106,7 @@ export default function MapPage(): React.ReactElement {
     if (linkerCreateMode && !linkerCreateModeRef.current) {
       setSearchOpen(false);     // 검색창 닫기
       setSearchOpen(false) // 하단바 닫기
+      setShowAddress(false); // 주소 표시 닫기
     }
 
     // 항상 최신 상태 저장
@@ -764,21 +765,7 @@ export default function MapPage(): React.ReactElement {
       alert("이 브라우저는 위치 정보를 지원하지 않습니다.");
     }
   };
-  const saveNewSpot = ({ alias, category }: { alias: string; category: string }) => {
-    if (!createDraft) return;
-    const { lat, lng } = createDraft;
-    const id = spotIdFromLatLng(lat, lng, 4);
-    setSpots((prev) => {
-      const next: StoredSpots = {
-        ...prev,
-        [id]: { lat, lng, alias, category, photos: [], messages: [] },
-      };
-      save(STORAGE_KEY, next);
-      return next;
-    });
-    setCreateDraft(null);
-    setActiveId(id);
-  };
+
 
 
   // 검색 후 링커 생성 모달열기
