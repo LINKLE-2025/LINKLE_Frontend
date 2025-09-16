@@ -83,12 +83,13 @@ export default function ChatListItem({
   const colorIconSrc = colorIconName ? asset(`icons/color/${colorIconName}`) : undefined;
 
   const avatarSrc = isDM
-    ? userProfileUrl(partnerId)
+    ? userProfileUrl(partnerId ?? null)
     : colorIconSrc ?? roomBackgroundUrl((item as any).roomId);
+
 
   const [avatarError, setAvatarError] = useState(false);
 
-  // ✅ 안전한 안읽은 수 계산 
+  // 안전한 안읽은 수 계산 
   const unread = Math.max(0, Number((item as any).unreadCount ?? 0));
 
   return (
