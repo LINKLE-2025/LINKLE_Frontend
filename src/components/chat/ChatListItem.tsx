@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import type { RoomResponseDTO } from "@/types/chat";
 import { formatTimeLabel, userProfileUrl, roomBackgroundUrl } from "@/utils/chat";
 
@@ -45,6 +45,40 @@ const COLOR_ICON_NAME: Record<number, string> = {
   6: "purple.png",
 };
 
+// --- 새로 추가: 탈퇴/성별 판별 유틸 ---
+function isWithdrawn(item: any) {
+  // 백엔드가 어느 필드에 상태를 내려줄지 모를 때 방어적으로 확인
+  const s =
+    (item?.dmPartnerState ??
+      item?.dmPartner?.state ??
+      item?.partnerState ??
+      item?.state ??
+      item?.dmPartner?.status ??
+      item?.status ??
+      "") as string;
+
+  const v = s.toString().trim().toUpperCase();
+  return v === "DELETED" || v === "WITHDRAWN" || v === "INACTIVE";
+}
+
+function readGender(item: any): string | undefined {
+  // 가능성 있는 위치를 전부 스캔
+  return (
+    item?.dmPartnerGender ??
+    item?.dmPartner?.gender ??
+    item?.partnerGender ??
+    item?.gender ??
+    undefined
+  );
+}
+
+function genderFallbackSrc(gender?: string) {
+  // 성별 기본 이미지 경로
+  if (gender === "남성") return asset("/icons/profile/Man.png");
+  if (gender === "여성") return asset("/icons/profile/Woman.png");
+  return asset("/icons/profile/Default.png"); // 성별 없을 때
+}
+
 export default function ChatListItem({
   item,
   onClick,
@@ -61,35 +95,63 @@ export default function ChatListItem({
     (isDM ? (item as any).dmPartnerName : undefined) ??
     (item as any).friendName ??
     (item as any).roomName;
-  const title = rawTitle && String(rawTitle).trim().length > 0 ? rawTitle : "(이름 없음)";
+
+  const withdrawn = isDM && isWithdrawn(item);
+  const title =
+    withdrawn
+      ? "탈퇴한 사용자"
+      : rawTitle && String(rawTitle).trim().length > 0
+        ? rawTitle
+        : "(이름 없음)";
 
   const preview =
     (item as any).lastMessagePreview ?? (item as any).lastMessage ?? "대화를 시작해 보세요";
 
-  // 시간 포맷 적용
   const rawWhen = (item as any).lastMessageDate ?? (item as any).lastMessageAt ?? "";
   const when = formatTimeLabel(rawWhen);
 
-  // DM이면 상대 아이디
   const partnerId = useMemo(
     () => (isDM ? extractPartnerId(item, currentUserId) : undefined),
     [isDM, item, currentUserId],
   );
 
-  // 그룹/방일 때 themeColor가 1~6이면 icons로, 아니면 기존 roomBackgroundUrl로
   const colorIdRaw = (item as any).themeColor;
   const colorId = typeof colorIdRaw === "string" ? Number(colorIdRaw) : colorIdRaw;
   const colorIconName = COLOR_ICON_NAME[colorId as number];
   const colorIconSrc = colorIconName ? asset(`icons/color/${colorIconName}`) : undefined;
 
-  const avatarSrc = isDM
-    ? userProfileUrl(partnerId ?? null)
-    : colorIconSrc ?? roomBackgroundUrl((item as any).roomId);
+  // --- 핵심: 이미지 후보 리스트 구성 ---
+  const gender = readGender(item);
+  const candidates = useMemo(() => {
+    if (isDM) {
+      const arr: (string | undefined)[] = [];
+      // 1) 프로필 이미지
+      if (typeof partnerId === "number") {
+        arr.push(userProfileUrl(partnerId));
+      }
+      // 2) 탈퇴가 아니라면 성별 기본 이미지
+      if (!withdrawn) {
+        arr.push(genderFallbackSrc(gender));
+      }
+      // 그룹과 달리 DM은 색 아이콘 사용 X (명확한 요구가 없으므로)
+      return arr.filter(Boolean) as string[];
+    } else {
+      // 그룹/방: themeColor 아이콘 우선 → 없으면 방 배경
+      return [colorIconSrc ?? roomBackgroundUrl((item as any).roomId)].filter(Boolean) as string[];
+    }
+  }, [isDM, partnerId, withdrawn, gender, colorIconSrc, item]);
 
-
+  // 후보를 순서대로 시도
+  const [idx, setIdx] = useState(0);
   const [avatarError, setAvatarError] = useState(false);
+  const avatarSrc = candidates[idx];
 
-  // 안전한 안읽은 수 계산 
+  useEffect(() => {
+    // item이 바뀌면 리셋
+    setIdx(0);
+    setAvatarError(false);
+  }, [item, candidates.length]);
+
   const unread = Math.max(0, Number((item as any).unreadCount ?? 0));
 
   return (
@@ -106,7 +168,11 @@ export default function ChatListItem({
           decoding="async"
           draggable={false}
           referrerPolicy="no-referrer"
-          onError={() => setAvatarError(true)}
+          onError={() => {
+            const next = idx + 1;
+            if (next < candidates.length) setIdx(next);
+            else setAvatarError(true);
+          }}
         />
       ) : (
         <div className="w-11 h-11 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold text-gray-700">

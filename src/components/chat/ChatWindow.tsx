@@ -31,16 +31,11 @@ export default function ChatWindow({ roomId }: { roomId: number }) {
 
   // DM에서 상대가 탈퇴했는지 판단
   const dmBlocked = useMemo(() => {
-    // 백엔드가 내려주는 안전한 플래그가 있으면 우선 사용
     const fromDto = (room as any)?.isDmBlocked === true;
-
-    // placeholder/아이디 기반 보조 판단
     const partnerIdIsZero =
       (room as any)?.friendUserId === 0 || (peer as any)?.id === 0;
-
     const nameIsPlaceholder =
       peerName === "(탈퇴한 사용자)" || (room as any)?.friendName === "(탈퇴한 사용자)";
-
     return isDM && (fromDto || partnerIdIsZero || nameIsPlaceholder);
   }, [isDM, room, peer, peerName]);
 
@@ -58,27 +53,36 @@ export default function ChatWindow({ roomId }: { roomId: number }) {
     return () => { mounted = false; };
   }, []);
 
-  // 헤더 구성 + 메뉴(⋯) 클릭 → 사이드 시트 토글
+  // 헤더 구성: 시트 열림 여부(sheetOpen)를 menuOpen으로 넘겨서 헤더 아이콘 토글
   useEffect(() => {
     if (!room) return;
+
     const onMenuClick = () => setSheetOpen(v => !v);
 
     if (room.roomType === "DM") {
-      setRoomHeader({
+      (setRoomHeader as any)({
         room,
         dmName: peer?.name ?? room.friendName ?? null,
         dmNick:
           (room as any).dmPartnerNickname
           ?? (peer?.nick ?? (room.friendUserId != null ? String(room.friendUserId) : null)),
-        dmUserId: (peer as any)?.id ?? room.friendUserId ?? null, // 사진용 id
+        dmUserId: (peer as any)?.id ?? room.friendUserId ?? null,
         onMenuClick,
+        menuOpen: sheetOpen,
+        menuAriaLabel: sheetOpen ? "닫기" : "메뉴 열기",
       });
     } else {
-      setRoomHeader({ room, onMenuClick });
+      (setRoomHeader as any)({
+        room,
+        onMenuClick,
+        menuOpen: sheetOpen,
+        menuAriaLabel: sheetOpen ? "닫기" : "메뉴 열기",
+      });
     }
 
+    // 클린업: 언마운트 시 헤더 초기화
     return () => setRoomHeader(null);
-  }, [room, peer, setRoomHeader]);
+  }, [room, peer, setRoomHeader, sheetOpen]);
 
   // 채팅방 나가기
   const handleLeave = async () => {
@@ -89,7 +93,7 @@ export default function ChatWindow({ roomId }: { roomId: number }) {
       console.error(e);
       alert("채팅방 나가기에 실패했어요.");
     } finally {
-      setSheetOpen(false);
+      setSheetOpen(false); // 닫으면서 아이콘도 ⋯ 로 복귀
     }
   };
 
@@ -113,17 +117,17 @@ export default function ChatWindow({ roomId }: { roomId: number }) {
       />
 
       <ChatInput
-        onSend={send}                         // ChatInput 내부에서 disabled면 자체 차단
+        onSend={send}
         footerHeightPx={footerHeight}
         onHeightChange={setInputHeight}
-        disabled={dmBlocked}                  // 입력 비활성화
-        disabledMessage="탈퇴한 사용자입니다"   // 안내 문구
+        disabled={dmBlocked}
+        disabledMessage="탈퇴한 사용자입니다"
       />
 
       {/* 우측 참여자 패널 */}
       <RoomMemberSheet
         open={sheetOpen}
-        onClose={() => setSheetOpen(false)}
+        onClose={() => setSheetOpen(false)}  // 닫히면 menuOpen도 false로 토글
         room={room}
         members={members}
         onLeave={handleLeave}
