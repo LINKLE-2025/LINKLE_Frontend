@@ -18,15 +18,16 @@ interface HistoryItem {
 
 export default function AccountPage() {
     const [showOptions, setShowOptions] = useState(false);
-    const [amount, setAmount] = useState(0);
+    const [amount, setAmount] = useState<string>("");
     const { open: openMenu, confirm, ActionMenu } = useActionMenu();
     const [loading, setLoading] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0);
     const [balance, setBalance] = useState<number>(0);
     const [history, setHistory] = useState<HistoryItem[]>([]);
     const [userId, setUserId] = useState<string>("");
-    const [name, setName] = useState<string>("");
+    const [name, setName] = useState<string>("　　　");
     const [accountNumber, setAccountNumber] = useState<string>("");
-    const [bankId, setBankId] = useState<number>(1); // 은행 ID (예: 1: 신한은행, 2: 국민은행 등)
+    const [bankId, setBankId] = useState<number>(); // 은행 ID (예: 1: 신한은행, 2: 국민은행 등)
     const bankNames: Record<number, string> = {
         1: "신한",
         2: "국민",
@@ -98,7 +99,8 @@ export default function AccountPage() {
 
     const handleCharge2 = async () => {
         if (!userId) return alert("로그인이 필요합니다.");
-        if (amount <= 0) return alert("1원 이상 입력해주세요.");
+        const numAmount = Number(amount);
+        if (!numAmount || numAmount < 100) return alert("입금 금액은 100원 이상이어야 합니다.");
 
         setLoading(true);
         try {
@@ -110,7 +112,7 @@ export default function AccountPage() {
                 channelKey: import.meta.env.VITE_PORTONE_CHANNEL_KEY,
                 paymentId,
                 orderName: "포인트 충전",
-                totalAmount: amount,
+                totalAmount: numAmount,
                 currency: "CURRENCY_KRW",
                 payMethod: "CARD",
                 redirectUrl: `${window.location.origin}/pay`, // 👉 여기로 리다이렉트
@@ -121,12 +123,12 @@ export default function AccountPage() {
             const res = await apiClient.post("/balance/charge", { paymentId, userId, amount });
             if (res.data.msg === "충전 성공") {
                 alert("충전 완료!");
-                setBalance((prev) => (prev ?? 0) + amount);
+                setBalance((prev) => (prev ?? 0) + numAmount);
                 setHistory((prev) => [
                     {
                         accountId: 0,
                         memo: "계좌 충전",
-                        amount,
+                        amount: numAmount,
                         createdDate: new Date().toISOString(),
                     },
                     ...prev,
@@ -148,13 +150,15 @@ export default function AccountPage() {
 
     const handleWithdraw = async () => {
         if (!userId) return;
-        if (amount <= 0) return alert("출금 금액을 입력하세요.");
+        const numAmount = Number(amount);
+
+        if (numAmount < 100) return alert("출금 금액은 100원 이상이어야 합니다.");
         setLoading(true);
         try {
-            await withdrawBalance(userId, amount, "잔액 출금");
+            await withdrawBalance(userId, numAmount, "잔액 출금");
             refreshData(userId);
         } catch {
-            alert("출금 실패");
+            alert("잔액이 부족합니다.");
         } finally {
             setLoading(false);
         }
@@ -196,7 +200,7 @@ export default function AccountPage() {
                 {/* 잔액 */}
                 <div className="flex flex-row items-center space-x-0.5">
                     <h1 className="text-2xl xxs:text-3xl font-bold">{balance !== null ? balance.toLocaleString() : "0"}원</h1>
-                    <div onClick={() => alert("잔액 새로고침")} className="p-1.5 text-gray-400 hover:text-linkleGray hover:bg-gray-100/80 rounded-xl cursor-pointer">
+                    <div onClick={() => refreshData(userId)} className="p-1.5 text-gray-400 hover:text-linkleGray hover:bg-gray-100/80 rounded-xl cursor-pointer">
                         <RotateCw strokeWidth={2} />
                     </div>
                 </div>
@@ -215,7 +219,7 @@ export default function AccountPage() {
                         <div className="flex flex-col w-full space-y-3">
                             <input type="number" placeholder="100원 이상 입력하세요"
                                 value={amount}
-                                onChange={(e) => setAmount(Number(e.target.value))}
+                                onChange={(e) => setAmount(e.target.value)}
                                 className="w-full text-linkleGray
                                     bg-gray-100/5 border border-gray-200 rounded-lg 
                                     focus:outline-none focus:border-black/15 px-3 py-2.5"
@@ -269,7 +273,7 @@ export default function AccountPage() {
                                         className={`xxs:text-lg font-bold ${item.amount > 0 ? "text-blue-600/90" : "text-red-600/90"
                                             }`}
                                     >
-                                        {item.amount.toLocaleString()}원
+                                        {Math.abs(item.amount).toLocaleString()}원
                                     </p>
                                 </div>
                             </div>
