@@ -30,6 +30,7 @@ const CATEGORY_ICONS: Record<number, string> = {
   10: "/icons/category/hospitalicon.png",
   11: "/icons/category/gameicon.png",
   12: "/icons/category/travelicon.png",
+  13: "/icons/category/shinhanicon.png",
 };
 
 interface CategoryFilterProps {
@@ -114,8 +115,8 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
                 onCategoryToggle(categoryId);
               }}
               className={`flex flex-row items-center w-full h-14 px-3 rounded-xl border transition-all duration-200 ${isSelected
-                  ? "border-blue-500 bg-blue-50 shadow-md"
-                  : "border-gray-200 bg-white hover:bg-gray-50"
+                ? "border-blue-500 bg-blue-50 shadow-md"
+                : "border-gray-200 bg-white hover:bg-gray-50"
                 }`}
             >
               {/* 카테고리 아이콘 */}
