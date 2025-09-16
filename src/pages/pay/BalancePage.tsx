@@ -4,6 +4,7 @@ import { ArrowUpCircle, ArrowDownCircle, PlusCircle } from "lucide-react";
 import { getCurrentUserInfo } from "@/api/authApi";
 import { getBalance, getBalanceHistory, withdrawBalance } from "@/api/payApi";
 import * as PortOne from "@portone/browser-sdk/v2";
+import apiClient from "@/api/apiClient";
 
 const BalanceControl = () => {
     const [userId, setUserId] = useState<string | null>(null);
@@ -51,6 +52,7 @@ const BalanceControl = () => {
                 totalAmount: amount,
                 currency: "CURRENCY_KRW",
                 payMethod: "CARD",
+                appScheme: "myapp://pay",
                 redirectUrl: `${window.location.origin}/pay`, // 👉 여기로 리다이렉트
             });
         } catch (err) {
@@ -61,12 +63,63 @@ const BalanceControl = () => {
         }
     };
 
+
+    const handleCharge2 = async () => {
+        if (!userId) return alert("로그인이 필요합니다.");
+        if (amount <= 0) return alert("1원 이상 입력해주세요.");
+
+        setLoading(true);
+        try {
+            const paymentId = `payment-${crypto.randomUUID()}`;
+
+            // 포트원 결제 요청 (팝업)
+            await PortOne.requestPayment({
+                storeId: import.meta.env.VITE_PORTONE_STORE_ID,
+                channelKey: import.meta.env.VITE_PORTONE_CHANNEL_KEY,
+                paymentId,
+                orderName: "포인트 충전",
+                totalAmount: amount,
+                currency: "CURRENCY_KRW",
+                payMethod: "CARD",
+                redirectUrl: `${window.location.origin}/pay`, // 👉 여기로 리다이렉트
+                // redirectUrl는 사실 필요 없음, 백엔드에서 바로 처리
+            });
+
+            // 팝업이 닫히고 나면 서버에서 결제 상태 확인 & DB 업데이트
+            const res = await apiClient.post("/balance/charge", { paymentId, userId, amount });
+            if (res.data.msg === "충전 성공") {
+                alert("충전 완료!");
+                setBalance((prev) => (prev ?? 0) + amount);
+                setHistory((prev) => [
+                    {
+                        accountId: crypto.randomUUID(),
+                        memo: "계좌 충전",
+                        amount,
+                        createdDate: new Date().toISOString(),
+                    },
+                    ...prev,
+                ]);
+            } else {
+                console.error("충전 API 응답:", res.data);
+                alert("충전 실패");
+            }
+
+        } catch (err) {
+            console.error(err);
+            alert("결제 중 오류가 발생했습니다.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+
     const handleWithdraw = async () => {
         if (!userId) return;
         if (amount <= 0) return alert("출금 금액을 입력하세요.");
         setLoading(true);
         try {
-            await withdrawBalance(userId, amount);
+            await withdrawBalance(userId, amount, "잔액 출금");
             refreshData(userId);
         } catch {
             alert("출금 실패");
@@ -94,7 +147,7 @@ const BalanceControl = () => {
                     />
                     <div className="flex flex-row gap-2 w-full sm:w-auto">
                         <button
-                            onClick={handleCharge}
+                            onClick={handleCharge2}
                             disabled={loading}
                             className="flex items-center justify-center gap-1 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white font-medium px-4 py-2 rounded-lg transition w-full sm:w-auto"
                         >

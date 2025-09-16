@@ -34,6 +34,9 @@ import { getCurrentUserId } from "@/api/authApi";
 
 import TestAPI from "./components/recommend/recommend";
 import FriendListLayout from "./layouts/FriendListLayout";
+import AccountPage from "./pages/account/AccountPage";
+import AccountEditPage from "./pages/account/AccountEditPage";
+import AccountLayout from "./layouts/AccountLayout";
 
 import PayRedirectPage from "./pages/pay/PayRedirectPage";
 import ChatLayout from "./layouts/ChatLayout";
@@ -103,9 +106,13 @@ export default function App() {
         <Route path='/search' element={<FriendSearchPage />} />
       </Route>
 
+      {/* 계좌 관련 레이아웃 */}
+      <Route element={<AccountLayout />}>
+        <Route path='/profile/account' element={<AccountPage />} />
+        <Route path='/profile/account/edit' element={<AccountEditPage />} />
+      </Route>
 
       <Route path='/post/:postId' element={<PostDetailPage />} />
-
 
       {/* 동적 에러 페이지 */}
       <Route path='/error/:type' element={<ErrorPage />} />
