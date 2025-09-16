@@ -1,5 +1,6 @@
 import PrimaryButton from "@/components/auth/AuthFilledButton";
 import AndroidInstallModal from "@/components/modal/AndroidInstallModal";
+import DesktopInstallModal from "@/components/modal/DesktopInstallModal";
 import IosInstallModal from "@/components/modal/IosInstallModal";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -7,12 +8,13 @@ import { Link } from "react-router-dom";
 export default function LandingPage() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallButton, setShowInstallButton] = useState(true);
+  const [showDesktopModal, setShowDesktopModal] = useState(false);
   const [showAndroidModal, setShowAndroidModal] = useState(false);
   const [showIosModal, setShowIosModal] = useState(false);
 
   const isAndroid = /Android/i.test(navigator.userAgent);
   const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-  const isPC = !isAndroid && !isIOS;
+  const isDesktop = !isAndroid && !isIOS;
 
   // ✅ PWA 실행 여부 감지
   const isInPWA = () =>
@@ -36,7 +38,7 @@ export default function LandingPage() {
   }, []);
 
   const handleInstallClick = async () => {
-    if (isPC && deferredPrompt) {
+    if (isDesktop && deferredPrompt) {
       // ✅ PC : PWA 설치
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
@@ -48,6 +50,9 @@ export default function LandingPage() {
       const { outcome } = await deferredPrompt.userChoice;
       console.log("PWA 설치 상태:", outcome);
       setDeferredPrompt(null);
+    } else if (isDesktop) {
+      // ✅ PC (PWA 미지원 브라우저)
+      setShowDesktopModal(true);
     } else if (isAndroid) {
       // ✅ Android (크롬 외 브라우저)
       setShowAndroidModal(true);
@@ -106,6 +111,7 @@ export default function LandingPage() {
       </p>
 
       {/* App 설치 안내 모달 */}
+      <DesktopInstallModal open={showDesktopModal} onClose={() => setShowDesktopModal(false)} />
       <AndroidInstallModal open={showAndroidModal} onClose={() => setShowAndroidModal(false)} />
       <IosInstallModal open={showIosModal} onClose={() => setShowIosModal(false)} />
     </div>
