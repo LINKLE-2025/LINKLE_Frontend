@@ -39,14 +39,14 @@ export default function RoomCreatePage() {
   const isClass = roomType === "CLASS";
 
   const canSubmit = useMemo(() => {
-    if (!roomName.trim() || !memo.trim()) return false;
+    if (!roomName.trim() || !memo.trim() || !description.trim()) return false;
     if (isClass) {
       const feeNum = entryFee === "" ? 0 : Number(entryFee);
       if (!Number.isFinite(feeNum) || feeNum < 0) return false; // 0(무료) 허용
       if (!startDate) return false;
     }
     return true;
-  }, [roomName, memo, isClass, entryFee, startDate]);
+  }, [roomName, memo, description, isClass, entryFee, startDate]);
 
   async function submitCreate() {
     if (!canSubmit || submitting) return;
@@ -131,8 +131,8 @@ export default function RoomCreatePage() {
               >
                 <span
                   className={`absolute inset-[1.5px] rounded-full transition-colors duration-150 ${isActive
-                      ? "bg-[var(--fill)]"
-                      : "bg-transparent [@media(hover:hover)]:group-hover:bg-[var(--hover)]"
+                    ? "bg-[var(--fill)]"
+                    : "bg-transparent [@media(hover:hover)]:group-hover:bg-[var(--hover)]"
                     }`}
                 />
               </button>
