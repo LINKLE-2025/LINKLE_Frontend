@@ -13,7 +13,7 @@ import { getRoomsByLinker, joinRoom } from "@/api/chatApi";
 import RoomPreviewModal from "@/components/modal/RoomPreviewModal";
 import { extendLinkerCreatedDate, deductUserBalance } from "@/api/mapApi";
 import { Button } from "@/components/ui/button"
-import { withdrawBalance } from "@/api/payApi";
+import { withdrawBalance, getBalance } from "@/api/payApi";
 
 export type LinkerDetail = {
   linkerId: number;
@@ -71,6 +71,8 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
 
   const [showExtendModal, setShowExtendModal] = useState(false);
   const [localDetail, setLocalDetail] = useState<LinkerDetail | null>(detail);
+  const [insufficientBalance, setInsufficientBalance] = useState(false);
+
 
   useEffect(() => {
     setLocalDetail(detail); // detail이 바뀌면 동기화
@@ -232,33 +234,53 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
 
 
 
-  // 만료일 연장
-  const handleExtend = async () => {
+  // 연장 버튼 클릭 시 잔액 체크
+  const handleExtendClick = async () => {
     if (!localDetail?.linkerId) return;
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
 
     try {
-      // 1️⃣ 현재 로그인 유저 ID 가져오기
-      const userId = await getCurrentUserId();
-      if (!userId) {
-        alert("로그인이 필요합니다.");
-        return;
+      const userBalance = await getBalance(userId);
+      if ((userBalance.balance ?? 0) < 5000) {
+        // 잔액 부족
+        setInsufficientBalance(true);
+      } else {
+        setInsufficientBalance(false);
       }
-
-      // 2️⃣ 잔액 차감 (5000원)
-      await withdrawBalance(userId, -5000, "링커 수명 연장"); // 음수 = 차감
-
-      // 3️⃣ 서버에 링커 연장 요청
-      await extendLinkerCreatedDate(localDetail.linkerId);
-
-      // 4️⃣ UI 업데이트
-      setLocalDetail(prev =>
-        prev ? { ...prev, createdDate: new Date().toISOString() } : prev,
-      );
-      setShowExtendModal(false);
-      alert("링커가 연장되었습니다!");
+      setShowExtendModal(true);
     } catch (err: any) {
       console.error(err);
-      alert(err.message || "잔액이 부족하거나 연장에 실패했습니다.");
+      alert("잔액 정보를 불러오지 못했습니다.");
+    }
+  };
+
+  // 모달 확인 버튼
+  const handleModalConfirm = async () => {
+    const userId = await getCurrentUserId();
+    if (!userId) return;
+
+    if (insufficientBalance) {
+      // 잔액 부족 → 충전 페이지 이동
+      navigate("/profile/account");
+      setShowExtendModal(false);
+    } else {
+      // 잔액 충분 → 기존 연장 로직
+      try {
+        await withdrawBalance(userId, -5000, "링커 수명 연장"); // 5000원 차감
+        await extendLinkerCreatedDate(localDetail!.linkerId);
+        setLocalDetail(prev =>
+          prev ? { ...prev, createdDate: new Date().toISOString() } : prev,
+        );
+        alert("링커가 연장되었습니다!");
+        setShowExtendModal(false);
+      } catch (err: any) {
+        console.error(err);
+        alert(err.message || "연장에 실패했습니다.");
+      }
     }
   };
 
@@ -330,7 +352,7 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
                     </div>
                     <span
                       className="cursor-pointer text-blue-500"
-                      onClick={() => setShowExtendModal(true)}
+                      onClick={handleExtendClick} // 기존 setShowExtendModal(true) → 잔액 체크
                     >
                       {expireDate ? expireDate.format("YYYY년 MM월 DD일") : ""} 만료 예정
                     </span>
@@ -496,21 +518,28 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
       {showExtendModal &&
         ReactDOM.createPortal(
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[2147483647]">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-80">
-              <p className="mb-4 text-center">링커를 30일 연장하시겠습니까?</p>
-              <p className="mb-4 text-center pb-2">(5000원이 차감됩니다.)</p>
+            <div className="bg-white p-6 rounded-lg shadow-lg w-80 text-center">
+              {insufficientBalance ? (
+                <>
+                  <p className="mb-4">잔액이 부족합니다.</p>
+                  <p className="mb-4">충전하러 이동하시겠습니까?</p>
+                </>
+              ) : (
+                <>
+                  <p className="mb-4">링커를 30일 연장하시겠습니까?</p>
+                  <p className="mb-4 pb-2">(5000원이 차감됩니다.)</p>
+                </>
+              )}
               <div className="flex justify-center gap-24">
-                <Button onClick={handleExtend}>확인</Button>
+                <Button onClick={handleModalConfirm}>예</Button>
                 <Button variant="outline" onClick={() => setShowExtendModal(false)}>
                   취소
                 </Button>
               </div>
-
             </div>
           </div>,
-          document.body // <-- body 최상단으로 포탈
-        )
-      }
+          document.body
+        )}
 
       {/* 방 미리보기 모달 */}
       <RoomPreviewModal
