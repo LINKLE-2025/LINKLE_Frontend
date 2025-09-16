@@ -1,14 +1,12 @@
+// src/pages/PostDetailPage.tsx
 import React, { useEffect, useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import PostForm, { LinkerLite } from "@/components/post/PostForm";
 import { getPost, updatePost, deletePost } from "@/api/postApi";
-import { getCurrentUserId, getCurrentUserInfo } from "@/api/authApi";
+import { getCurrentUserId } from "@/api/authApi";
 import BackTitleHeader from "@/components/header/BackTitleHeader";
-//TypeScript interface for PostDTO
-//TypeScript란?
-// JavaScript에 타입 시스템을 추가한 언어
-// -> 변수, 함수, 객체 등에 타입을 지정할 수 있음
-// -> 컴파일 시점에서 타입 오류를 잡아줌
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { get } from "http";
 
 type PostDTO = {
   postId: number;
@@ -20,16 +18,6 @@ type PostDTO = {
   name: string;
   userNickname: string;
 };
-// DTO: Data Transfer Object
-// API에서 받아오는 데이터의 형태를 정의
-// 필요한 필드만 정의하면 됨
-// API에서 받아오는 데이터에 맞게 수정 필요
-// 예: createdDate가 string이 아닐 수도 있음
-// 예: userId가 number가 아닐 수도 있음
-// 예: image가 null이 아닐 수도 있음
-// 예: linker의 address가 없을 수도 있음
-// 예: userNickname이 없을 수도 있음
-// 등등...
 
 export default function PostDetailPage(): React.ReactElement {
   const { footerHeight } = useOutletContext<{ headerHeight: number; footerHeight: number }>();
@@ -42,24 +30,21 @@ export default function PostDetailPage(): React.ReactElement {
   const [submitting, setSubmitting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  //현재 로그인한 사용자 ID 상태
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  console.log("foot" + footerHeight);
-  // 로그인 사용자 정보 가져오기
+
   useEffect(() => {
     (async () => {
       try {
-        const userId = await getCurrentUserId(); // 실제 숫자 or 문자열
-        setCurrentUserId(String(userId));        // FormData에 안전하게 string으로 변환
+        const userId = await getCurrentUserId();
+        setCurrentUserId(String(userId));
       } catch (e) {
         console.error("현재 사용자 정보 불러오기 실패", e);
       }
     })();
   }, []);
 
-
   const isMine = post?.userId === Number(currentUserId);
-
+  const profile = useUserProfile(post?.userId);
 
   useEffect(() => {
     if (!postId) return;
@@ -76,8 +61,6 @@ export default function PostDetailPage(): React.ReactElement {
     })();
   }, [postId]);
 
-
-
   const handleUpdate = async ({ text, file }: { text: string; file?: File | null }) => {
     if (!postId) return;
     try {
@@ -85,7 +68,9 @@ export default function PostDetailPage(): React.ReactElement {
       await updatePost(postId, text, file ?? null);
       alert("수정 완료");
       setIsEditing(false);
-      navigate("/post/" + postId, { replace: true });
+
+      const updated = await getPost(postId);
+      setPost(updated);
     } catch (e: any) {
       alert(e?.message ?? "수정 실패");
     } finally {
@@ -107,51 +92,38 @@ export default function PostDetailPage(): React.ReactElement {
     }
   };
 
-  if (loading) return <div className='p-6 text-gray-500'>불러오는 중…</div>;
-  if (error) return <div className='p-6 text-red-500'>{error}</div>;
-  if (!post) return <div className='p-6 text-gray-400'>포스트 없음</div>;
+  if (loading) return <div className="p-6 text-gray-500">불러오는 중…</div>;
+  if (error) return <div className="p-6 text-red-500">{error}</div>;
+  if (!post) return <div className="p-6 text-gray-400">포스트 없음</div>;
 
   return (
-    <div className='flex flex-col min-h-screen w-full'
-      style={{ paddingBottom: `${footerHeight}px` }}>
-      <BackTitleHeader
-        title={isEditing ? "포스트 수정" : "포스트"}
-        onBack={isEditing ? () => setIsEditing(false) : undefined}
-      />
+    <div className="flex flex-col min-h-screen w-full" style={{ paddingBottom: `${footerHeight}px` }}>
+      <BackTitleHeader title={isEditing ? "포스트 수정" : "포스트"} onBack={isEditing ? () => setIsEditing(false) : undefined} />
 
       <PostForm
+        key={`${post.postId}-${isEditing ? "edit" : "view"}`}
         linker={post.linker}
-        initialText={post.memo ?? " "}
+        initialText={post.memo ?? ""}
         initialImageUrl={post.image ? `/api/post/${post.postId}/image?v=${Date.now()}` : null}
         submitting={submitting}
-        submitLabel='수정하기'
+        submitLabel="수정하기"
         onSubmit={handleUpdate}
         onDelete={handleDelete}
         readOnly={!(isMine && isEditing)}
         showDeleteButton={isMine}
         footerOffset={footerHeight}
-        userNickname={post.userNickname}
-        name={post.name}
+        name={profile?.name}
+        userNickname={profile?.nickname}
+        profileImageUrl={profile?.profileImageUrl}
       />
-      {/* <div className='text-[15px] font-semibold'>{isEditing ? "포스트 편집" : "포스트"}</div> */}
 
-      {isMine && (
-        <div
-          className='fixed bottom-2 right-4 z-40'
-          style={{ paddingBottom: footerHeight }}
-        >
-          {!isEditing ? (
-            <button
-              className='px-4 py-2'
-              onClick={() => setIsEditing(true)}
-            >
-              <img src="/icons/post/FixPost.png"></img>
-            </button>
-          ) : null}
+      {isMine && !isEditing && (
+        <div className="fixed bottom-2 right-4 z-40" style={{ paddingBottom: footerHeight }}>
+          <button className="px-4 py-2" onClick={() => setIsEditing(true)}>
+            <img src="/icons/post/FixPost.png" alt="edit" />
+          </button>
         </div>
       )}
-
-
     </div>
   );
 }
