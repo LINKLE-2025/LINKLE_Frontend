@@ -50,6 +50,7 @@ export default function App() {
   useEffect(() => {
     let mounted = true;
     (async () => {
+      console.log("🔄 STOMP 연결 초기화 시도...");
       const uid = await getCurrentUserId().catch(() => undefined);
 
       if (!mounted) return;

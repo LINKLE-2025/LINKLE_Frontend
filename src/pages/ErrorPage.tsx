@@ -31,6 +31,14 @@ export default function ErrorPage() {
     // URL 파라미터에 따른 에러 메시지 설정 (기본값: unknown)
     const errorType: ErrorType = (type as ErrorType) ?? "unknown";
 
+    // 에러 타입이 정의된 것 중 하나가 아니면 unknown으로 설정
+    const navigate = useNavigate();
+    useEffect(() => {
+        if (!["network", "server", "auth", "unknown"].includes(errorType)) {
+            navigate("/error/unknown", { replace: true });
+        }
+    }, [errorType, navigate]);
+
     // 에러 메시지
     const { title, description } = errorMessages[errorType];
 
