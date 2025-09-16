@@ -210,11 +210,13 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
   );
 
   // 실제 입장 (모달의 '참여' 버튼에서 호출)
-  const openRoom = async (r: RoomResponseDTO, alreadyJoined = false) => {
+  const openRoom = async (r: RoomResponseDTO) => {
     try {
-      if (!alreadyJoined && r.roomType !== "DM") {
-        await joinRoom(r.roomId); // DM 방이 아니면 필요할 때만 join
-      }
+      // 여기서 다시 joinRoom 호출하면 중복 송금됨!
+      // if (r.roomType !== "DM") {
+      //   await joinRoom(r.roomId);
+      // }
+
       navigate(`/chat/room/${r.roomId}`);
     } catch (e) {
       console.error(e);
@@ -229,14 +231,21 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
     console.log("handleEnterFromPreview", previewRoom);
 
     try {
+      // 이미 참여중이라면 바로 입장만
+      if (previewRoom.isMember) {
+        await openRoom(previewRoom);
+        closePreview();
+        return;
+      }
+
+      // 처음 참여라면 joinRoom 실행
       const res = await joinRoom(previewRoom.roomId);
 
       if (res.balance !== undefined) {
         alert(`입장료가 차감되었습니다. 남은 잔액: ${res.balance.toLocaleString()}원`);
       }
 
-      // ✅ 이미 join 했으니까 openRoom에 알려줌
-      await openRoom(res.room, true);
+      await openRoom(res.room);
       closePreview();
     } catch (err: any) {
       if (err.response?.status === 400 && err.response.data?.error) {
