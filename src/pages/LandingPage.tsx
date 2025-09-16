@@ -2,32 +2,40 @@ import PrimaryButton from "@/components/auth/AuthFilledButton";
 import AndroidInstallModal from "@/components/modal/AndroidInstallModal";
 import DesktopInstallModal from "@/components/modal/DesktopInstallModal";
 import IosInstallModal from "@/components/modal/IosInstallModal";
+import MacInstallModal from "@/components/modal/MacInstallModal";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function LandingPage() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallButton, setShowInstallButton] = useState(true);
-  const [showDesktopModal, setShowDesktopModal] = useState(false);
   const [showAndroidModal, setShowAndroidModal] = useState(false);
   const [showIosModal, setShowIosModal] = useState(false);
+  const [showMacModal, setShowMacModal] = useState(false);
+  const [showDesktopModal, setShowDesktopModal] = useState(false);
 
-  const isAndroid = /Android/i.test(navigator.userAgent);
-  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  // 플랫폼 감지
+  const ua = navigator.userAgent;
+  const isAndroid = /Android/i.test(ua);
+  const isIOS = /iPhone|iPad|iPod/i.test(ua);
+  const isMac = /Macintosh/i.test(ua);
+  const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+  const isMacSafari = isMac && isSafari;
   const isDesktop = !isAndroid && !isIOS;
 
-  // ✅ PWA 실행 여부 감지
+  // PWA 실행 여부 감지
   const isInPWA = () =>
     window.matchMedia("(display-mode: standalone)").matches ||
     (window.navigator as any).standalone === true;
 
-  // PWA 설치 관련 이벤트 처리
+  // beforeinstallprompt 이벤트 처리
   useEffect(() => {
     if (isInPWA()) {
-      setShowInstallButton(false); // PWA 실행 중이면 설치 버튼 숨김
+      setShowInstallButton(false); // PWA 실행 중이면 버튼 숨김
+      return;
     }
 
-    // PC/Android: PWA 설치 이벤트 감지
+    // beforeinstallprompt 이벤트는 Chrome/Edge 등에서만 발생
     const handler = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -38,27 +46,24 @@ export default function LandingPage() {
   }, []);
 
   const handleInstallClick = async () => {
-    if (isDesktop && deferredPrompt) {
-      // ✅ PC : PWA 설치
+    if (deferredPrompt) {
+      // Chrome/Edge(Android & Desktop) - 설치 지원
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       console.log("PWA 설치 상태:", outcome);
       setDeferredPrompt(null);
-    } else if (isAndroid && deferredPrompt) {
-      // ✅ Android Chrome : PWA 설치
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log("PWA 설치 상태:", outcome);
-      setDeferredPrompt(null);
-    } else if (isDesktop) {
-      // ✅ PC (PWA 미지원 브라우저)
-      setShowDesktopModal(true);
+      return;
+    }
+
+    // 플랫폼별 안내 모달
+    if (isIOS) {
+      setShowIosModal(true); // "홈 화면에 추가" 안내
     } else if (isAndroid) {
-      // ✅ Android (크롬 외 브라우저)
-      setShowAndroidModal(true);
-    } else if (isIOS) {
-      // ✅ iOS Safari
-      setShowIosModal(true);
+      setShowAndroidModal(true); // 크롬 외 브라우저 안내
+    } else if (isMacSafari) {
+      setShowDesktopModal(true); // "파일 → Dock에 추가" 안내
+    } else if (isDesktop) {
+      setShowDesktopModal(true); // 기타 PC 브라우저 안내
     }
   };
 
@@ -79,8 +84,7 @@ export default function LandingPage() {
         <figcaption className='sr-only'>LINKLE 로고</figcaption>
       </figure>
 
-
-
+      {/* 여백 */}
       {!showInstallButton && (
         <div className='mb-1'></div>
       )}
@@ -111,9 +115,10 @@ export default function LandingPage() {
       </p>
 
       {/* App 설치 안내 모달 */}
-      <DesktopInstallModal open={showDesktopModal} onClose={() => setShowDesktopModal(false)} />
       <AndroidInstallModal open={showAndroidModal} onClose={() => setShowAndroidModal(false)} />
       <IosInstallModal open={showIosModal} onClose={() => setShowIosModal(false)} />
+      <MacInstallModal open={showMacModal} onClose={() => setShowMacModal(false)} />
+      <DesktopInstallModal open={showDesktopModal} onClose={() => setShowDesktopModal(false)} />
     </div>
   );
 }
