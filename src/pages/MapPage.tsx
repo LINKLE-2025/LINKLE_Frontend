@@ -102,6 +102,13 @@ export default function MapPage(): React.ReactElement {
   const linkerCreateModeRef = useRef(false);
   // 상태가 바뀔 때마다 ref 갱신
   useEffect(() => {
+    // 상태가 true로 바뀌는 순간 실행
+    if (linkerCreateMode && !linkerCreateModeRef.current) {
+      setSearchOpen(false);     // 검색창 닫기
+      setSearchOpen(false) // 하단바 닫기
+    }
+
+    // 항상 최신 상태 저장
     linkerCreateModeRef.current = linkerCreateMode;
   }, [linkerCreateMode]);
 
@@ -906,7 +913,11 @@ export default function MapPage(): React.ReactElement {
                 <CircleButton
                   imgSrc='/icons/mapicon/search.png'
                   alt='검색'
-                  onClick={() => setSearchOpen(true)}
+                  onClick={() => {
+                    setSearchOpen(true)
+                    setLinkerCreateMode(false);
+                  }
+                  }
                 />
                 <CircleButton
                   imgSrc='/icons/mapicon/refresh.png'
