@@ -81,6 +81,7 @@ export default function LinkerCreateModal({
     10: "/icons/category/hospitalicon.png",
     11: "/icons/category/gameicon.png",
     12: "/icons/category/travelicon.png",
+    13: "/icons/category/shinhanicon.png",
   };
 
   const handleConfirm = () => {

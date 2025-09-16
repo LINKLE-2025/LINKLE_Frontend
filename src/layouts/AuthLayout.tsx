@@ -34,9 +34,6 @@ export default function AuthLayout() {
         <Outlet />
       </main>
 
-      {/* 푸터 위 paddingBottom 보정 + 그라데이션 */}
-      <div className="absolute bottom-0 left-0 w-full h-[40px] bg-gradient-to-t from-white to-transparent pointer-events-none z-[1]" />
-
       {/* Footer */}
       <TeamNameFooter />
     </div>

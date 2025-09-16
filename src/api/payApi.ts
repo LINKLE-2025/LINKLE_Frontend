@@ -2,7 +2,7 @@
 
 import apiClient from "./apiClient";
 
-/** 잔액 */
+/** 잔액, 은행, 계좌번호 */
 export const getBalance = async (userId: string) => {
   const res = await apiClient.get(`/balance/${userId}`, { withCredentials: true });
   return res.data;
@@ -31,6 +31,21 @@ export const withdrawBalance = async (userId: string, amount: number, memo: stri
   const res = await apiClient.patch(
     `/balance/${userId}/withdraw`,
     { amount: -Math.abs(amount), memo }, //항상 음수로 전송
+    { withCredentials: true },
+  );
+  return res.data;
+};
+
+/** 송금 */
+export const transferBalance = async (
+  fromUserId: string,
+  toUserId: string,
+  amount: number,
+  memo: string,
+) => {
+  const res = await apiClient.patch(
+    `/balance/${fromUserId}/transfer/${toUserId}`,
+    { amount, memo },
     { withCredentials: true },
   );
   return res.data;

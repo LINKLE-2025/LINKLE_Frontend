@@ -3,7 +3,9 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import PostForm, { LinkerLite } from "@/components/post/PostForm";
 import { createPost, getLinker } from "@/api/postApi";
-import { getCurrentUserInfo } from "@/api/authApi";
+import { getCurrentUserId } from "@/api/authApi"; // ✅ userId만 가져옴
+import BackTitleHeader from "@/components/header/BackTitleHeader";
+import { useUserProfile } from "@/hooks/useUserProfile"; // ✅ 추가
 
 export default function PostCreatePage(): React.ReactElement {
   const { footerHeight } = useOutletContext<{ headerHeight: number; footerHeight: number }>();
@@ -15,24 +17,21 @@ export default function PostCreatePage(): React.ReactElement {
   const [linker, setLinker] = useState<LinkerLite | null>(location.state?.linker ?? null);
   const [submitting, setSubmitting] = useState(false);
 
-  // 로그인한 사용자 정보 상태
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [name, setUserName] = useState<string | null>(null);
-  const [userNickname, setUserNickname] = useState<string | null>(null);
-
-  // 로그인 사용자 정보 가져오기
+  // ✅ 현재 로그인한 사용자 ID
+  const [meId, setMeId] = useState<number | null>(null);
   useEffect(() => {
     (async () => {
       try {
-        const info = await getCurrentUserInfo();
-        setCurrentUserId(String(info.userId));
-        setUserName(info.name);
-        setUserNickname(info.nickname);
+        const id = await getCurrentUserId();
+        setMeId(Number(id));
       } catch (e) {
-        console.error("현재 사용자 정보 불러오기 실패", e);
+        console.error("현재 사용자 ID 불러오기 실패", e);
       }
     })();
   }, []);
+
+  // ✅ 프로필 훅 (이름, 닉네임, 기본 이미지까지 알아서 처리)
+  const meProfile = useUserProfile(meId ?? undefined);
 
   useEffect(() => {
     if (!linkerId) {
@@ -64,13 +63,13 @@ export default function PostCreatePage(): React.ReactElement {
       alert("사진을 첨부해 주세요.");
       return;
     }
-    if (currentUserId == null) {
+    if (!meId) {
       alert("로그인한 사용자 정보를 불러오지 못했습니다. 다시 시도해주세요.");
       return;
     }
     try {
       setSubmitting(true);
-      await createPost(linkerId, text, file, currentUserId);
+      await createPost(linkerId, text, file, meId.toString());
       const openId = Number(linker?.linkerId ?? linkerId);
       navigate("/map", { replace: true, state: { openLinkerId: openId } });
     } catch (e: any) {
@@ -83,6 +82,7 @@ export default function PostCreatePage(): React.ReactElement {
 
   return (
     <div className="flex w-full flex-col">
+      <BackTitleHeader title="새 포스트 만들기" className="bg-white" />
       <PostForm
         linker={linker ?? undefined}
         submitting={submitting}
@@ -91,8 +91,9 @@ export default function PostCreatePage(): React.ReactElement {
         onSubmit={handleSubmit}
         footerOffset={footerHeight}
         showDeleteButton={false}
-        name={name ?? "알 수 없는 사용자"}
-        userNickname={userNickname ?? "알 수 없는 사용자"}
+        name={meProfile?.name}
+        userNickname={meProfile?.nickname}
+        profileImageUrl={meProfile?.profileImageUrl}
       />
     </div>
   );

@@ -1,30 +1,34 @@
 // src/components/chat/ChatInput.tsx
-import { ArrowRight, SendHorizontal, } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 export default function ChatInput({
   onSend,
   onHeightChange,
   footerHeightPx = 0,
+  disabled = false,
+  disabledMessage = "탈퇴한 사용자입니다",
 }: {
   onSend: (text: string) => void;
   onHeightChange?: (h: number) => void;
   footerHeightPx?: number;
+  disabled?: boolean;            // ← 추가
+  disabledMessage?: string;      // ← 추가
 }) {
   const [text, setText] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
 
-  // 자신의 실제 높이를 관찰해서 부모(ChatWindow)에 통지
   useEffect(() => {
     const el = rootRef.current;
     if (!el) return;
     const ro = new ResizeObserver(() => onHeightChange?.(el.offsetHeight));
     ro.observe(el);
-    onHeightChange?.(el.offsetHeight); // 초기 통지
+    onHeightChange?.(el.offsetHeight);
     return () => ro.disconnect();
   }, [onHeightChange]);
 
   const send = () => {
+    if (disabled) return;        // ← 비활성 시 완전 차단
     const body = text.trim();
     if (!body) return;
     onSend(body);
@@ -38,23 +42,32 @@ export default function ChatInput({
       style={{ bottom: `calc(${footerHeightPx}px + env(safe-area-inset-bottom, 0px))` }}
     >
       <div className="w-full max-w-md mx-auto px-4 py-2">
-        <div className="flex items-center gap-2">
-          <input
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && send()}
-            placeholder="채팅을 입력하세요"
-            className="flex-1 rounded-2xl bg-gray-100 px-4 py-1.5 text-base focus:outline-none "
-          />
-          <button
-            onClick={send}
-            className="p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition"
-            aria-label="send"
-            type="button"
-          >
-            <ArrowRight size={20} className="text-linkleGray" />
-          </button>
-        </div>
+        {/* 비활성화 모드: 안내만 표시하고 입력/버튼 제거 */}
+        {disabled ? (
+          <div className="flex items-center gap-2">
+            <div className="flex-1 rounded-2xl bg-gray-100 px-4 py-1.5 text-base text-gray-500">
+              {disabledMessage}
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <input
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && send()}
+              placeholder="채팅을 입력하세요"
+              className="flex-1 rounded-2xl bg-gray-100 px-4 py-1.5 text-base focus:outline-none"
+            />
+            <button
+              onClick={send}
+              className="p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition"
+              aria-label="send"
+              type="button"
+            >
+              <ArrowRight size={20} className="text-linkleGray" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

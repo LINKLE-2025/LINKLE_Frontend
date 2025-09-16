@@ -66,35 +66,50 @@ export function useChatRoom(roomId: number) {
     if (!roomId) return;
 
     (async () => {
-      const [r, m, mem] = await Promise.all([
-        getRoom(roomId),
-        getMessages(roomId, PAGE_SIZE),
-        getMembers(roomId),
-      ]);
+      const [r, m] = await Promise.all([getRoom(roomId), getMessages(roomId, PAGE_SIZE)]);
+
+      // 멤버 조회는 실패해도 진행
+      let mem: MemberResponseDTO[] = [];
+      try {
+        mem = await getMembers(roomId);
+      } catch {
+        mem = [];
+      }
 
       setRoom(r);
 
       // membersById 구성
       const map: Record<number, MemberResponseDTO> = {};
-      (mem ?? []).forEach((u) => (map[u.userId] = u));
+      (mem ?? []).forEach((u) => {
+        if (typeof u?.userId === "number") map[u.userId] = u;
+      });
       setMembersById(map);
 
-      if (r.roomType === "DM") {
+      if (String(r.roomType).toUpperCase() === "DM") {
         const me = Number(DEV_UID);
-        const partner = (mem ?? []).find((u) => u.userId !== me) ?? (mem ?? [])[0] ?? null;
-        const partnerId = partner?.userId ?? r.friendUserId ?? null;
-        setPeer({
-          name: partner?.name ?? r.friendName ?? "(상대)",
-          nick: (r as any).dmPartnerNickname ?? (partnerId != null ? String(partnerId) : null),
-          id: partnerId,
-        });
+        const partner = (mem ?? []).find((u) => u.userId !== me) ?? null;
+        const partnerId = partner?.userId ?? (r as any).friendUserId ?? null;
+
+        // 상대가 없으면 "탈퇴한 사용자"로 안전표시
+        setPeer(
+          partnerId != null
+            ? {
+                name: partner?.name ?? (r as any).friendName ?? "(상대)",
+                nick: (r as any).dmPartnerNickname ?? partner?.nickname ?? String(partnerId),
+                id: partnerId,
+              }
+            : {
+                name: "탈퇴한 사용자",
+                nick: null,
+                id: null,
+              },
+        );
       } else {
         setPeer({ name: r.roomName ?? "그룹 톡", nick: null, id: null });
       }
 
       const initial = (m ?? [])
         .map((x) => ({ ...x, content: x.content ?? (x as any).text ?? "" }))
-        // TEXT + SYSTEM 모두 허용
         .filter((x) => x.messageType === "TEXT" || x.messageType === "SYSTEM")
         .filter((x) => typeof x.messageId === "number")
         .filter((x) => typeof x.content === "string" && x.content.trim().length > 0)

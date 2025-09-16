@@ -29,6 +29,21 @@ export default function ChatWindow({ roomId }: { roomId: number }) {
   const peerName = useMemo(() => peer?.name ?? null, [peer]);
   const members = useMemo(() => Object.values(membersById ?? {}), [membersById]);
 
+  // DM에서 상대가 탈퇴했는지 판단
+  const dmBlocked = useMemo(() => {
+    // 백엔드가 내려주는 안전한 플래그가 있으면 우선 사용
+    const fromDto = (room as any)?.isDmBlocked === true;
+
+    // placeholder/아이디 기반 보조 판단
+    const partnerIdIsZero =
+      (room as any)?.friendUserId === 0 || (peer as any)?.id === 0;
+
+    const nameIsPlaceholder =
+      peerName === "(탈퇴한 사용자)" || (room as any)?.friendName === "(탈퇴한 사용자)";
+
+    return isDM && (fromDto || partnerIdIsZero || nameIsPlaceholder);
+  }, [isDM, room, peer, peerName]);
+
   // 현재 로그인 유저 ID 로드 (아이콘/정렬용)
   useEffect(() => {
     let mounted = true;
@@ -46,7 +61,6 @@ export default function ChatWindow({ roomId }: { roomId: number }) {
   // 헤더 구성 + 메뉴(⋯) 클릭 → 사이드 시트 토글
   useEffect(() => {
     if (!room) return;
-
     const onMenuClick = () => setSheetOpen(v => !v);
 
     if (room.roomType === "DM") {
@@ -99,9 +113,11 @@ export default function ChatWindow({ roomId }: { roomId: number }) {
       />
 
       <ChatInput
-        onSend={send}
+        onSend={send}                         // ChatInput 내부에서 disabled면 자체 차단
         footerHeightPx={footerHeight}
         onHeightChange={setInputHeight}
+        disabled={dmBlocked}                  // 입력 비활성화
+        disabledMessage="탈퇴한 사용자입니다"   // 안내 문구
       />
 
       {/* 우측 참여자 패널 */}
