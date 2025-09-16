@@ -23,7 +23,7 @@ export function useUserProfile(userId?: number) {
         const { src, isDefault } = getProfileImageSrc(
           data.userId,
           data.profileImageUrl,
-          data.gender, // "남성"으로 들어오는 값
+          data.gender,
         );
 
         // ✅ 디버깅 로그 추가

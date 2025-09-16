@@ -2,7 +2,7 @@ import { useActionMenu } from "@/components/modal/useActionMenu";
 import { EllipsisVertical, RotateCw, Settings } from "lucide-react"
 import { useState, useEffect } from "react";
 import { getCurrentUserInfo } from "@/api/authApi";
-import { getBalance, getBalanceHistory, withdrawBalance } from "@/api/payApi";
+import { transferBalance, getBalance, getBalanceHistory, withdrawBalance } from "@/api/payApi";
 import * as PortOne from "@portone/browser-sdk/v2";
 import apiClient from "@/api/apiClient";
 
@@ -165,7 +165,6 @@ export default function AccountPage() {
     };
 
 
-
     return (
         <div className="flex flex-col flex-1 w-full bg-blue-50/40 items-center gap-4 p-4">
             {/* 상단 컨텐츠 */}
@@ -227,7 +226,7 @@ export default function AccountPage() {
                             <div className="flex justify-around space-x-4">
                                 <button
                                     className="w-screen border rounded-lg bg-gray-100/20 hover:bg-gray-100/60 py-1.5"
-                                    onClick={() => handleCharge2()}
+                                    onClick={() => handleWithdraw()}
                                 >
                                     <p>입금</p>
                                 </button>
