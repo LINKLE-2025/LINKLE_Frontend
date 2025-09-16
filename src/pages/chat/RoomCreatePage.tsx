@@ -30,7 +30,7 @@ export default function RoomCreatePage() {
   const [roomName, setRoomName] = useState("");
   const [memo, setMemo] = useState("");
   const [description, setDescription] = useState("");
-  // 참가비는 문자열 상태로 관리하되, onChange에서 숫자만 유지
+  // 참가비는 문자열 상태로 관리 (콤마 포함)
   const [entryFee, setEntryFee] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
@@ -41,7 +41,8 @@ export default function RoomCreatePage() {
   const canSubmit = useMemo(() => {
     if (!roomName.trim() || !memo.trim() || !description.trim()) return false;
     if (isClass) {
-      const feeNum = entryFee === "" ? 0 : Number(entryFee);
+      const feeDigits = entryFee.replace(/[^0-9]/g, "");
+      const feeNum = feeDigits === "" ? 0 : Number(feeDigits);
       if (!Number.isFinite(feeNum) || feeNum < 0) return false; // 0(무료) 허용
       if (!startDate) return false;
     }
@@ -61,8 +62,9 @@ export default function RoomCreatePage() {
         linkerId: linker?.linkerId,
       };
       if (isClass) {
-        // 빈 문자열이면 0(무료), 그 외에는 숫자 변환 (onChange로 이미 숫자만 유지됨)
-        const feeNum = entryFee === "" ? 0 : Number(entryFee);
+        // 콤마 제거 후 숫자로 변환
+        const feeDigits = entryFee.replace(/[^0-9]/g, "");
+        const feeNum = feeDigits === "" ? 0 : Number(feeDigits);
         payload.entryFee = Number.isFinite(feeNum) && feeNum >= 0 ? feeNum : 0;
         payload.startDate = new Date(startDate).toISOString().slice(0, 19);
       }
@@ -229,16 +231,21 @@ export default function RoomCreatePage() {
                 참가비
               </span>
               <CircleDollarSign className="w-4 h-4 text-gray-500" />
-              {/* 숫자만 허용: 붙여넣기/타이핑 모두 비숫자 제거, 빈 값 허용 */}
+              {/* 숫자만 허용 + 천단위 콤마 */}
               <input
                 type="text"
                 inputMode="numeric"
-                placeholder="5000"
+                placeholder="5,000"
                 value={entryFee}
                 onChange={(e) => {
                   const raw = e.target.value;
-                  const digits = raw.replace(/[^0-9]/g, ""); // 0~9만 유지
-                  setEntryFee(digits);
+                  const digits = raw.replace(/[^0-9]/g, "");
+                  if (digits === "") {
+                    setEntryFee("");
+                    return;
+                  }
+                  const formatted = Number(digits).toLocaleString("ko-KR");
+                  setEntryFee(formatted);
                 }}
                 className="flex-1 bg-transparent outline-none border-0 focus:ring-0 text-base"
               />
