@@ -89,7 +89,7 @@ export default function MessageList({
           const name =
             m.senderName ??
             member?.name ??
-            (isMine ? "나" : isDM ? (peerName ?? "상대") : "상대");
+            (isMine ? "나" : isDM ? (peerName ?? "탈퇴한 사용자") : "탈퇴한 사용자");
 
           const avatar = userProfileUrl(m.senderId);
 
