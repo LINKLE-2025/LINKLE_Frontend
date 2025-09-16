@@ -18,7 +18,7 @@ export default function ChatLayout() {
   const { pathname } = useLocation();
 
   const [headerHeight, setHeaderHeight] = useState(56);
-  const [footerHeight, setFooterHeight] = useState(0);
+  const [footerHeight, setFooterHeight] = useState(78);
 
   const isChatList = pathname === "/chat" || pathname === "/chat/";
   const isCreateRoom = pathname.startsWith("/chat/room/create");
