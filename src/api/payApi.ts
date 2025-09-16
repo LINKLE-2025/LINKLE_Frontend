@@ -2,7 +2,7 @@
 
 import apiClient from "./apiClient";
 
-/** 잔액 */
+/** 잔액, 은행, 계좌번호 */
 export const getBalance = async (userId: string) => {
   const res = await apiClient.get(`/balance/${userId}`, { withCredentials: true });
   return res.data;

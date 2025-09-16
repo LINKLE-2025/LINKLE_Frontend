@@ -134,7 +134,7 @@ const BalanceControl = () => {
             <div className="w-full sm:max-w-md bg-white rounded-2xl shadow-lg p-6 text-center">
                 <h3 className="text-lg font-medium text-gray-500 mb-2">현재 잔액</h3>
                 <p className="text-3xl font-bold text-indigo-600">
-                    {balance !== null ? balance.toLocaleString() : "로딩중..."} P
+                    {balance !== null ? balance.toLocaleString() : "0"} P
                 </p>
 
                 <div className="mt-6 flex flex-col sm:flex-row gap-3 w-full">
