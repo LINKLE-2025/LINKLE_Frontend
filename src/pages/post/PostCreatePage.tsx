@@ -4,7 +4,7 @@ import { useLocation, useNavigate, useOutletContext, useSearchParams } from "rea
 import PostForm, { LinkerLite } from "@/components/post/PostForm";
 import { createPost, getLinker } from "@/api/postApi";
 import { getCurrentUserInfo } from "@/api/authApi";
-
+import BackTitleHeader from "@/components/header/BackTitleHeader";
 export default function PostCreatePage(): React.ReactElement {
   const { footerHeight } = useOutletContext<{ headerHeight: number; footerHeight: number }>();
   const navigate = useNavigate();
@@ -83,6 +83,7 @@ export default function PostCreatePage(): React.ReactElement {
 
   return (
     <div className="flex w-full flex-col">
+      <BackTitleHeader title='새 포스트 만들기' className='bg-white' />
       <PostForm
         linker={linker ?? undefined}
         submitting={submitting}

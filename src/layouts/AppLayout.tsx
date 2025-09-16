@@ -33,7 +33,8 @@ export default function AppLayout() {
     <div className='relative flex flex-col min-h-screen text-black'>
       {/* Header */}
       {location.pathname.startsWith("/post") ? (
-        <BackTitleHeader title='포스트' className='bg-white' />
+        // <BackTitleHeader title='새 포스트 만들기' className='bg-white' />
+        <></>
       ) : (
         <MainHeader />
       )}
