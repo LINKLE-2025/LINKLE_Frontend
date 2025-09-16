@@ -26,7 +26,7 @@ export default function AccountPage() {
     const [userId, setUserId] = useState<string>("");
     const [name, setName] = useState<string>("");
     const [accountNumber, setAccountNumber] = useState<string>("");
-    const [bankId, setbankId] = useState<number>(1); // 은행 ID (예: 1: 신한은행, 2: 국민은행 등)
+    const [bankId, setBankId] = useState<number>(1); // 은행 ID (예: 1: 신한은행, 2: 국민은행 등)
     const bankNames: Record<number, string> = {
         1: "신한",
         2: "국민",
@@ -37,6 +37,18 @@ export default function AccountPage() {
         7: "카카오",
         8: "토스",
         9: "케이뱅크",
+    };
+    // bankId → 이미지 파일 매핑
+    const bankImages: Record<number, string> = {
+        1: "/icons/account/Shinhan_Symbol.png",
+        2: "/icons/account/KB_Symbol.png",
+        3: "/icons/account/Hana_Symbol.png",
+        4: "/icons/account/Woori_Symbol.png",
+        5: "/icons/account/NH_Symbol.png",
+        6: "/icons/account/IBK_Symbol.png",
+        7: "/icons/account/Kakao_Symbol.png",
+        8: "/icons/account/Toss_Symbol.png",
+        9: "/icons/account/Kbank_Symbol.png",
     };
 
     useEffect(() => {
@@ -58,10 +70,10 @@ export default function AccountPage() {
             const hist = await getBalanceHistory(id);
             const accountNum = bal.accountNumber;
             const bankId = bal.bankId;
-            setbankId(bankId);
-            setAccountNumber(accountNum);
-            setBalance(bal.balance);
-            setHistory(hist);
+            setBankId(bankId ?? 0);
+            setAccountNumber(accountNum ?? "");
+            setBalance(bal.balance ?? 0);
+            setHistory(hist ?? []);
         } catch (err) {
             console.error("잔액/내역 불러오기 실패:", err);
         }
@@ -158,16 +170,23 @@ export default function AccountPage() {
                 <div className="flex justify-between items-center">
                     <div className="flex flex-row items-center">
                         {/* 은행사별 동적 아이콘 */}
-                        <img className="w-9 h-9 *:rounded-full mr-3"
-                            src="/icons/account/Shinhan_Symbol.png"
-                            alt="신한아이콘"
-                        />
-                        {/* 은행사 정보 없을 경우 */}
-                        {/* <div className="w-9 h-9 rounded-full mr-3 bg-gray-200/60" /> */}
+                        {bankId ? (
+                            <img
+                                className="w-9 h-9 rounded-full mr-3"
+                                src={bankImages[bankId] || "/icons/account/Default_Bank.png"}
+                                alt={`${bankNames[bankId] || "은행"} 아이콘`}
+                            />
+                        ) : (
+                            <div className="w-9 h-9 rounded-full mr-3 bg-gray-200/60" />
+                        )}
+
                         <div className="flex flex-col items-start">
-                            <p className="text-sm"><span className="font-bold">{name}</span>님의 계좌</p>
-                            <p className="text-xs text-black/50">{bankNames[bankId] || "알수없음"} {accountNumber}</p>
-                            {/* <p className="text-xs text-black/50">계좌를 등록해주세요</p> */}
+                            <p className="text-sm">
+                                <span className="font-bold">{name || "사용자"}</span>님의 계좌
+                            </p>
+                            <p className="text-xs text-black/50">
+                                {bankId ? `${bankNames[bankId] || "알수없음"} ${accountNumber}` : "계좌를 등록해주세요"}
+                            </p>
                         </div>
                     </div>
                     <button onClick={onEditProfile} className="p-2 rounded-xl hover:bg-gray-100/80">
