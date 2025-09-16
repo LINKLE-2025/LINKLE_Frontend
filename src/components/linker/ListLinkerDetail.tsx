@@ -48,6 +48,7 @@ const CATEGORY_ICONS: Record<number, string> = {
   10: "/icons/category/hospital.png",
   11: "/icons/category/game.png",
   12: "/icons/category/travel.png",
+  13: "/icons/category/shinhan.png",
 };
 
 const LinkerListModal: React.FC<LinkerListModalProps> = ({

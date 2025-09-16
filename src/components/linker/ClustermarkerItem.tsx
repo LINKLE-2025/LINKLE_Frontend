@@ -38,18 +38,19 @@ const CATEGORY_NAMES: Record<number, string> = {
 
 // 카테고리 아이콘 매핑
 const CATEGORY_ICONS: Record<number, string> = {
-  1: "/icons/category/meal.png",
-  2: "/icons/category/cafe.png",
-  3: "/icons/category/music.png",
-  4: "/icons/category/movie.png",
-  5: "/icons/category/reading.png",
-  6: "/icons/category/exercise.png",
-  7: "/icons/category/drinking.png",
-  8: "/icons/category/learning.png",
-  9: "/icons/category/shopping.png",
-  10: "/icons/category/hospital.png",
-  11: "/icons/category/game.png",
-  12: "/icons/category/travel.png",
+  1: "/icons/category/mealicon.png",
+  2: "/icons/category/cafeicon.png",
+  3: "/icons/category/musicicon.png",
+  4: "/icons/category/movieicon.png",
+  5: "/icons/category/readingicon.png",
+  6: "/icons/category/exerciseicon.png",
+  7: "/icons/category/drinkingicon.png",
+  8: "/icons/category/learningicon.png",
+  9: "/icons/category/shoppingicon.png",
+  10: "/icons/category/hospitalicon.png",
+  11: "/icons/category/gameicon.png",
+  12: "/icons/category/travelicon.png",
+  13: "/icons/category/shinhanicon.png",
 };
 
 const ClusterMarkerList: React.FC<ClusterMarkerListProps> = ({

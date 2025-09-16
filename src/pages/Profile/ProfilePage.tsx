@@ -47,6 +47,7 @@ const CATEGORY_ICONS = [
   "/icons/profile/hospital.png",   // 10
   "/icons/profile/game.png",       // 11
   "/icons/profile/travel.png",     // 12
+  "/icons/profile/shinhan.png",     // 13
 ];
 
 const COLORS = [

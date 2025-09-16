@@ -154,6 +154,7 @@ export default function MapPage(): React.ReactElement {
     10: "/icons/category/hospital.png",
     11: "/icons/category/game.png",
     12: "/icons/category/travel.png",
+    13: "/icons/category/shinhan.png",
   };
 
   // 전체 활성 링커를 메모리에 보관
@@ -251,8 +252,8 @@ export default function MapPage(): React.ReactElement {
           return;
         }
 
-        // 🔥 커스텀 훅의 selectedCategories 사용
-        if (!selectedCategories.has(categoryId as any)) {
+        // 🔥 커스텀 훅의 selectedCategories 사용, 13번은 항상 보임
+        if (categoryId !== 13 && !selectedCategories.has(categoryId as any)) {
           console.log(`🚫 카테고리 필터로 제외됨: ${m.name} (카테고리 ${categoryId})`);
           return;
         }
