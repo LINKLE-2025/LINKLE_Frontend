@@ -8,7 +8,7 @@ type Props = {
     room: RoomResponseDTO | null;
     isOpen: boolean;
     onClose: () => void;
-    onEnter: () => void;
+    onEnter: () => void; // 참여(api+이동) 또는 이미 참여시 곧바로 이동
 };
 
 const COLOR_ICON_NAME: Record<number, string> = {
@@ -24,6 +24,8 @@ export default function RoomPreviewModal({ room, isOpen, onClose, onEnter }: Pro
     if (!isOpen || !room) return null;
 
     const isClass = room.roomType === "CLASS";
+    const isMember = !!room.isMember;
+
     const title = room.roomName ?? (isClass ? "링클 톡" : "그룹 톡");
     const description = room.description ?? "";
     const memo = room.memo ?? "";
@@ -56,6 +58,7 @@ export default function RoomPreviewModal({ room, isOpen, onClose, onEnter }: Pro
                     zIndex: Z_BACKDROP,
                 }}
                 onClick={onClose}
+                aria-hidden
             />
 
             {/* 중앙 카드 */}
@@ -71,6 +74,7 @@ export default function RoomPreviewModal({ room, isOpen, onClose, onEnter }: Pro
                 }}
                 role="dialog"
                 aria-modal
+                aria-label="방 미리보기"
             >
                 <div
                     className="w-[320px] max-w-[92vw] overflow-hidden rounded-2xl bg-white shadow-2xl"
@@ -80,8 +84,9 @@ export default function RoomPreviewModal({ room, isOpen, onClose, onEnter }: Pro
                     <div className="relative aspect-[4/3] w-full bg-gray-100 border-2 border-gray-200">
                         <img
                             src={heroUrl}
-                            alt=""
+                            alt="방 대표 이미지"
                             className="h-full w-full object-cover border border-gray-200 rounded-t-2xl"
+                            draggable={false}
                         />
                     </div>
 
@@ -135,16 +140,28 @@ export default function RoomPreviewModal({ room, isOpen, onClose, onEnter }: Pro
                         </div>
 
                         {/* 버튼 */}
-                        <div className="mt-4 flex gap-3 ">
-                            <button
-                                onClick={onEnter}
-                                className="flex-1 rounded-full border border-gray-300 bg-white py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 active:bg-gray-300"
-                            >
-                                참여
-                            </button>
+                        <div className="mt-4 flex gap-3">
+                            {isMember ? (
+                                <button
+                                    onClick={onEnter} // 이미 참여 → 바로 이동
+                                    className="flex-1 rounded-full border border-gray-300 bg-white py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 active:bg-gray-300"
+                                    aria-label="참여중 - 방으로 이동"
+                                >
+                                    참여중
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={onEnter} // 참여 API + 이동은 onEnter 내부에서 처리
+                                    className="flex-1 rounded-full border border-gray-300 bg-white py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 active:bg-gray-300"
+                                    aria-label="참여"
+                                >
+                                    참여
+                                </button>
+                            )}
                             <button
                                 onClick={onClose}
                                 className="flex-1 rounded-full border border-gray-300 bg-white py-2 text-sm text-gray-600 hover:bg-gray-50 active:bg-gray-300"
+                                aria-label="취소"
                             >
                                 취소
                             </button>

@@ -30,6 +30,7 @@ export default function RoomCreatePage() {
   const [roomName, setRoomName] = useState("");
   const [memo, setMemo] = useState("");
   const [description, setDescription] = useState("");
+  // 참가비는 문자열 상태로 관리하되, onChange에서 숫자만 유지
   const [entryFee, setEntryFee] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
@@ -40,8 +41,8 @@ export default function RoomCreatePage() {
   const canSubmit = useMemo(() => {
     if (!roomName.trim() || !memo.trim()) return false;
     if (isClass) {
-      const fee = Number(entryFee);
-      if (!Number.isFinite(fee) || fee < 0) return false;
+      const feeNum = entryFee === "" ? 0 : Number(entryFee);
+      if (!Number.isFinite(feeNum) || feeNum < 0) return false; // 0(무료) 허용
       if (!startDate) return false;
     }
     return true;
@@ -60,7 +61,9 @@ export default function RoomCreatePage() {
         linkerId: linker?.linkerId,
       };
       if (isClass) {
-        payload.entryFee = Number(entryFee) || 0;
+        // 빈 문자열이면 0(무료), 그 외에는 숫자 변환 (onChange로 이미 숫자만 유지됨)
+        const feeNum = entryFee === "" ? 0 : Number(entryFee);
+        payload.entryFee = Number.isFinite(feeNum) && feeNum >= 0 ? feeNum : 0;
         payload.startDate = new Date(startDate).toISOString().slice(0, 19);
       }
       const created: RoomResponseDTO = await createGroupRoom(payload);
@@ -128,8 +131,8 @@ export default function RoomCreatePage() {
               >
                 <span
                   className={`absolute inset-[1.5px] rounded-full transition-colors duration-150 ${isActive
-                    ? "bg-[var(--fill)]"
-                    : "bg-transparent [@media(hover:hover)]:group-hover:bg-[var(--hover)]"
+                      ? "bg-[var(--fill)]"
+                      : "bg-transparent [@media(hover:hover)]:group-hover:bg-[var(--hover)]"
                     }`}
                 />
               </button>
@@ -226,12 +229,17 @@ export default function RoomCreatePage() {
                 참가비
               </span>
               <CircleDollarSign className="w-4 h-4 text-gray-500" />
+              {/* 숫자만 허용: 붙여넣기/타이핑 모두 비숫자 제거, 빈 값 허용 */}
               <input
-                type="number"
-                min={0}
+                type="text"
+                inputMode="numeric"
                 placeholder="5000"
                 value={entryFee}
-                onChange={(e) => setEntryFee(e.target.value)}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  const digits = raw.replace(/[^0-9]/g, ""); // 0~9만 유지
+                  setEntryFee(digits);
+                }}
                 className="flex-1 bg-transparent outline-none border-0 focus:ring-0 text-base"
               />
               <span className="text-gray-700 pr-1">원</span>
