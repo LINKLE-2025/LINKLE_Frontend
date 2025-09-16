@@ -261,6 +261,8 @@ export default function RoomCreatePage() {
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 className="flex-1 bg-transparent outline-none border-0 focus:ring-0 text-base"
+                min={new Date().toISOString().slice(0, 16)} // 현재 시간부터
+                max={new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16)} // 30일 뒤까지
               />
             </label>
           </div>
