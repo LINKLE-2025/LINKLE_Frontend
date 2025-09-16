@@ -62,7 +62,7 @@ export default function MessageItem({
         <div className="max-w-[72%]">
           {/* 첫 메시지에서만 이름 노출 */}
           {!isMine && showAvatar && (
-            <div className="text-[12px] text-gray-600 mb-1 ml-1 text-left">{name ?? "상대"}</div>
+            <div className="text-[12px] text-gray-600 mb-1 ml-1 text-left">{name ?? "탈퇴한 사용자"}</div>
           )}
 
           {isMine ? (

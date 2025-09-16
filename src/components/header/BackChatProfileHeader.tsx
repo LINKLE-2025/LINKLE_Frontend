@@ -55,12 +55,13 @@ export default function BackChatProfileHeader({
       if (dmUserId != null) return userProfileUrl(dmUserId);
       if (partnerImg) return partnerImg;
       if ((room as any).friendImage) return (room as any).friendImage as string;
-      return userProfileUrl(room.friendUserId ?? undefined);
+      return userProfileUrl((room as any).friendUserId ?? null);
     }
     const colorId = Number(room.themeColor);
     const name = COLOR_ICON_NAME[colorId as keyof typeof COLOR_ICON_NAME];
     return name ? asset(`icons/color/${name}`) : roomBackgroundUrl(room.roomId);
   }, [isDM, dmUserId, room.friendUserId, room.themeColor, room.roomId]);
+
 
   return (
     <header className="fixed top-0 w-full flex items-center justify-between bg-white border-b border-gray-200 py-3 px-3 z-50">
