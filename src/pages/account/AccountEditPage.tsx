@@ -1,9 +1,66 @@
 import BankButton from "@/components/account/BankButton";
-import { useState } from "react";
+import { getCurrentUserInfo } from "@/api/authApi";
+import { getBalance } from "@/api/payApi";
+import apiClient from "@/api/apiClient";
+import { useState, useEffect } from "react";
+import { set } from "date-fns";
 
 export default function AccountEditPage() {
     const [selectedBank, setSelectedBank] = useState<string | null>(null);
     const [accountNumber, setAccountNumber] = useState<string>("");
+    const [userId, setUserId] = useState<string | null>(null);
+    const [bankId, setBankId] = useState<number | null>(null);
+    const bankNames: Record<number, string> = {
+        1: "신한은행",
+        2: "KB국민은행",
+        3: "하나은행",
+        4: "우리은행",
+        5: "NH농협은행",
+        6: "IBK기업은행",
+        7: "카카오뱅크",
+        8: "토스뱅크",
+        9: "케이뱅크",
+    };
+    // 로그인한 사용자 정보 가져오기
+    useEffect(() => {
+        (async () => {
+            try {
+                const info = await getCurrentUserInfo();
+                setUserId(String(info.userId));
+                const bal = await getBalance(String(info.userId));
+                setAccountNumber(bal.accountNumber || "");
+                setBankId(bal.bankId || null);
+                setSelectedBank(bal.bankId ? banks.find(bank => bank.name === bankNames[bal.bankId])?.name || null : null);
+            } catch (err) {
+                console.error("데이터 불러오기 실패:", err);
+            }
+        })();
+    }, []);
+
+
+    // ✅ 계좌 수정 API 호출 함수
+    const handleUpdateAccount = async () => {
+        if (!userId) {
+            alert("로그인이 필요합니다.");
+            return;
+        }
+        if (!accountNumber || !bankId) {
+            alert("은행과 계좌번호를 모두 입력해주세요.");
+            return;
+        }
+
+        try {
+            const response = await apiClient.patch(`/balance/${userId}/update`, {
+                accountNumber,
+                bankId,
+            });
+            console.log("계좌 수정 결과:", response.data);
+            alert("계좌 정보가 수정되었습니다.");
+        } catch (error: any) {
+            console.error("계좌 수정 실패:", error);
+            alert(error.response?.data?.error || "계좌 수정 실패");
+        }
+    };
 
     // 은행사 리스트
     const banks = [
@@ -96,6 +153,8 @@ export default function AccountEditPage() {
                     <div className="w-full marker:items-start justify-start text-left">
                         <p className="text-sm text-linkleGray font-bold pl-1 mb-1">계좌번호</p>
                         <input type="text" placeholder={`${selectedBank ? banks.find(bank => bank.name === selectedBank)?.placeholder : "계좌번호를 입력해주세요"}`}
+                            value={accountNumber}
+                            onChange={e => setAccountNumber(e.target.value)}
                             className="w-full text-linkleGray border border-gray-200 rounded-lg
                         bg-gray-100/40
                         focus:outline-none focus:border-black/15 px-3 py-2.5"
@@ -105,12 +164,7 @@ export default function AccountEditPage() {
                 {/* 수정 버튼 */}
                 <div className="flex justify-around space-x-4 px-2">
                     <button className="w-screen max-w-48 border rounded-lg bg-gray-100/20 hover:bg-gray-100/60 py-1.5 mt-2"
-                        onClick={() => {
-                            alert("계좌 수정");
-                            // TODO: 계좌 수정 로직 추가
-                            console.log("수정된 은행사:", selectedBank);
-                            console.log("수정된 계좌번호:", accountNumber);
-                        }}>
+                        onClick={handleUpdateAccount}>
                         <p>수정</p>
                     </button>
                 </div>
@@ -131,7 +185,9 @@ export default function AccountEditPage() {
                             selected={selectedBank === bank.name}
                             colors={bank.colors}
                             onClick={() => {
-                                setSelectedBank(bank.name);
+                                setSelectedBank(bank.name); // UI 표시용
+                                setBankId(banks.indexOf(bank) + 1); // 숫자 ID 설정 (1~9)
+                                console.log("선택된 은행사:", bank.name, "ID:", banks.indexOf(bank) + 1);
                             }}
                         />
                     ))}
