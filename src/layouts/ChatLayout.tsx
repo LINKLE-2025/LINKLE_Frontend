@@ -10,7 +10,13 @@ export type ChatOutletContext = {
   headerHeight: number;
   footerHeight: number;
   setRoomHeader: (
-    v: ({ room: RoomResponseDTO; onMenuClick?: () => void } & BackChatHeaderDMOverride) | null
+    v: (
+      {
+        room: RoomResponseDTO;
+        onMenuClick?: () => void;
+        menuOpen?: boolean;
+      } & BackChatHeaderDMOverride
+    ) | null
   ) => void;
 };
 
@@ -25,7 +31,13 @@ export default function ChatLayout() {
   const isChatRoom = pathname.startsWith("/chat/room/") && !isCreateRoom;
 
   const [roomHeader, setRoomHeader] = useState<
-    ({ room: RoomResponseDTO; onMenuClick?: () => void } & BackChatHeaderDMOverride) | null
+    (
+      {
+        room: RoomResponseDTO;
+        onMenuClick?: () => void;
+        menuOpen?: boolean;
+      } & BackChatHeaderDMOverride
+    ) | null
   >(null);
 
   const headerHostRef = useRef<HTMLDivElement | null>(null);
@@ -75,6 +87,7 @@ export default function ChatLayout() {
             room={roomHeader.room}
             backTo="/chat"
             onMenuClick={roomHeader.onMenuClick}
+            menuOpen={roomHeader.menuOpen}
             dmName={roomHeader.dmName}
             dmNick={roomHeader.dmNick}
             dmUserId={roomHeader.dmUserId}

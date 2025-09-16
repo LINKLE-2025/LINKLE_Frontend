@@ -1,4 +1,4 @@
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, EllipsisVertical, X } from "lucide-react";
 import type { RoomResponseDTO } from "@/types/chat";
 import { useNavigate } from "react-router-dom";
 import { useMemo, useState } from "react";
@@ -29,6 +29,7 @@ export default function BackChatProfileHeader({
   room,
   backTo = "/chat",
   onMenuClick,
+  menuOpen = false,
   dmName,
   dmNick,
   dmUserId,
@@ -36,6 +37,7 @@ export default function BackChatProfileHeader({
   room: RoomResponseDTO;
   backTo?: string;
   onMenuClick?: () => void;
+  menuOpen?: boolean;
 } & BackChatHeaderDMOverride) {
   const navigate = useNavigate();
   const isDM = room.roomType === "DM";
@@ -61,7 +63,6 @@ export default function BackChatProfileHeader({
     const name = COLOR_ICON_NAME[colorId as keyof typeof COLOR_ICON_NAME];
     return name ? asset(`icons/color/${name}`) : roomBackgroundUrl(room.roomId);
   }, [isDM, dmUserId, room.friendUserId, room.themeColor, room.roomId]);
-
 
   return (
     <header className="fixed top-0 w-full flex items-center justify-between bg-white border-b border-gray-200 py-3 px-3 z-50">
@@ -99,9 +100,13 @@ export default function BackChatProfileHeader({
       <button
         onClick={onMenuClick}
         className="flex items-center justify-center w-10 h-10 rounded-xl hover:bg-gray-100/60 transition-colors"
-        aria-label="메뉴"
+        aria-label={menuOpen ? "닫기" : "메뉴"}
       >
-        <span className="text-2xl leading-none">⋯</span>
+        {menuOpen ? (
+          <X className="w-5 h-5 text-black" />
+        ) : (
+          <EllipsisVertical className="w-5 h-5 text-black" />
+        )}
       </button>
     </header>
   );
