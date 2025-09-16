@@ -1,16 +1,25 @@
 // src/components/chat/MessageItem.tsx
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { MessageResponseDTO } from "@/types/chat";
 import { formatTimeLabel } from "@/utils/chat";
 import { getCurrentUserId } from "@/api/authApi";
 
 const DEV_UID = await getCurrentUserId().catch(() => { });
 
+// public/ 에 있는 기본 이미지 사용
+function genderFallbackSrc(gender?: string | null) {
+  if (gender === "남성") return "/icons/profile/Man.png";
+  if (gender === "여성") return "/icons/profile/Woman.png";
+  return "/icons/profile/Default.png";
+}
+
 export default function MessageItem({
   m,
   showAvatar,
   name,
   avatar,
+  gender,
+  withdrawn,
   isFirstOfBlock,
   compactAfterSystem,
 }: {
@@ -18,40 +27,56 @@ export default function MessageItem({
   showAvatar: boolean;
   name?: string | null;
   avatar?: string | null;
+  gender?: string | null;
+  withdrawn?: boolean;
   isFirstOfBlock: boolean;
   compactAfterSystem?: boolean;
 }) {
   const isMine = m.senderId === DEV_UID;
-  const [imgFailed, setImgFailed] = useState(false);
+
+  // 후보: 1) avatar → 2) (탈퇴 아님) 성별 폴백
+  const candidates = useMemo(() => {
+    if (isMine || !showAvatar) return [] as string[];
+    const arr: (string | undefined)[] = [];
+    if (avatar) arr.push(avatar);
+    if (!withdrawn) arr.push(genderFallbackSrc(gender));
+    return arr.filter(Boolean) as string[];
+  }, [isMine, showAvatar, avatar, gender, withdrawn]);
+
+  const [idx, setIdx] = useState(0);
+  const [avatarError, setAvatarError] = useState(false);
+  const currentSrc = candidates[idx];
+
+  useEffect(() => {
+    setIdx(0);
+    setAvatarError(false);
+  }, [candidates.length, avatar, gender, withdrawn]);
 
   const renderAvatar = () => {
-    if (isMine) return null; // 내 메시지는 아바타 없음
-    if (!showAvatar) return <div className="w-11 h-px flex-shrink-0" />; // 정렬용 스페이서
+    if (isMine) return null;
+    if (!showAvatar) return <div className="w-11 h-px flex-shrink-0" />;
 
-    if (avatar && !imgFailed) {
+    if (!avatarError && currentSrc) {
       return (
         <img
-          src={avatar}
+          src={currentSrc}
           alt={name ?? ""}
           className="w-11 h-11 bg-white shadow-sm rounded-full object-cover flex-shrink-0 mt-0.5"
-          onError={() => setImgFailed(true)}
+          onError={() => {
+            const next = idx + 1;
+            if (next < candidates.length) setIdx(next);
+            else setAvatarError(true);
+          }}
+          decoding="async"
+          draggable={false}
+          referrerPolicy="no-referrer"
         />
       );
     }
     return <div className="w-11 h-11 shadow-sm rounded-full bg-gray-200 flex-shrink-0 mt-0.5" />;
   };
 
-  // 간격 규칙
-  // - 시스템 메시지 직후면 가장 촘촘하게
-  // - 같은 발신자 연속이면 약간 촘촘
-  // - 블록 첫 메시지면 넉넉하게
-  const outerMarginTop = compactAfterSystem
-    ? "mt-1" // 시스템 직후
-    : isFirstOfBlock
-      ? "mt-5" // 새 블록 시작
-      : "mt-1.5"; // 같은 발신자 연속
-
-  // 시스템 직후엔 아래쪽도 살짝 줄여줌
+  const outerMarginTop = compactAfterSystem ? "mt-1" : isFirstOfBlock ? "mt-5" : "mt-1.5";
   const outerMarginBottom = compactAfterSystem ? "mb-1.5" : "mb-2.5";
 
   return (
@@ -60,9 +85,10 @@ export default function MessageItem({
         {renderAvatar()}
 
         <div className="max-w-[72%]">
-          {/* 첫 메시지에서만 이름 노출 */}
           {!isMine && showAvatar && (
-            <div className="text-[12px] text-gray-600 mb-1 ml-1 text-left">{name ?? "탈퇴한 사용자"}</div>
+            <div className="text-[12px] text-gray-600 mb-1 ml-1 text-left">
+              {name ?? (withdrawn ? "탈퇴한 사용자" : "알 수 없음")}
+            </div>
           )}
 
           {isMine ? (

@@ -90,7 +90,7 @@ export default function RoomMemoModal({ room, isOpen, onClose }: Props) {
                             <h3 className="text-xl font-bold leading-snug">{title}</h3>
                             {isClass && (
                                 <span className="ml-2 rounded bg-black/70 px-2 py-0.5 text-xs font-semibold text-white">
-                                    class
+                                    Linkle
                                 </span>
                             )}
                         </div>

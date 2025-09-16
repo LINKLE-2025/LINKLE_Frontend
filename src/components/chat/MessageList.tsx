@@ -69,7 +69,7 @@ export default function MessageList({
         {msgs.map((m, i) => {
           const prev = msgs[i - 1];
 
-          // SYSTEM 메시지(입장/퇴장) 표시
+          // SYSTEM 메시지
           if (m.messageType === "SYSTEM") {
             return (
               <div key={m.messageId} className="w-full flex justify-center my-2">
@@ -80,18 +80,29 @@ export default function MessageList({
             );
           }
 
-          // 일반(TEXT) 메시지
+          // 일반(TEXT)
           const isMine = m.senderId === meId;
           const isFirstOfBlock = !prev || prev.senderId !== m.senderId;
           const afterSystem = prev?.messageType === "SYSTEM";
 
-          const member = m.senderId != null ? membersById[m.senderId] : undefined;
+          const member: MemberResponseDTO | undefined =
+            m.senderId != null ? membersById[m.senderId] : undefined;
+
           const name =
             m.senderName ??
             member?.name ??
             (isMine ? "나" : isDM ? (peerName ?? "탈퇴한 사용자") : "탈퇴한 사용자");
 
-          const avatar = userProfileUrl(m.senderId);
+          // senderId가 유효할 때만 프로필 URL 생성
+          const avatar =
+            !isMine && m.senderId != null && m.senderId > 0 ? userProfileUrl(m.senderId) : undefined;
+
+          // membersById에서 성별 전달
+          const gender = !isMine ? (member?.gender ?? null) : null;
+
+          // 탈퇴 여부(멤버 정보가 없고 senderId가 0이거나 이름에 '탈퇴' 포함 시)
+          const withdrawn =
+            !isMine && !member ? ((m.senderId ?? 0) === 0 || (name ?? "").includes("탈퇴")) : false;
 
           return (
             <MessageItem
@@ -101,7 +112,8 @@ export default function MessageList({
               showAvatar={!isMine && isFirstOfBlock}
               name={name}
               avatar={avatar}
-              // 시스템 메시지 직후면 간격을 더 촘촘하게
+              gender={gender}          // ← 전달
+              withdrawn={withdrawn}    // ← 전달
               compactAfterSystem={afterSystem}
             />
           );

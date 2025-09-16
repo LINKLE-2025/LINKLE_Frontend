@@ -16,9 +16,11 @@ type Props = {
     currentUserId?: number;
 };
 
-function pickMemberAvatar(m: MemberResponseDTO): string {
-    const raw = (m as any)?.image ?? (m as any)?.profileImageUrl ?? (m as any)?.userImage ?? null;
-    return resolveImageUrl(raw ?? undefined) ?? userProfileUrl(m.userId);
+// 성별별 디폴트 이미지
+function genderFallbackSrc(gender?: string | null) {
+    if (gender === "남성") return "/icons/profile/Man.png";
+    if (gender === "여성") return "/icons/profile/Woman.png";
+    return "/icons/profile/Default.png";
 }
 
 function pickMemberNick(m: MemberResponseDTO): string {
@@ -26,6 +28,81 @@ function pickMemberNick(m: MemberResponseDTO): string {
     const alt = (m as any).nick ?? (m as any).userNickname;
     if (typeof alt === "string" && alt.trim()) return alt.trim();
     return String(m.userId);
+}
+
+function initials(name?: string | null) {
+    const n = (name ?? "").trim();
+    if (!n) return "??";
+    const p = n.split(/\s+/);
+    return p.length === 1 ? p[0]!.slice(0, 2) : `${p[0]![0] ?? ""}${p[1]![0] ?? ""}`;
+}
+
+// 개별 멤버 행: 이미지 실패 시 순차 폴백
+function MemberRow({
+    m,
+    isSelf,
+}: {
+    m: MemberResponseDTO & { id?: number; nick?: string };
+    isSelf: boolean;
+}) {
+    const name = m.name;
+    const nick = pickMemberNick(m);
+
+    // 1) 서버 절대/상대 URL -> resolve
+    const raw = (m as any)?.image ?? (m as any)?.profileImageUrl ?? (m as any)?.userImage ?? null;
+    const resolved = resolveImageUrl(raw ?? undefined);
+
+    // 후보 src 우선순위: resolved → userProfileUrl → genderFallback
+    const candidates = useMemo(() => {
+        const arr: string[] = [];
+        if (resolved) arr.push(resolved);
+        arr.push(userProfileUrl(m.userId));
+        arr.push(genderFallbackSrc(m.gender));
+        // 중복 제거
+        return Array.from(new Set(arr.filter(Boolean)));
+    }, [resolved, m.userId, m.gender]);
+
+    const [idx, setIdx] = useState(0);
+    const currentSrc = candidates[idx];
+    const [exhausted, setExhausted] = useState(false);
+
+    return (
+        <li className="flex items-center gap-3">
+            {currentSrc && !exhausted ? (
+                <img
+                    src={currentSrc}
+                    alt={name}
+                    className="w-8 h-8 rounded-full object-cover"
+                    referrerPolicy="no-referrer"
+                    draggable={false}
+                    onError={() => {
+                        const next = idx + 1;
+                        if (next < candidates.length) setIdx(next);
+                        else setExhausted(true);
+                    }}
+                />
+            ) : (
+                <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-semibold text-gray-700">
+                    {initials(name)}
+                </div>
+            )}
+
+            <div className="min-w-0 flex-1 leading-tight">
+                <div className="flex items-center gap-1 text-sm font-semibold text-gray-900 truncate">
+                    <span className="truncate">{name}</span>
+                    {isSelf && (
+                        <img
+                            src="/icons/profile/isSelf.svg"
+                            alt="본인 프로필"
+                            className="inline-block w-4 h-4 shrink-0"
+                            draggable={false}
+                        />
+                    )}
+                </div>
+                <div className="text-[11px] text-gray-500 truncate">@{nick}</div>
+            </div>
+        </li>
+    );
 }
 
 export default function RoomMemberSheet({
@@ -51,14 +128,11 @@ export default function RoomMemberSheet({
         const base = (members ?? []).map((m) => {
             const isSelf = currentUserId != null && Number(m.userId) === Number(currentUserId);
             return {
+                ...m,
                 id: m.userId,
-                name: m.name,
-                avatar: pickMemberAvatar(m),
-                nick: pickMemberNick(m),
                 isSelf,
             };
         });
-        // 나(본인) 최상단, 나머지는 이름 오름차순(원하면 제거/변경 가능)
         base.sort((a, b) => {
             if (a.isSelf !== b.isSelf) return a.isSelf ? -1 : 1;
             return a.name.localeCompare(b.name);
@@ -105,7 +179,6 @@ export default function RoomMemberSheet({
                         <span className="font-medium truncate">{countLabel}</span>
                     </div>
 
-                    {/* DM 방에서는 Info 버튼 숨김 */}
                     {room.roomType !== "DM" && (
                         <button
                             type="button"
@@ -122,29 +195,7 @@ export default function RoomMemberSheet({
                 <div className="flex-1 overflow-y-auto px-4 py-3">
                     <ul className="space-y-3">
                         {normalizedMembers.map((m) => (
-                            <li key={m.id} className="flex items-center gap-3">
-                                <img
-                                    src={m.avatar}
-                                    alt={m.name}
-                                    className="w-8 h-8 rounded-full object-cover"
-                                    referrerPolicy="no-referrer"
-                                    draggable={false}
-                                />
-                                <div className="min-w-0 flex-1 leading-tight">
-                                    <div className="flex items-center gap-1 text-sm font-semibold text-gray-900 truncate">
-                                        <span className="truncate">{m.name}</span>
-                                        {m.isSelf && (
-                                            <img
-                                                src="/icons/profile/isSelf.svg"
-                                                alt="본인 프로필"
-                                                className="inline-block w-4 h-4 shrink-0"
-                                                draggable={false}
-                                            />
-                                        )}
-                                    </div>
-                                    <div className="text-[11px] text-gray-500 truncate">@{m.nick}</div>
-                                </div>
-                            </li>
+                            <MemberRow key={m.id} m={m} isSelf={m.isSelf as boolean} />
                         ))}
                     </ul>
                 </div>

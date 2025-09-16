@@ -17,6 +17,7 @@ export interface RoomResponseDTO {
   friendName?: string | null;
   friendNickname?: string | null;
   friendImage?: string | null;
+  friendGender?: string | null;
   lastMessagePreview?: string | null;
   lastMessageDate?: string | null;
   linkerId?: number | null;
@@ -28,6 +29,7 @@ export interface MemberResponseDTO {
   name: string;
   image?: string | null;
   nickname?: string | null;
+  gender?: string | null;
 }
 
 export type MessageType = "TEXT" | "SYSTEM";
@@ -41,6 +43,7 @@ export interface MessageResponseDTO {
   senderId?: number | null;
   senderName?: string | null;
   senderImage?: string | null;
+  senderGender?: string | null;
 }
 
 export interface CreateRoomRequestDTO {
