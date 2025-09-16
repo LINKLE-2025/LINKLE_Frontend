@@ -44,10 +44,15 @@ export default function PostForm({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const navigate = useNavigate();
 
-  const canSubmit = useMemo(
-    () => !readOnly && (text.trim().length > 0 || !!file),
-    [readOnly, text, file],
-  );
+  // 텍스트 , 사진 둘 중 하나만 바꿔도 버튼 활성화 
+  // 둘 다 안 바뀌면 비활성화
+  const canSubmit = useMemo(() => {
+    if (readOnly) return false;
+
+    const textChanged = text !== initialText;
+    const fileChanged = !!file;
+    return textChanged || fileChanged;
+  }, [readOnly, text, file, initialText]);
 
   useEffect(() => setText(initialText), [initialText]);
 
