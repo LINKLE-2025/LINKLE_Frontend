@@ -11,6 +11,7 @@ export default function LandingRedirect() {
     useEffect(() => {
         const checkLogin = async () => {
             try {
+                console.log("🔄 로그인 상태 확인 중...");
                 await getCurrentUserInfo();
                 console.log("✅ 로그인 성공");
                 setLoggedIn(true);

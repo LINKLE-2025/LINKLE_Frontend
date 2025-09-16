@@ -50,6 +50,7 @@ export default function App() {
   useEffect(() => {
     let mounted = true;
     (async () => {
+      console.log("🔄 STOMP 연결 초기화 시도...");
       const uid = await getCurrentUserId().catch(() => undefined);
 
       if (!mounted) return;
@@ -112,16 +113,12 @@ export default function App() {
         <Route path='/profile/account/edit' element={<AccountEditPage />} />
       </Route>
 
-      <Route path='/post/:postId' element={<PostDetailPage />} />
+      {/* 기타 */}
+      <Route path='/test-api' element={<TestAPI />} />
 
       {/* 동적 에러 페이지 */}
       <Route path='/error/:type' element={<ErrorPage />} />
-
-      {/* 기타 */}
-      <Route path='/post/:postId' element={<PostDetailPage />} />
-
-
-      <Route path='/test-api' element={<TestAPI />} />
+      <Route path="*" element={<ErrorPage />} />
     </Routes >
   );
 }

@@ -1,15 +1,15 @@
 import { useEffect } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import type { ErrorType } from "@/types/error";
+import { useNavigate, useParams } from "react-router-dom";
+
+type ErrorType = "network" | "server" | "auth" | "unknown";
 
 const errorMessages: Record<
     ErrorType,
-    { title: string; description: string; autoRetry?: boolean; redirectToLogin?: boolean }
+    { title: string; description: string; }
 > = {
     network: {
         title: "네트워크 연결 끊김",
-        description: "인터넷 연결이 원활하지 않습니다.\n자동으로 재연결을 시도합니다...",
-        autoRetry: true,
+        description: "인터넷 연결이 원활하지 않습니다.\n잠시 후 다시 시도해주세요.",
     },
     server: {
         title: "서버 오류 발생",
@@ -18,45 +18,29 @@ const errorMessages: Record<
     auth: {
         title: "인증 오류",
         description: "로그인 세션이 만료되었습니다.\n다시 로그인해주세요.",
-        redirectToLogin: true,
+    },
+    unknown: {
+        title: "존재하지 않는 페이지",
+        description: "요청하신 페이지를 찾을 수 없습니다.\n주소를 다시 확인해주세요.",
     },
 };
 
 export default function ErrorPage() {
     const { type } = useParams<{ type: ErrorType }>();
+
+    // URL 파라미터에 따른 에러 메시지 설정 (기본값: unknown)
+    const errorType: ErrorType = (type as ErrorType) ?? "unknown";
+
+    // 에러 타입이 정의된 것 중 하나가 아니면 unknown으로 설정
     const navigate = useNavigate();
-
-    // 잘못된 type일 경우 기본값 = server
-    const errorType: ErrorType = (type as ErrorType) ?? "server";
-
-    const { title, description, autoRetry, redirectToLogin } = errorMessages[errorType];
-
     useEffect(() => {
-        // 네트워크 오류 → 일정 주기 재시도
-        if (errorType === "network" && autoRetry) {
-            const retryInterval = setInterval(async () => {
-                try {
-                    const res = await fetch("/api/health"); // 헬스체크 API
-                    if (res.ok) {
-                        clearInterval(retryInterval);
-                        navigate("/", { replace: true }); // 복구 시 홈으로 이동
-                    }
-                } catch {
-                    // 여전히 실패 → 계속 대기
-                }
-            }, 5000);
-
-            return () => clearInterval(retryInterval);
+        if (!["network", "server", "auth", "unknown"].includes(errorType)) {
+            navigate("/error/unknown", { replace: true });
         }
+    }, [errorType, navigate]);
 
-        // 인증 오류 → 자동으로 로그인 페이지로 이동
-        if (errorType === "auth" && redirectToLogin) {
-            const timeout = setTimeout(() => {
-                navigate("/login", { replace: true });
-            }, 2000);
-            return () => clearTimeout(timeout);
-        }
-    }, [errorType, autoRetry, redirectToLogin, navigate]);
+    // 에러 메시지
+    const { title, description } = errorMessages[errorType];
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen text-center animate-fadeIn">
@@ -71,21 +55,19 @@ export default function ErrorPage() {
             <img
                 src="/logos/logo_text.svg"
                 alt="LINKLE 로고 텍스트"
-                className="w-[50vw] sm:w-[20vw] h-auto mb-4"
+                className="w-[50vw] sm:w-[20vw] h-auto mb-4 xxs:mb-6"
             />
 
             {/* 에러 메시지 */}
             <div className="animate-pulse">
-                <h1 className="text-2xl font-bold my-2">{title}</h1>
-                <p className="max-w-xs text-linkleGray whitespace-pre-line my-1">{description}</p>
+                <h1 className="text-xl xxs:text-2xl font-bold my-3">{title}</h1>
+                <p className="max-w-xs text-sm xxs:text-base text-linkleGray whitespace-pre-line my-2">{description}</p>
             </div>
 
-            {errorType === "server" && (
-                <Link to='/' replace className='text-sm font-medium text-black/40 hover:text-black/45 mt-5'>
-                    홈으로 돌아가기
-                </Link>
-            )}
-
+            {/* 홈으로 돌아가기 링크 */}
+            <a href='/' className='text-sm xxs:text-base font-medium text-black/40 hover:text-black/60 transition-colors mt-4'>
+                홈으로 돌아가기
+            </a>
         </div>
     );
 }
