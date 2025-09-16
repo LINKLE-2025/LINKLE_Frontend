@@ -1,5 +1,4 @@
-// FriendSearchPage.tsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useFriendSearch } from "@/hooks/useFriendSearch";
 import TotalSearchPanel from "@/components/search/TotalSearchPanel";
 import { useOutletContext } from "react-router-dom";
@@ -12,11 +11,9 @@ type OutletContextType = {
 };
 
 function TotalSearchPage() {
-    const { headerHeight, footerHeight } =
-        useOutletContext<OutletContextType>();
+    const { headerHeight, footerHeight } = useOutletContext<OutletContextType>();
     const [isAuthLoading, setIsAuthLoading] = useState(true);
     const [loggedInUserId, setLoggedInUserId] = useState<number | null>(null);
-
 
     useEffect(() => {
         (async () => {
@@ -31,30 +28,52 @@ function TotalSearchPage() {
         })();
     }, []);
 
+
     const {
-        searchQuery, setSearchQuery,
-        results, setResults,
-        isSearching, hasSearched,
+        searchQuery,
+        setSearchQuery,
+        results,
+        setResults,
+        isSearching,
+        hasSearched,
         handleSearch,
+        page,
+        totalPages,
+        setPage,
     } = useFriendSearch(loggedInUserId ?? 0);
 
     const inputRef = useRef<HTMLInputElement | null>(null);
 
+    const handleSearchCallback = useCallback(
+        (pageNum?: number) => {
+            handleSearch(searchQuery, pageNum);
+        },
+        [handleSearch, searchQuery]
+    );
+
+
+    if (isAuthLoading) {
+        return <div>로딩 중...</div>;
+    }
+
     return (
-        <div
-            className="max-w-full mx-auto bg-white min-h-screen"
-        // style={{ marginBottom: `${footerHeight}px` }}
-        >
+        <div className="h-screen flex flex-col bg-white">
             <TotalSearchPanel
                 currentUserId={loggedInUserId ?? 0}
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
                 searchResults={results}
                 setSearchResults={setResults}
-                handleSearch={() => handleSearch(searchQuery)}
+                // handleSearch={(pageNum?: number) => handleSearch(searchQuery, pageNum)}
                 inputRef={inputRef}
                 headerHeight={headerHeight}
                 footerHeight={footerHeight}
+                isSearching={isSearching}
+                hasSearched={hasSearched}
+                page={page}
+                totalPages={totalPages}
+                setPage={setPage}
+                handleSearch={handleSearchCallback}
             />
         </div>
     );

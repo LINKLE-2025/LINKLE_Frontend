@@ -3,13 +3,13 @@ import { determineProfileType } from "./determineProfileType";
 
 // 여러 명 검색 시 프로필 타입 판단
 export function determineProfileTypes(
-  searchResults: FriendResponse[],
+  searchResults: FriendResponse[] = [],
   currentUserId: number,
-  friendList: FriendResponse[]
+  friendList: FriendResponse[] = []    
 ): FriendSummaryWithProfileType[] {
   return searchResults.map(
     (user): FriendSummaryWithProfileType => ({
-      friendUserid: user.userId,         // FriendSummaryWithProfileType.id 로 매핑
+      friendUserid: user.userId,
       name: user.name,
       nickname: user.nickname,
       image: user.image,
@@ -19,7 +19,7 @@ export function determineProfileTypes(
           ? "friend"
           : user.state === "REQUESTED"
             ? "wait"
-            : determineProfileType(currentUserId, user.userId, friendList),
+            : determineProfileType(currentUserId, user.userId, friendList ?? []),
     })
   );
 }

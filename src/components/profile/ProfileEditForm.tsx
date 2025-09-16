@@ -13,8 +13,9 @@ interface ProfileInputRowProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  as?: "input" | "select";
+  as?: "input" | "select" | "textarea";
   options?: string[];
+  readOnly?: boolean;
 }
 
 function ProfileInputRow({
@@ -25,10 +26,11 @@ function ProfileInputRow({
   placeholder,
   as = "input",
   options = [],
+  readOnly = false,
 }: ProfileInputRowProps) {
   return (
-    <div className="flex justify-between items-center border-b pb-2 max-w-full">
-      <label className="text-gray-500 text-sm">{label}</label>
+    <div className="flex justify-between items-start border-b pb-2 max-w-full">
+      <label className="text-gray-500 text-sm pt-1">{label}</label>
       {as === "select" ? (
         <select
           value={value}
@@ -41,18 +43,28 @@ function ProfileInputRow({
             </option>
           ))}
         </select>
+      ) : as === "textarea" ? (
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="text-right text-sm text-gray-800 focus:outline-none w-2/3 resize-none bg-transparent"
+          rows={2}
+        />
       ) : (
         <input
           type={type}
           value={value ?? ""}
           onChange={(e) => onChange(e.target.value)}
-          className="text-right text-base text-gray-800 focus:outline-none w-2/3"
+          className="text-right text-base text-gray-800 focus:outline-none w-2/3 bg-transparent"
           placeholder={placeholder}
+          readOnly={readOnly}
         />
       )}
     </div>
   );
 }
+
 
 function ProfileForm({ userId, profileData, updateField }: ProfileFormProps) {
   return (
@@ -68,15 +80,16 @@ function ProfileForm({ userId, profileData, updateField }: ProfileFormProps) {
           label="이름"
           value={profileData.name}
           onChange={(v) => updateField("name", v)}
+          readOnly
         />
 
-        <ProfileInputRow
+        {/* <ProfileInputRow
           label="비밀번호"
           type="password"
           value={profileData.password ?? ""}
           onChange={(v) => updateField("password", v)}
           placeholder="********"
-        />
+        /> */}
 
         <ProfileInputRow
           label="닉네임"
@@ -88,14 +101,16 @@ function ProfileForm({ userId, profileData, updateField }: ProfileFormProps) {
           label="성별"
           value={profileData.gender}
           onChange={(v) => updateField("gender", v)}
-          as="select"
-          options={["남성", "여성"]}
+          // as="select"
+          // options={["남성", "여성"]}
+          readOnly
         />
 
         <ProfileInputRow
           label="소개"
           value={profileData.memo}
           onChange={(v) => updateField("memo", v)}
+          as="textarea"
         />
 
         <ProfileInputRow
@@ -103,6 +118,7 @@ function ProfileForm({ userId, profileData, updateField }: ProfileFormProps) {
           type="email"
           value={profileData.email}
           onChange={(v) => updateField("email", v)}
+          readOnly
         />
       </div>
 

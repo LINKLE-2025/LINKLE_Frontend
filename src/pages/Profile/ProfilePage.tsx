@@ -101,7 +101,14 @@ const ProfilePage = () => {
   const { userId: profileUserIdParam } = useParams<{ userId: string }>();
   const location = useLocation();
 
-  const { results, setResults } = useFriendSearch(loggedInUserId ?? 0);
+  const {
+    results,
+    setResults,
+    page,
+    totalPages,
+    handleSearch,
+  } = useFriendSearch(loggedInUserId ?? 0);
+
 
 
   const state = location.state as {
@@ -121,6 +128,19 @@ const ProfilePage = () => {
   const profileUserId = profileUserIdParam
     ? Number(profileUserIdParam)
     : state?.userId ?? loggedInUserId;
+
+
+
+  const refetchFriendList = async () => {
+    if (profileUserId == null) return; // null 또는 undefined 방지
+
+    try {
+      const updatedFriends = await getFriends(profileUserId);
+      setFriendList(updatedFriends);
+    } catch (err) {
+      console.error("친구 목록 재요청 실패:", err);
+    }
+  };
 
   // 데이터 패칭
   useEffect(() => {
@@ -216,13 +236,15 @@ const ProfilePage = () => {
           loggedInUserId={loggedInUserId}
           setSearchResults={setResults}
           pathname={pathname}
+
+          page={page}
+          totalPages={totalPages}
+          handleSearch={handleSearch}
+          onFriendRequestSuccess={refetchFriendList}
         />
       ) : (
         <>
-          {/* 배경 placeholder */}
           <div className="h-60 bg-gray-100 animate-pulse" />
-
-          {/* 프로필 정보 placeholder */}
           <div className="bg-white px-4 mt-3 rounded-t-3xl min-h-[120px] animate-pulse" />
         </>
       )}

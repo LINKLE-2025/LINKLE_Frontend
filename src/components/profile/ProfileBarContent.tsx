@@ -16,6 +16,7 @@ interface ProfileContentProps {
   image?: string | null;
   background?: string | null;
   pathname: string;
+  onFriendDeleted?: () => void;
 }
 
 // 로그아웃 처리 함수
@@ -40,6 +41,7 @@ function ProfileBarContent({
   image,
   background,
   pathname,
+  onFriendDeleted,
 }: ProfileContentProps) {
 
   const navigate = useNavigate();
@@ -106,6 +108,7 @@ function ProfileBarContent({
             try {
               await deleteFriend(friendId!);
               alert("친구가 삭제되었습니다.");
+              onFriendDeleted?.();
             } catch (err) {
               console.error("친구 삭제 실패:", err);
               alert("친구 삭제에 실패했습니다.");
@@ -140,8 +143,11 @@ function ProfileBarContent({
       {/* 오른쪽 ⋯ 버튼 */}
       <div>
         {(profileType === 'self' || profileType === 'friend') && (
-          <button onClick={profileType === 'self' ? onEditProfile : onFriendMenu} className="w-8 h-8 flex items-center justify-center text-xl">
-            ⋯
+          <button
+            onClick={profileType === 'self' ? onEditProfile : onFriendMenu}
+            className="w-8 h-8 flex items-center justify-center text-xl"
+          >
+            <Ellipsis className="w-5 h-5 text-gray-700" />
           </button>
         )}
       </div>
