@@ -77,7 +77,7 @@ export default function AccountEditPage() {
     return (
         <div className="flex flex-col flex-1 w-full bg-blue-50/40 items-center gap-4 p-4">
             {/* 상단 컨텐츠 */}
-            <div className="w-full border bg-white p-5 rounded-xl space-y-4">
+            <div className="w-full max-w-2xl border bg-white p-5 rounded-xl space-y-4 shadow-sm">
                 <div className="flex text-lg font-bold justify-between border-b">
                     <p>계좌 정보</p>
                 </div>
@@ -116,7 +116,7 @@ export default function AccountEditPage() {
                 </div>
             </div>
             {/* 하단 컨텐츠 */}
-            <div className="flex-1 w-full border bg-white p-5 rounded-xl space-y-5">
+            <div className="flex-1 w-full max-w-2xl border bg-white p-5 rounded-xl space-y-5 shadow-sm">
                 <div className="flex text-lg font-bold justify-between border-b">
                     <p>은행사 선택</p>
                 </div>

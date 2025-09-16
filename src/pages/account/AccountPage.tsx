@@ -1,7 +1,10 @@
 import { useActionMenu } from "@/components/modal/useActionMenu";
 import { EllipsisVertical, RotateCw, Settings } from "lucide-react"
+import { useState } from "react";
 
 export default function AccountPage() {
+    const [showOptions, setShowOptions] = useState(false);
+    const [amount, setAmount] = useState("");
     const { open: openMenu, confirm, ActionMenu } = useActionMenu();
 
     const onEditProfile = async () => {
@@ -24,7 +27,7 @@ export default function AccountPage() {
     return (
         <div className="flex flex-col flex-1 w-full bg-blue-50/40 items-center gap-4 p-4">
             {/* 상단 컨텐츠 */}
-            <div className="w-full border bg-white p-5 rounded-xl space-y-6">
+            <div className="w-full max-w-2xl border bg-white p-5 rounded-xl space-y-6 shadow-sm">
                 {/* 계좌 정보 */}
                 <div className="flex justify-between items-center">
                     <div className="flex flex-row items-center">
@@ -54,18 +57,44 @@ export default function AccountPage() {
                 </div>
                 {/* 입출금 버튼 */}
                 <div className="flex justify-around space-x-4 px-2">
-                    <button className="w-screen border rounded-lg bg-gray-100/20 hover:bg-gray-100/60 py-1.5"
-                        onClick={() => alert("입금 기능")}>
-                        <p>입금</p>
-                    </button>
-                    <button className="w-screen border rounded-lg bg-gray-100/20 hover:bg-gray-100/60 py-1.5"
-                        onClick={() => alert("출금 기능")}>
-                        <p>출금</p>
-                    </button>
+                    {!showOptions ? (
+                        // 처음에는 "입출금" 버튼만 보임
+                        <button
+                            className="w-screen border rounded-lg bg-gray-100/20 hover:bg-gray-100/60 py-1.5"
+                            onClick={() => setShowOptions(true)}
+                        >
+                            <p>입출금</p>
+                        </button>
+                    ) : (
+                        // "입금" "출금" 버튼과 input이 나타남
+                        <div className="flex flex-col w-full space-y-3">
+                            <input type="number" placeholder="100원 이상 입력하세요"
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
+                                className="w-full text-linkleGray
+                                    bg-gray-100/5 border border-gray-200 rounded-lg 
+                                    focus:outline-none focus:border-black/15 px-3 py-2.5"
+                            />
+                            <div className="flex justify-around space-x-4">
+                                <button
+                                    className="w-screen border rounded-lg bg-gray-100/20 hover:bg-gray-100/60 py-1.5"
+                                    onClick={() => alert(`입금: ${amount}`)}
+                                >
+                                    <p>입금</p>
+                                </button>
+                                <button
+                                    className="w-screen border rounded-lg bg-gray-100/20 hover:bg-gray-100/60 py-1.5"
+                                    onClick={() => alert(`출금: ${amount}`)}
+                                >
+                                    <p>출금</p>
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
             {/* 하단 컨텐츠 */}
-            <div className="flex-1 w-full border bg-white p-5 rounded-xl space-y-5">
+            <div className="flex-1 w-full max-w-2xl border bg-white p-5 rounded-xl space-y-5 shadow-sm">
                 <div className="flex text-lg font-bold justify-between border-b">
                     <p>입출금 내역 조회</p>
                 </div>
