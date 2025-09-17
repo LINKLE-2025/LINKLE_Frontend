@@ -250,7 +250,7 @@ const ProfilePage = () => {
       )}
 
       {/* 탭 선택 */}
-      <div className="bg-white border sticky top-0 z-10">
+      <div className="sticky top-0 bg-white border-b z-20">
         <div className="flex">
           <button
             className={`flex-1 py-3 mx-3 flex items-center justify-center border-b-2 ${activeTab === "posts" ? "border-gray-200" : "border-transparent"

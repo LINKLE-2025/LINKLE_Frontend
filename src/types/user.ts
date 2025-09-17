@@ -46,7 +46,9 @@ export type ProfilePostDTO = {
 
 export type ProfileLinkerCountDTO = {
   categoryId: number;
-  count: number;
+  linkerCount: number;
+  postCount: number;
+  chatCount: number;
 }
 
 // 이미지 조회 URL 헬퍼

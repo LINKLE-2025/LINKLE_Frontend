@@ -118,14 +118,21 @@ export default function TotalSearchPanel({
     const fetchLinkers = async (pageToFetch = 0) => {
         try {
             const data = await searchLinkers(searchQuery, pageToFetch, 10);
-            setLinkerResults(data.content);
+
+            if (pageToFetch === 0) {
+                // 첫 페이지는 초기화
+                setLinkerResults(data.content);
+            } else {
+                // 그 외는 이어붙이기
+                setLinkerResults(prev => [...prev, ...data.content]);
+            }
+
             setLinkerPage(data.number);
             setLinkerTotalPages(data.totalPages);
         } catch (err) {
             console.error("링커 검색 실패:", err);
         }
     };
-
     const handleTabSearch = () => {
         if (activeTab === "friend") {
             handleSearch(1);
@@ -374,20 +381,14 @@ export default function TotalSearchPanel({
                                     </div>
                                 ))}
 
-                                {/* 페이지네이션 */}
-                                {linkerTotalPages > 1 && (
-                                    <div className="flex justify-center mt-3 gap-2">
+                                {/* 더보기 버튼 (마지막 페이지가 아닐 때만 표시) */}
+                                {linkerPage + 1 < linkerTotalPages && (
+                                    <div className="flex justify-center mt-3">
                                         <button
-                                            disabled={linkerPage === 0}
-                                            onClick={() => fetchLinkers(linkerPage - 1)}
-                                        >
-                                            이전
-                                        </button>
-                                        <button
-                                            disabled={linkerPage === linkerTotalPages - 1}
                                             onClick={() => fetchLinkers(linkerPage + 1)}
+                                            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
                                         >
-                                            다음
+                                            더보기
                                         </button>
                                     </div>
                                 )}
@@ -397,6 +398,7 @@ export default function TotalSearchPanel({
                                 {renderEmptyState("링커 검색 결과가 없습니다")}
                             </div>
                         )}
+
                     </>
                 )}
             </div>
