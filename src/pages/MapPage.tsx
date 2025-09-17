@@ -80,7 +80,11 @@ export default function MapPage(): React.ReactElement {
   const [mapReady, setMapReady] = useState(false); //지도 로드 완료 여부
   const [activeLinkers, setActiveLinkers] = useState<any[]>([]);  // 활성 링커 목록
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null); // 지도 중심 좌표 저장
+  const [openLinkerId, setOpenLinkerId] = useState<number | null>(null);
 
+  const handleLinkerClick = (linkerId: number) => {
+    setOpenLinkerId(linkerId);
+  };
   // 버튼 관련
   // const [linkerCreateMode, setLinkerCreateMode] = useState(false); // 🔥 링커 생성 모드
 
@@ -208,6 +212,7 @@ export default function MapPage(): React.ReactElement {
     setDetailError(null);
     setDetailData(null);
     setShowClusterList(false);
+    setSearchOpen(false);
 
     (async () => {
       try {
@@ -845,7 +850,9 @@ export default function MapPage(): React.ReactElement {
       window.history.replaceState({}, document.title);
     }
   }, [location.state, setLinkerCreateMode]);
-
+  useEffect(() => {
+    linkerCreateModeRef.current = linkerCreateMode; // prop으로 받은 값
+  }, [linkerCreateMode]);
 
   useViewportHeight();
   const { headerHeight, footerHeight } = useOutletContext<LayoutContext>();
@@ -1009,6 +1016,7 @@ export default function MapPage(): React.ReactElement {
         onClose={() => setShowAddress(false)}
         activeLinkers={activeLinkers}
         loggedInUserId={loggedInUserId}
+        onOpenDetailById={onOpenDetailById}
       />
       {/* 나머지 모달들 (기존과 동일) */}
       <Sheet
