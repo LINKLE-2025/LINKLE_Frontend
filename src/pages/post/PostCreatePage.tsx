@@ -17,7 +17,7 @@ export default function PostCreatePage(): React.ReactElement {
   const [linker, setLinker] = useState<LinkerLite | null>(location.state?.linker ?? null);
   const [submitting, setSubmitting] = useState(false);
 
-  // ✅ 현재 로그인한 사용자 ID
+  // 현재 로그인한 사용자 ID
   const [meId, setMeId] = useState<number | null>(null);
   useEffect(() => {
     (async () => {
@@ -30,7 +30,7 @@ export default function PostCreatePage(): React.ReactElement {
     })();
   }, []);
 
-  // ✅ 프로필 훅 (이름, 닉네임, 기본 이미지까지 알아서 처리)
+  // 프로필 훅 (이름, 닉네임, 기본 이미지까지 알아서 처리)
   const meProfile = useUserProfile(meId ?? undefined);
 
   useEffect(() => {
