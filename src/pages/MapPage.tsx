@@ -79,7 +79,7 @@ export default function MapPage(): React.ReactElement {
   const [createDraft, setCreateDraft] = useState<{ lat: number; lng: number } | null>(null);
   const [mapReady, setMapReady] = useState(false); //지도 로드 완료 여부
   const [activeLinkers, setActiveLinkers] = useState<any[]>([]);  // 활성 링커 목록
-
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null); // 지도 중심 좌표 저장
 
   // 버튼 관련
   // const [linkerCreateMode, setLinkerCreateMode] = useState(false); // 🔥 링커 생성 모드
@@ -144,6 +144,12 @@ export default function MapPage(): React.ReactElement {
     }
   }, [linkerCreateMode]);
 
+  // mapCenter 상태 변경될 때 저장
+  useEffect(() => {
+    if (mapCenter) {
+      localStorage.setItem('lastMapCenter', JSON.stringify(mapCenter));
+    }
+  }, [mapCenter]);
   // AppLayout의 Outlet context에 상태 전달
   const outletContext = useOutletContext<{
     headerHeight: number;
@@ -417,13 +423,24 @@ export default function MapPage(): React.ReactElement {
         let lat = 37.5665;
         let lng = 126.978;
 
-        const initMap = (latitude: number, longitude: number) => {
+        const initMap = (latitude: number, longitude: number, level: number) => {
           const options = {
             center: new window.kakao.maps.LatLng(latitude, longitude),
-            level: 3,
+            level: level,
           };
           const map = new window.kakao.maps.Map(container, options);
           kakaoMapRef.current = map;
+          // 지도 이동 이벤트 등록 → 중심 좌표 업데이트
+          window.kakao.maps.event.addListener(map, "center_changed", () => {
+            const center = map.getCenter();
+            const level = map.getLevel();
+            const state = {
+              lat: center.getLat(),
+              lng: center.getLng(),
+              level,
+            };
+            localStorage.setItem("lastMapState", JSON.stringify(state));
+          });
 
           // 🔥 클러스터러 생성 및 ref에 저장 (한 번만 생성)
           const clusterer = new (window.kakao.maps as any).MarkerClusterer({
@@ -555,17 +572,28 @@ export default function MapPage(): React.ReactElement {
           }
         };
 
+        const saved = localStorage.getItem("lastMapState");
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (parsed.lat && parsed.lng && parsed.level) {
+              initMap(parsed.lat, parsed.lng, parsed.level);
+              return;
+            }
+          } catch { }
+        }
+
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
             (position) => {
               lat = position.coords.latitude;
               lng = position.coords.longitude;
-              initMap(lat, lng);
+              initMap(lat, lng, 3);
             },
-            () => initMap(lat, lng),
+            () => initMap(lat, lng, 3),
           );
         } else {
-          initMap(lat, lng);
+          initMap(lat, lng, 3);
         }
       });
     };
@@ -761,8 +789,6 @@ export default function MapPage(): React.ReactElement {
     console.log("🐥 내 위치 버튼 클릭");
 
     const map = kakaoMapRef.current;
-    const currentCenter = map.getCenter();
-    map.panTo(currentCenter); // 시각적 피드백
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -774,8 +800,9 @@ export default function MapPage(): React.ReactElement {
           const newPosition = new kakao.maps.LatLng(lat, lng);
 
           // 1️⃣ 지도 이동
-          map.panTo(newPosition);
           map.setLevel(2);
+          map.panTo(newPosition);
+
 
           // 2️⃣ 마커와 원 이동
           if (userMarker) (userMarker as any).setPosition(newPosition);
