@@ -13,9 +13,10 @@ interface LinkerCardItemProps {
         state: string;
         address: string;
     };
+    onClick?: (linkerId: number) => void;
 }
 
-const LinkerCardItem = ({ linker }: LinkerCardItemProps) => {
+const LinkerCardItem = ({ linker, onClick }: LinkerCardItemProps) => {
     const category =
         linker.categoryId >= 1 && linker.categoryId <= CATEGORY_DATA.length
             ? CATEGORY_DATA[linker.categoryId - 1]
@@ -39,9 +40,7 @@ const LinkerCardItem = ({ linker }: LinkerCardItemProps) => {
                 className={`flex items-center p-4 rounded-2xl border transition ${isDeleted ? "cursor-default" : "cursor-pointer hover:shadow-md"}`}
                 style={{ backgroundColor: isDeleted ? "#D1D5DB" : `${bgColor}10` }}
                 onClick={() => {
-                    if (!isDeleted) {
-                        navigate("/map", { state: { openLinkerId: linker.linkerId } });
-                    }
+                    if (!isDeleted && onClick) onClick(linker.linkerId); // 여기서 MapPage의 onOpenDetailById 호출
                 }}
             >
                 <div
