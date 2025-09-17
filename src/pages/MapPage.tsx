@@ -212,6 +212,7 @@ export default function MapPage(): React.ReactElement {
     setDetailError(null);
     setDetailData(null);
     setShowClusterList(false);
+    setSearchOpen(false);
 
     (async () => {
       try {
