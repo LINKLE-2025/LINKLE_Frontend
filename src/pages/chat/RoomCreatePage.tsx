@@ -1,9 +1,9 @@
 // src/pages/chat/RoomCreatePage.tsx
 import { useLocation, useNavigate } from "react-router-dom";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { createGroupRoom } from "@/services/chat";
 import type { RoomResponseDTO } from "@/types/chat";
-import { Camera, Users, Crown, CircleDollarSign } from "lucide-react";
+import { Camera, Users, Crown, CircleDollarSign, X } from "lucide-react";
 
 type LinkerDetail = { linkerId: number; name: string };
 type RoomType = "LIGHT" | "CLASS";
@@ -24,17 +24,32 @@ export default function RoomCreatePage() {
   const navigate = useNavigate();
   const linker: LinkerDetail | null = (useLocation().state as any)?.linker ?? null;
 
-  // themeColor는 이제 숫자 id로 관리 (1~6)
+  // themeColor는 숫자 id(1~6)
   const [themeColor, setThemeColor] = useState<number>(1);
   const [roomType, setRoomType] = useState<RoomType>("LIGHT");
   const [roomName, setRoomName] = useState("");
   const [memo, setMemo] = useState("");
   const [description, setDescription] = useState("");
-  // 참가비는 문자열 상태로 관리 (콤마 포함)
-  const [entryFee, setEntryFee] = useState<string>("");
+  const [entryFee, setEntryFee] = useState<string>(""); // 문자열(콤마 포함)
   const [startDate, setStartDate] = useState<string>("");
+
   const [submitting, setSubmitting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  // 업로드 배경 이미지
+  const [bgFile, setBgFile] = useState<File | null>(null);
+  const [bgPreview, setBgPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (!bgFile) {
+      setBgPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(bgFile);
+    setBgPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [bgFile]);
 
   const isClass = roomType === "CLASS";
 
@@ -43,7 +58,7 @@ export default function RoomCreatePage() {
     if (isClass) {
       const feeDigits = entryFee.replace(/[^0-9]/g, "");
       const feeNum = feeDigits === "" ? 0 : Number(feeDigits);
-      if (!Number.isFinite(feeNum) || feeNum < 0) return false; // 0(무료) 허용
+      if (!Number.isFinite(feeNum) || feeNum < 0) return false; // 0 허용
       if (!startDate) return false;
     }
     return true;
@@ -58,17 +73,18 @@ export default function RoomCreatePage() {
         roomName: roomName.trim(),
         description: description.trim(),
         memo: memo.trim(),
-        themeColor, // 숫자(1~6) 그대로 전송
+        themeColor,            // 숫자(1~6) 그대로 전송
         linkerId: linker?.linkerId,
       };
       if (isClass) {
-        // 콤마 제거 후 숫자로 변환
         const feeDigits = entryFee.replace(/[^0-9]/g, "");
         const feeNum = feeDigits === "" ? 0 : Number(feeDigits);
         payload.entryFee = Number.isFinite(feeNum) && feeNum >= 0 ? feeNum : 0;
         payload.startDate = new Date(startDate).toISOString().slice(0, 19);
       }
-      const created: RoomResponseDTO = await createGroupRoom(payload);
+
+      // 파일이 있으면 멀티파트로, 없으면 JSON으로
+      const created: RoomResponseDTO = await createGroupRoom(payload, bgFile ?? undefined);
       navigate(`/chat/room/${created.roomId}`, { replace: true });
     } catch (e: any) {
       alert(e?.message ?? "채팅방 생성 실패");
@@ -80,10 +96,7 @@ export default function RoomCreatePage() {
 
   function hexToRgba(hex: string, alpha = 0.5) {
     const h = hex.replace("#", "");
-    const bigint = parseInt(
-      h.length === 3 ? h.split("").map((c) => c + c).join("") : h,
-      16
-    );
+    const bigint = parseInt(h.length === 3 ? h.split("").map((c) => c + c).join("") : h, 16);
     const r = (bigint >> 16) & 255;
     const g = (bigint >> 8) & 255;
     const b = bigint & 255;
@@ -99,19 +112,36 @@ export default function RoomCreatePage() {
 
   return (
     <main className="w-full max-w-md mx-auto px-2 sm:px-0 pb-8">
-      {/* 프리뷰 박스: 정사각형 */}
-      <div className="mt-6 mx-auto w-1/2 aspect-square rounded-2xl flex items-center justify-center overflow-hidden">
-        {activeColor && (
+      {/* 프리뷰: 파일이 있으면 파일, 없으면 컬러 아이콘 */}
+      <div className="mt-6 mx-auto w-1/2 aspect-square rounded-2xl flex items-center justify-center overflow-hidden relative">
+        {bgPreview ? (
+          <>
+            <img
+              src={bgPreview}
+              alt="배경 미리보기"
+              className="w-full h-full object-cover"
+              draggable={false}
+            />
+            <button
+              type="button"
+              onClick={() => setBgFile(null)}
+              className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1"
+              aria-label="배경 제거"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </>
+        ) : activeColor ? (
           <img
             src={activeColor.src}
             alt={activeColor.label}
             className="w-full h-full object-cover"
             draggable={false}
           />
-        )}
+        ) : null}
       </div>
 
-      {/* 팔레트 */}
+      {/* 팔레트 + 카메라 */}
       <div className="mt-5">
         <div className="text-xs text-gray-600 text-left mb-1">채팅방 테마 선택</div>
         <div className="flex items-center gap-3">
@@ -133,22 +163,34 @@ export default function RoomCreatePage() {
               >
                 <span
                   className={`absolute inset-[1.5px] rounded-full transition-colors duration-150 ${isActive
-                    ? "bg-[var(--fill)]"
-                    : "bg-transparent [@media(hover:hover)]:group-hover:bg-[var(--hover)]"
+                      ? "bg-[var(--fill)]"
+                      : "bg-transparent [@media(hover:hover)]:group-hover:bg-[var(--hover)]"
                     }`}
                 />
               </button>
             );
           })}
 
+          {/* 업로드: 파일 선택 */}
           <button
             type="button"
-            title="배경 이미지 업로드(준비중)"
-            className="ml-1 flex items-center justify-center w-8 h-8 rounded-full border-2 bg-white text-gray-500 cursor-not-allowed"
+            onClick={() => fileInputRef.current?.click()}
+            className="ml-1 flex items-center justify-center w-8 h-8 rounded-full border-2 bg-white text-gray-700 hover:bg-gray-50"
             style={{ WebkitTapHighlightColor: "transparent", touchAction: "manipulation" }}
+            aria-label="배경 이미지 업로드"
           >
             <Camera className="w-5 h-5" />
           </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0] ?? null;
+              if (f) setBgFile(f);
+            }}
+          />
         </div>
       </div>
 
@@ -231,7 +273,6 @@ export default function RoomCreatePage() {
                 참가비
               </span>
               <CircleDollarSign className="w-4 h-4 text-gray-500" />
-              {/* 숫자만 허용 + 천단위 콤마 */}
               <input
                 type="text"
                 inputMode="numeric"
@@ -240,10 +281,7 @@ export default function RoomCreatePage() {
                 onChange={(e) => {
                   const raw = e.target.value;
                   const digits = raw.replace(/[^0-9]/g, "");
-                  if (digits === "") {
-                    setEntryFee("");
-                    return;
-                  }
+                  if (digits === "") return setEntryFee("");
                   const formatted = Number(digits).toLocaleString("ko-KR");
                   setEntryFee(formatted);
                 }}
@@ -261,15 +299,15 @@ export default function RoomCreatePage() {
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 className="flex-1 bg-transparent outline-none border-0 focus:ring-0 text-base"
-                min={new Date().toISOString().slice(0, 16)} // 현재 시간부터
-                max={new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16)} // 30일 뒤까지
+                min={new Date().toISOString().slice(0, 16)}
+                max={new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16)}
               />
             </label>
           </div>
         </div>
       )}
 
-      {/* 액션 버튼*/}
+      {/* 액션 버튼 */}
       <section className="mt-6 mb-4">
         <div className="grid grid-cols-2 gap-2">
           <button

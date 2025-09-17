@@ -1,6 +1,6 @@
-// src/api/chatApi.ts
 import apiClient from "./apiClient";
 import { getCurrentUserId } from "./authApi";
+import type { CreateRoomRequestDTO, RoomResponseDTO } from "@/types/chat";
 
 const DEV_UID = await getCurrentUserId().catch(() => {});
 
@@ -60,14 +60,29 @@ export async function createDmRoom(targetUserId: number) {
   return data;
 }
 
-/** 그룹/클래스 방 생성: POST /chat/room */
-export async function createGroupRoom(payload: { name: string; memberIds: number[] }) {
-  const { data } = await apiClient.post("/chat/room", payload, {
-    headers: { "x-user-id": DEV_UID },
-  });
-  return data;
+/**
+ * 그룹/클래스 방 생성: POST /chat/room
+ * - 파일이 있으면 multipart(dto + background)
+ * - 파일이 없으면 JSON
+ */
+export async function createGroupRoom(payload: CreateRoomRequestDTO, backgroundFile?: File) {
+  if (backgroundFile) {
+    const fd = new FormData();
+    fd.append("dto", new Blob([JSON.stringify(payload)], { type: "application/json" }));
+    fd.append("background", backgroundFile);
+    const { data } = await apiClient.post<RoomResponseDTO>("/chat/room", fd, {
+      headers: { "x-user-id": DEV_UID }, // Content-Type은 자동 설정
+    });
+    return data;
+  } else {
+    const { data } = await apiClient.post<RoomResponseDTO>("/chat/room", payload, {
+      headers: { "x-user-id": DEV_UID, "Content-Type": "application/json" },
+    });
+    return data;
+  }
 }
-/** 특정 링커의 모든 방(내가 멤버가 아닐 수도 있음): GET /chat/room/by-linker?linkerId= */
+
+/** 특정 링커의 모든 방: GET /chat/room/by-linker */
 export async function getRoomsByLinker(linkerId: number) {
   const { data } = await apiClient.get("/chat/room/by-linker", {
     params: { linkerId },
@@ -78,12 +93,12 @@ export async function getRoomsByLinker(linkerId: number) {
 
 /** 방 들어오기 */
 export async function joinRoom(roomId: number) {
-  // body는 없어도 되면 null 전달
   const { data } = await apiClient.post(`/chat/room/${roomId}/join`, null, {
     headers: { "x-user-id": DEV_UID },
   });
   return data;
 }
+
 /** 방 나가기 */
 export async function leaveRoom(roomId: number) {
   const uid = await getCurrentUserId().catch(() => undefined);
