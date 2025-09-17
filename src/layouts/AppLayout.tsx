@@ -41,6 +41,10 @@ export default function AppLayout() {
       setFooterHeight(footer.clientHeight);
     }
   }, []);
+  // ----------------
+  // post 페이지 여부 판단
+  // ----------------
+  const isPostPage = location.pathname.startsWith("/post");
 
   return (
     <div className='relative flex flex-col min-h-screen text-black'>
@@ -74,16 +78,23 @@ export default function AppLayout() {
       </main>
 
       {/* Footer */}
-      <MainFooter linkerCreateMode={linkerCreateMode} setLinkerCreateMode={setLinkerCreateMode}
-        onResetSearch={() => {
-          console.log("초기화 실행");
-          setSearchOpen(false);
-          setSearchQuery("");
-          setSearchResults([]);
-          setShowAddress(false);
-          setShowClusterList(false);
-          setDetailOpen(false);
-        }} />
+      {/* ---------------- */}
+      {!isPostPage && (
+        <MainFooter
+          linkerCreateMode={linkerCreateMode}
+          setLinkerCreateMode={setLinkerCreateMode}
+          onResetSearch={() => {
+            console.log("초기화 실행");
+            setSearchOpen(false);
+            setSearchQuery("");
+            setSearchResults([]);
+            setShowAddress(false);
+            setShowClusterList(false);
+            setDetailOpen(false);
+          }}
+        />
+      )}
+      {/* ---------------- */}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import LinkerCardItem from "../linker/LinkerCardItem";
 
@@ -15,11 +15,11 @@ interface Linker {
 
 interface ParticipationTabProps {
   participations: Linker[];
-  // categories?: typeof CATEGORY_DATA; // 현재 사용되지 않음, 필요 시 주석 해제
 }
 
 function ParticipationTab({ participations }: ParticipationTabProps) {
   const navigate = useNavigate();
+  const [visibleCount, setVisibleCount] = useState(10); // 처음엔 10개만 보여줌
 
   if (!participations || participations.length === 0) {
     return (
@@ -43,30 +43,42 @@ function ParticipationTab({ participations }: ParticipationTabProps) {
     return 0;
   });
 
+  const visibleParticipations = sortedParticipations.slice(0, visibleCount);
+
   return (
     <div>
       <div className="ml-3 mt-3 text-left text-sm font-medium text-gray-700">
         {participations.length}개의 링커 참여함
       </div>
-      <div className="px-4 py-2 space-y-3">
-        {sortedParticipations.map((linker) => {
-          const isDeleted = linker.state === "DELETED";
 
-          return (
-            <div
-              key={linker.linkerId}
-              className={isDeleted ? "cursor-default" : "cursor-pointer"}
-              onClick={() => {
-                if (!isDeleted) {
-                  navigate("/map", { state: { openLinkerId: linker.linkerId } });
-                }
-              }}
-            >
-              <LinkerCardItem linker={linker} />
-            </div>
-          );
-        })}
-      </div>
+      {visibleParticipations.map((linker) => {
+        const isDeleted = linker.state === "DELETED";
+        return (
+          <div
+            key={linker.linkerId}
+            className={isDeleted ? "cursor-default" : "cursor-pointer"}
+            onClick={() => {
+              if (!isDeleted) {
+                navigate("/map", { state: { openLinkerId: linker.linkerId } });
+              }
+            }}
+          >
+            <LinkerCardItem linker={linker} />
+          </div>
+        );
+      })}
+
+      {/* 더보기 버튼 */}
+      {visibleCount < sortedParticipations.length && (
+        <div className="flex justify-center my-4">
+          <button
+            onClick={() => setVisibleCount((prev) => prev + 10)}
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+          >
+            더보기
+          </button>
+        </div>
+      )}
     </div>
   );
 }
