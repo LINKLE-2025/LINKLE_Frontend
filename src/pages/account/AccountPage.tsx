@@ -18,6 +18,8 @@ interface HistoryItem {
 
 export default function AccountPage() {
     const [showOptions, setShowOptions] = useState(false);
+    const [lastClick, setLastClick] = useState<number>(0);
+    const cooldown = 3000; // 3초
     const [amount, setAmount] = useState<string>("");
     const { open: openMenu, confirm, ActionMenu } = useActionMenu();
     const [loading, setLoading] = useState(false);
@@ -95,6 +97,18 @@ export default function AccountPage() {
             closeOnOverlay: true,
         });
     };
+
+    // 잔액 새로고침 핸들러 (5초 쿨타임)
+    const handleRefresh = () => {
+        const now = Date.now();
+        if (now - lastClick < cooldown) {
+            alert("잠시 후 다시 시도해주세요.");
+            return;
+        }
+        setLastClick(now);
+        refreshData(userId);
+    };
+
 
     const handleCharge = async () => {
         if (!userId) return alert("로그인이 필요합니다.");
@@ -205,7 +219,7 @@ export default function AccountPage() {
                 {/* 잔액 */}
                 <div className="flex flex-row items-center space-x-0.5">
                     <h1 className="text-2xl xxs:text-3xl font-bold">{balance !== null ? balance.toLocaleString() : "0"}원</h1>
-                    <div onClick={() => refreshData(userId)} className="p-1.5 text-gray-400 hover:text-linkleGray hover:bg-gray-100/80 rounded-xl cursor-pointer">
+                    <div onClick={() => handleRefresh()} className="p-1.5 text-gray-400 hover:text-linkleGray hover:bg-gray-100/80 rounded-xl cursor-pointer">
                         <RotateCw strokeWidth={2} />
                     </div>
                 </div>

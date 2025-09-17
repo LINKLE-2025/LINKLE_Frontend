@@ -8,6 +8,7 @@ export default function LandingRedirect() {
     const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
     const [loading, setLoading] = useState(true);
 
+    // 컴포넌트 마운트 시 로그인 상태 확인
     useEffect(() => {
         const checkLogin = async () => {
             try {
@@ -28,6 +29,7 @@ export default function LandingRedirect() {
         checkLogin();
     }, []);
 
+    // 로딩 중일 때 로더 표시
     if (loading) {
         return <FullScreenLoader />;
     }
