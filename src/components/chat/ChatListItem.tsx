@@ -175,9 +175,7 @@ export default function ChatListItem({
           }}
         />
       ) : (
-        <div className="w-11 h-11 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold text-gray-700">
-          {initials(title)}
-        </div>
+        <img src={asset("icons/user-default.png")} alt="기본 사용자 아이콘" className="w-11 h-11 rounded-full" />
       )}
 
       {/* 텍스트 */}

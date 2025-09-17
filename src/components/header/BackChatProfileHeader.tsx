@@ -133,7 +133,9 @@ export default function BackChatProfileHeader({
             draggable={false}
             referrerPolicy="no-referrer"
           />
-        ) : null}
+        ) : (
+          <img src={asset("icons/user-default.png")} className="w-10 h-10 rounded-full object-cover mr-2" />
+        )}
 
         <div className="max-w-[72%] leading-tight">
           <div className="text-sm font-semibold text-gray-900 truncate">{title}</div>
