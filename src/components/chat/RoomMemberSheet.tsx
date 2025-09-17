@@ -222,12 +222,7 @@ export default function RoomMemberSheet({
 
                 {/* 하단 액션 */}
                 <div className="border-t border-gray-200 px-4 py-3 bg-white">
-                    <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2 text-gray-600">
-                            <span className="text-sm">알림 끄기</span>
-                        </div>
-                        <div className="w-10 h-6 rounded-full bg-gray-200" />
-                    </div>
+
 
                     <button
                         onClick={handleLeave}
