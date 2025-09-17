@@ -29,6 +29,7 @@ import { on } from "events";
 import { useViewportHeight } from "@/hooks/useViewportHeight";
 import { set } from "date-fns";
 import { getCurrentUserId } from "@/api/authApi";
+import { usePreventTouchScroll } from "@/hooks/usePreventTouchScroll";
 
 interface LayoutContext {
   linkerCreateMode: boolean;
@@ -58,6 +59,8 @@ interface SearchItem {
 const STORAGE_KEY = "linkle_spots_v2";
 
 export default function MapPage(): React.ReactElement {
+  usePreventTouchScroll(true); // 터치 스크롤 방지 훅 사용
+
   // ===== 1. 🔥 카테고리 필터링 - 커스텀 훅으로 대체 =====
   const {
     categoryFilterOpen,

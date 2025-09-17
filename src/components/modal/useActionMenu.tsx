@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
+import { usePreventTouchScroll } from "@/hooks/usePreventTouchScroll";
 
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -90,6 +91,9 @@ export function useActionMenu() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [state.isOpen]);
+
+  // 모바일 터치 스크롤 방지
+  usePreventTouchScroll(state.isOpen)
 
   const handleAction = async (action: ActionItem) => {
     try {
