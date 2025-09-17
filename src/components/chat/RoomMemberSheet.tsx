@@ -16,6 +16,12 @@ type Props = {
     currentUserId?: number;
 };
 
+const asset = (p: string) => {
+    const base = (import.meta.env.BASE_URL || "/").replace(/\/+$/, "");
+    const path = p.replace(/^\/+/, "");
+    return `${base}/${path}`;
+};
+
 // 성별별 디폴트 이미지
 function genderFallbackSrc(gender?: string | null) {
     if (gender === "남성") return "/icons/profile/Man.png";
@@ -82,9 +88,8 @@ function MemberRow({
                     }}
                 />
             ) : (
-                <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-semibold text-gray-700">
-                    {initials(name)}
-                </div>
+                <img src={asset("icons/user-default.png")} alt="기본 사용자 아이콘" className="w-8 h-8 rounded-full" />
+
             )}
 
             <div className="min-w-0 flex-1 leading-tight">

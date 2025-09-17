@@ -20,6 +20,8 @@ interface AddressDisplayProps {
   onClose: () => void;
   activeLinkers: any[];
   loggedInUserId: number | null;
+  onLinkerClick?: (linkerId: number) => void;
+  onOpenDetailById: (linkerId: number) => void;
 }
 
 interface WeatherData {
@@ -44,6 +46,7 @@ export default function AddressDisplay({
   onClose,
   activeLinkers,
   loggedInUserId,
+  onOpenDetailById
 }: AddressDisplayProps) {
   const [address, setAddress] = useState("");
   const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -207,7 +210,7 @@ export default function AddressDisplay({
             <div className="flex-1 min-h-0 overflow-y-auto">
               {linkerResults.length > 0 ? (
                 linkerResults.map((linker) => (
-                  <LinkerCardItem key={linker.linkerId} linker={linker} />
+                  <LinkerCardItem key={linker.linkerId} linker={linker} onClick={() => onOpenDetailById(linker.linkerId)} />
                 ))
               ) : (
                 <div className="p-3 text-sm text-gray-400">추천된 링커가 없습니다.</div>

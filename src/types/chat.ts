@@ -51,9 +51,10 @@ export interface CreateRoomRequestDTO {
   roomName: string;
   description: string;
   memo: string;
-  themeColor: number; // 1~9
+  themeColor: number; // 1~6
   entryFee?: number;
-  startDate?: string;
+  startDate?: string; // 'YYYY-MM-DDTHH:mm:ss'
+  linkerId?: number | null;
 }
 
 export interface ReadSyncRequestDTO {

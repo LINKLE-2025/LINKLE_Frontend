@@ -79,16 +79,52 @@ export default function MapPage(): React.ReactElement {
   const [createDraft, setCreateDraft] = useState<{ lat: number; lng: number } | null>(null);
   const [mapReady, setMapReady] = useState(false); //지도 로드 완료 여부
   const [activeLinkers, setActiveLinkers] = useState<any[]>([]);  // 활성 링커 목록
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null); // 지도 중심 좌표 저장
+  const [openLinkerId, setOpenLinkerId] = useState<number | null>(null);
 
+  const handleLinkerClick = (linkerId: number) => {
+    setOpenLinkerId(linkerId);
+  };
   // 버튼 관련
   // const [linkerCreateMode, setLinkerCreateMode] = useState(false); // 🔥 링커 생성 모드
-  const { linkerCreateMode, setLinkerCreateMode } = useOutletContext<LayoutContext>();
-  const [showAddress, setShowAddress] = useState(false); // 🔥 주소 표시
 
-  // 검색 관련
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<SearchItem[]>([]);
+  interface LayoutContext {
+    linkerCreateMode: boolean;
+    setLinkerCreateMode: React.Dispatch<React.SetStateAction<boolean>>;
+    headerHeight: number;
+    footerHeight: number;
+    searchOpen: boolean;
+    setSearchOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    searchQuery: string;
+    setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
+    searchResults: SearchItem[];
+    setSearchResults: React.Dispatch<React.SetStateAction<SearchItem[]>>;
+    showAddress: boolean;
+    setShowAddress: React.Dispatch<React.SetStateAction<boolean>>;
+    showClusterList: boolean;
+    setShowClusterList: React.Dispatch<React.SetStateAction<boolean>>;
+    detailOpen: boolean;
+    setDetailOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  }
+
+  const {
+    linkerCreateMode,
+    setLinkerCreateMode,
+    searchOpen,
+    setSearchOpen,
+    searchQuery,
+    setSearchQuery,
+    searchResults,
+    setSearchResults,
+    showAddress,
+    setShowAddress,
+    showClusterList,
+    setShowClusterList,
+    detailOpen,
+    setDetailOpen,
+
+  } = useOutletContext<LayoutContext>();
+
 
   // ref들
   const mapRef = useRef<HTMLDivElement | null>(null);
@@ -102,17 +138,22 @@ export default function MapPage(): React.ReactElement {
   const linkerCreateModeRef = useRef(false);
   // 상태가 바뀔 때마다 ref 갱신
   useEffect(() => {
-    // 상태가 true로 바뀌는 순간 실행
-    if (linkerCreateMode && !linkerCreateModeRef.current) {
-      setSearchOpen(false);     // 검색창 닫기
-      setSearchOpen(false) // 하단바 닫기
-      setShowAddress(false); // 주소 표시 닫기
+    if (linkerCreateMode) {
+      linkerCreateModeRef.current = linkerCreateMode;
+      setSearchOpen(false);
+      setSearchQuery("");
+      setSearchResults([]);
+      setShowAddress(false);
+      setShowClusterList(false);
     }
-
-    // 항상 최신 상태 저장
-    linkerCreateModeRef.current = linkerCreateMode;
   }, [linkerCreateMode]);
 
+  // mapCenter 상태 변경될 때 저장
+  useEffect(() => {
+    if (mapCenter) {
+      localStorage.setItem('lastMapCenter', JSON.stringify(mapCenter));
+    }
+  }, [mapCenter]);
   // AppLayout의 Outlet context에 상태 전달
   const outletContext = useOutletContext<{
     headerHeight: number;
@@ -130,7 +171,6 @@ export default function MapPage(): React.ReactElement {
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const [detailOpen, setDetailOpen] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [detailData, setDetailData] = useState<LinkerDetail | null>(null);
@@ -139,7 +179,7 @@ export default function MapPage(): React.ReactElement {
 
   // 클러스터 리스트 상태 
   const [clusterMarkers, setClusterMarkers] = useState<any[]>([]);
-  const [showClusterList, setShowClusterList] = useState(false);
+
 
   // ===== 3. 🔥 마커용 아이콘 상수 (지도에 표시되는 마커용) =====
   const CATEGORY_ICONS: Record<number, string> = {
@@ -387,13 +427,24 @@ export default function MapPage(): React.ReactElement {
         let lat = 37.5665;
         let lng = 126.978;
 
-        const initMap = (latitude: number, longitude: number) => {
+        const initMap = (latitude: number, longitude: number, level: number) => {
           const options = {
             center: new window.kakao.maps.LatLng(latitude, longitude),
-            level: 3,
+            level: level,
           };
           const map = new window.kakao.maps.Map(container, options);
           kakaoMapRef.current = map;
+          // 지도 이동 이벤트 등록 → 중심 좌표 업데이트
+          window.kakao.maps.event.addListener(map, "center_changed", () => {
+            const center = map.getCenter();
+            const level = map.getLevel();
+            const state = {
+              lat: center.getLat(),
+              lng: center.getLng(),
+              level,
+            };
+            localStorage.setItem("lastMapState", JSON.stringify(state));
+          });
 
           // 🔥 클러스터러 생성 및 ref에 저장 (한 번만 생성)
           const clusterer = new (window.kakao.maps as any).MarkerClusterer({
@@ -525,17 +576,28 @@ export default function MapPage(): React.ReactElement {
           }
         };
 
+        const saved = localStorage.getItem("lastMapState");
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (parsed.lat && parsed.lng && parsed.level) {
+              initMap(parsed.lat, parsed.lng, parsed.level);
+              return;
+            }
+          } catch { }
+        }
+
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
             (position) => {
               lat = position.coords.latitude;
               lng = position.coords.longitude;
-              initMap(lat, lng);
+              initMap(lat, lng, 3);
             },
-            () => initMap(lat, lng),
+            () => initMap(lat, lng, 3),
           );
         } else {
-          initMap(lat, lng);
+          initMap(lat, lng, 3);
         }
       });
     };
@@ -731,8 +793,6 @@ export default function MapPage(): React.ReactElement {
     console.log("🐥 내 위치 버튼 클릭");
 
     const map = kakaoMapRef.current;
-    const currentCenter = map.getCenter();
-    map.panTo(currentCenter); // 시각적 피드백
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -744,8 +804,9 @@ export default function MapPage(): React.ReactElement {
           const newPosition = new kakao.maps.LatLng(lat, lng);
 
           // 1️⃣ 지도 이동
-          map.panTo(newPosition);
           map.setLevel(2);
+          map.panTo(newPosition);
+
 
           // 2️⃣ 마커와 원 이동
           if (userMarker) (userMarker as any).setPosition(newPosition);
@@ -952,6 +1013,7 @@ export default function MapPage(): React.ReactElement {
         onClose={() => setShowAddress(false)}
         activeLinkers={activeLinkers}
         loggedInUserId={loggedInUserId}
+        onOpenDetailById={onOpenDetailById}
       />
       {/* 나머지 모달들 (기존과 동일) */}
       <Sheet

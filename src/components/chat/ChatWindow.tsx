@@ -97,7 +97,7 @@ export default function ChatWindow({ roomId }: { roomId: number }) {
     }
   };
 
-  if (!room) return <div className="p-4">Loading...</div>;
+  if (!room) return;
 
   return (
     <>
@@ -136,11 +136,7 @@ export default function ChatWindow({ roomId }: { roomId: number }) {
         currentUserId={currentUserId}
       />
 
-      {status !== "open" && (
-        <div className="fixed left-1/2 -translate-x-1/2 bottom-20 text-xs text-gray-500 bg-white/80 px-2 py-1 rounded">
-          {status === "connecting" ? "연결 중..." : status === "closed" ? "연결 종료" : "에러"}
-        </div>
-      )}
+
     </>
   );
 }
