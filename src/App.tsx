@@ -1,6 +1,5 @@
-// App.tsx
-import { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
+
 import MapPage from "./pages/MapPage";
 import LoginPage from "./pages/auth/LoginPage";
 import SignUpPage from "./pages/auth/SignupPage";
@@ -21,16 +20,10 @@ import RoomCreatePage from "./pages/chat/RoomCreatePage";
 
 import AppLayout from "./layouts/AppLayout";
 import PostDetailPage from "./pages/post/PostDetailPage";
-import useSilentRefresh from "./hooks/useSilentRefresh";
+import useFocusRefresh from "./hooks/useFocusRefresh";
 import LandingRedirect from "./pages/LandingRedirect";
 import ErrorPage from "./pages/ErrorPage";
-import TestPage from "./pages/TestPage";
 import PasswordResetPage from "./pages/auth/PasswordResetPage";
-import BalancePage from "./pages/pay/BalancePage";
-
-
-import { stompClient } from "@/lib/stompClient";
-import { getCurrentUserId } from "@/api/authApi";
 
 import TestAPI from "./components/recommend/recommend";
 import FriendListLayout from "./layouts/FriendListLayout";
@@ -38,31 +31,22 @@ import AccountPage from "./pages/account/AccountPage";
 import AccountEditPage from "./pages/account/AccountEditPage";
 import AccountLayout from "./layouts/AccountLayout";
 
-import PayRedirectPage from "./pages/pay/PayRedirectPage";
 import ChatLayout from "./layouts/ChatLayout";
-
+import useStomp from "./hooks/useStomp";
+import { useAuthStore } from "./store/authStore";
+import { useEffect } from "react";
+import ProtectedLayout from "./layouts/ProtectedLayout";
 
 export default function App() {
-  // Silent Refresh Hook 적용 -> Refresh Token을 이용해 Access Token 재발급
-  useSilentRefresh();
+  const fetchUser = useAuthStore((s) => s.fetchUser);
 
-  // 앱 시작 시 1회 STOMP 연결 초기화
+  useFocusRefresh();  // 포커스 복귀 시 토큰 갱신
+  useStomp();         // STOMP 연결 초기화
+
+  // 전역 사용자 상태 설정 : 앱 로드 시 한 번만 /auth/me 호출 
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      console.log("🔄 STOMP 연결 초기화 시도...");
-      const uid = await getCurrentUserId().catch(() => undefined);
-
-      if (!mounted) return;
-      stompClient.init(import.meta.env.VITE_WS_URL, {
-        "x-user-id": String(uid ?? ""),
-        // Authorization: `Bearer ${accessToken}`,
-      });
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    fetchUser();
+  }, [fetchUser]);
 
   return (
     <Routes>
@@ -72,45 +56,47 @@ export default function App() {
         <Route path='/login' element={<LoginPage />} />
         <Route path='/signup' element={<SignUpPage />} />
         <Route path='/password/reset' element={<PasswordResetPage />} />
-        <Route path='/test' element={<TestPage />} />
+        {/* <Route path='/test' element={<TestPage />} /> */}
       </Route>
 
-      {/* 메인 앱 레이아웃 */}
-      <Route element={<AppLayout />}>
-        <Route path='/map' element={<MapPage />} />
+      {/* 보호된 라우트: 로그인 필요 */}
+      <Route element={<ProtectedLayout />}>
+        {/* 메인 앱 레이아웃 */}
+        <Route element={<AppLayout />}>
+          <Route path='/map' element={<MapPage />} />
 
-        <Route path='/post' element={<PostCreatePage />} />
-        <Route path='/post/:postId' element={<PostDetailPage />} />
+          <Route path='/post' element={<PostCreatePage />} />
+          <Route path='/post/:postId' element={<PostDetailPage />} />
 
-        <Route path='/balance' element={<BalancePage />} />
-        <Route path="/pay" element={<PayRedirectPage />} />
+          {/* <Route path='/balance' element={<BalancePage />} /> */}
+          {/* <Route path="/pay" element={<PayRedirectPage />} /> */}
+        </Route>
 
-      </Route>
+        {/* 채팅 관련 레이아웃 */}
+        <Route element={<ChatLayout />}>
+          <Route path='/chat' element={<ChatListPage />} />
+          <Route path='/chat/room/:roomId' element={<ChatRoomPage />} />
+          <Route path='/chat/room/create' element={<RoomCreatePage />} />
+        </Route>
 
-      {/* 채팅 관련 레이아웃 */}
-      <Route element={<ChatLayout />}>
-        <Route path='/chat' element={<ChatListPage />} />
-        <Route path='/chat/room/:roomId' element={<ChatRoomPage />} />
-        <Route path='/chat/room/create' element={<RoomCreatePage />} />
-      </Route>
+        {/* 프로필 관련 레이아웃 */}
+        <Route element={<ProfileLayout />}>
+          <Route path='/profile' element={<ProfilePage />} />
+        </Route>
 
-      {/* 프로필 관련 레이아웃 */}
-      <Route element={<ProfileLayout />}>
-        <Route path='/profile' element={<ProfilePage />} />
-      </Route>
+        <Route element={<FriendListLayout />}>
+          <Route path='/profile/edit' element={<ProfileEditPage />} />
+          <Route path='/profile/friend' element={<FriendListPage />} />
+          <Route path='/profile/friend/received' element={<FriendRequestsPage />} />
 
-      <Route element={<FriendListLayout />}>
-        <Route path='/profile/edit' element={<ProfileEditPage />} />
-        <Route path='/profile/friend' element={<FriendListPage />} />
-        <Route path='/profile/friend/received' element={<FriendRequestsPage />} />
+          <Route path='/search' element={<FriendSearchPage />} />
+        </Route>
 
-        <Route path='/search' element={<FriendSearchPage />} />
-      </Route>
-
-      {/* 계좌 관련 레이아웃 */}
-      <Route element={<AccountLayout />}>
-        <Route path='/profile/account' element={<AccountPage />} />
-        <Route path='/profile/account/edit' element={<AccountEditPage />} />
+        {/* 계좌 관련 레이아웃 */}
+        <Route element={<AccountLayout />}>
+          <Route path='/profile/account' element={<AccountPage />} />
+          <Route path='/profile/account/edit' element={<AccountEditPage />} />
+        </Route>
       </Route>
 
       {/* 기타 */}
