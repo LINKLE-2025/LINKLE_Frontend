@@ -139,7 +139,7 @@ function ProfileContent({
   };
 
   const profileBackgroundSrc = isDefaultBackground
-    ? '/icons/profile/Background.png'
+    ? "/icons/profile/Background.png"
     : `/api/user/view/background/${userId}?v=${Date.now()}`;
 
   const renderButton = () => {
@@ -194,11 +194,10 @@ function ProfileContent({
   return (
     <div className="relative">
       {/* 배경 이미지 */}
-      <div className="relative w-full h-52 overflow-hidden bg-gray-200">
-        <div className="relative w-full h-60 overflow-hidden bg-gray-100">
+      <div className="relative w-full h-52 overflow-hidden bg-white-200">
+        <div className="relative w-full h-60 overflow-hidden bg-gray-500/30">
           <img
             src={profileBackgroundSrc}
-            alt="background"
             className="absolute inset-0 w-full h-full object-cover cursor-pointer"
             onClick={() => setPreviewImage(profileBackgroundSrc)} // 👈 추가
           />

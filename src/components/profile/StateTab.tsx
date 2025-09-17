@@ -3,8 +3,47 @@ import React from "react";
 import { CATEGORY_DATA } from "@/constants/categoryData"; // 혹시 몰라 import 추가
 
 interface StateTabProps {
-  linkerStats: { categoryId: number; count: number }[];
+  linkerStats: {
+    categoryId: number;
+    linkerCount: number;
+    postCount: number;
+    chatCount: number;
+  }[];
   categories: typeof CATEGORY_DATA;
+}
+
+function addRanks(data: StateTabProps["linkerStats"]) {
+  // 1. categoryId=13 분리
+  const special = data.find((item) => item.categoryId === 13);
+  const others = data.filter((item) => item.categoryId !== 13);
+
+  // 2. 나머지 정렬: linkerCount 내림차순
+  const sorted = [...others].sort((a, b) => b.linkerCount - a.linkerCount);
+
+  let rank = 0;
+  let prevCount: number | null = null;
+  const rankMap: Record<number, number> = {};
+
+  sorted.forEach((item, index) => {
+    if (item.linkerCount !== prevCount) {
+      rank = index + 1; // 1등부터 시작
+    }
+    rankMap[item.categoryId] = rank;
+    prevCount = item.linkerCount;
+  });
+
+  // 3. 순위 적용
+  const rankedOthers = sorted.map((item) => ({
+    ...item,
+    rank: rankMap[item.categoryId],
+  }));
+
+  // 4. special(13)은 맨 위에 rank=0으로 추가
+  const rankedSpecial = special
+    ? [{ ...special, rank: 0 }, ...rankedOthers]
+    : rankedOthers;
+
+  return rankedSpecial;
 }
 
 function StateTab({ linkerStats, categories }: StateTabProps) {
@@ -24,33 +63,59 @@ function StateTab({ linkerStats, categories }: StateTabProps) {
     );
   }
 
+  const rankedStats = addRanks(linkerStats);
+
   return (
-    <div className="p-4 space-y-3">
-      {linkerStats.map((state) => {
+    <div className="p-4 space-y-2">
+      {rankedStats.map((state) => {
         const category =
           state.categoryId >= 1 && state.categoryId <= categories.length
             ? categories[state.categoryId - 1]
             : null;
 
-        const activityName = category?.name ?? "기타";
+        const activityName = category?.title ?? "기타";
         const iconSrc = category?.icon ?? "/icons/category/default.png";
         const color = category?.color ?? "#ccc";
 
         return (
           <div
             key={state.categoryId}
-            className="flex items-center p-3 border rounded-lg bg-white shadow-sm"
-            style={{ backgroundColor: `${color}10` }}
+            className="flex items-center justify-between p-4 rounded-xl"
+            style={{ backgroundColor: `${color}15` }}
           >
-            {/* 카테고리 아이콘 */}
-            <div className="w-10 h-10 flex items-center justify-center mr-3 bg-gray-100 rounded-full">
-              <img src={iconSrc} alt={activityName} className="w-7 h-7" />
+            {/* 왼쪽: 순위 + 카테고리 정보 */}
+            <div className="flex items-center">
+              <div className="w-8 h-8 flex items-center justify-center text-lg font-bold text-gray-700 mr-4">
+                {state.rank === 0 ? "특별" : state.rank}
+              </div>
+
+              <div>
+                <div className="flex items-center mb-1">
+                  <h3 className="font-semibold text-gray-900 text-base">
+                    {activityName}
+                  </h3>
+                  {state.rank === 1 && <span className="ml-2">🥇</span>}
+                  {state.rank === 2 && <span className="ml-2">🥈</span>}
+                  {state.rank === 3 && <span className="ml-2">🥉</span>}
+                </div>
+                <p className="text-sm text-gray-500">
+                  {state.postCount} 포스트  {state.chatCount} 채팅방  참여
+                </p>
+              </div>
             </div>
 
-            {/* 카테고리 이름 + 횟수 */}
-            <div className="flex-1">
-              <h3 className="font-medium text-gray-900">{activityName}</h3>
-              <p className="text-sm text-gray-500">{state.count}회 참여</p>
+            {/* 오른쪽: 횟수 + 아이콘 */}
+            <div className="flex items-center">
+              <div
+                className="w-24 h-12 flex items-center justify-center rounded-sm"
+                style={{ backgroundColor: `${color}15` }}
+              >
+                <span className="text-lg font-bold text-gray-700 mr-3">
+                  {state.linkerCount}회
+                </span>
+
+                <img src={iconSrc} alt={activityName} className="w-6 h-6" />
+              </div>
             </div>
           </div>
         );
@@ -59,4 +124,5 @@ function StateTab({ linkerStats, categories }: StateTabProps) {
   );
 }
 
+// 🔥 여기 default export 추가
 export default StateTab;

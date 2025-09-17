@@ -176,7 +176,7 @@ export default function AddressDisplay({
   }, [map, isOpen]);
 
   const linkerCount = activeLinkers.filter((linker) => linker.addressDetail === address).length;
-
+  console.log(footerHeight)
   return (
     <Sheet
       isOpen={isOpen}
@@ -207,10 +207,14 @@ export default function AddressDisplay({
             </div>
 
             {/* 링커 리스트 */}
-            <div className="flex-1 min-h-0 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto max-h-[380px]">
               {linkerResults.length > 0 ? (
                 linkerResults.map((linker) => (
-                  <LinkerCardItem key={linker.linkerId} linker={linker} onClick={() => onOpenDetailById(linker.linkerId)} />
+                  <LinkerCardItem
+                    key={linker.linkerId}
+                    linker={linker}
+                    onClick={() => onOpenDetailById(linker.linkerId)}
+                  />
                 ))
               ) : (
                 <div className="p-3 text-sm text-gray-400">추천된 링커가 없습니다.</div>
