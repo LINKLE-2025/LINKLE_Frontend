@@ -21,13 +21,12 @@ const asset = (p: string) => {
 };
 
 export type BackChatHeaderDMOverride = {
-  dmName?: string | null;      // 위: 이름
-  dmNick?: string | null;      // 아래: 닉네임(태그)
-  dmUserId?: number | null;    // 프로필 사진 계산용 폴백
+  dmName?: string | null;   // 위: 이름
+  dmNick?: string | null;   // 아래: 닉네임(태그)
+  dmUserId?: number | null; // 프로필 사진 계산용
 };
 
 function readGender(room: any): string | undefined {
-  // 백에서 내려올 수 있는 후보들 방어적으로 체크
   return (
     room?.dmPartnerGender ??
     room?.friendGender ??
@@ -60,27 +59,28 @@ export default function BackChatProfileHeader({
   const navigate = useNavigate();
   const isDM = room.roomType === "DM";
 
-  const title = isDM ? (dmName ?? room.friendName ?? "(상대)") : (room.roomName ?? "(이름 없음)");
-  const sub = isDM ? (dmNick ?? (room as any).dmPartnerNickname ?? null) : null;
+  // ✅ DM일 때 partnerId / partnerName / partnerNickname 우선
+  const partnerId = dmUserId ?? (room as any).dmPartnerId ?? room.friendUserId ?? null;
+  const partnerName = dmName ?? (room as any).dmPartnerName ?? room.friendName ?? "(상대)";
+  const partnerNick = dmNick ?? (room as any).dmPartnerNickname ?? room.friendNickname ?? null;
 
-  // 🔑 아바타 후보들을 우선순위로 구성
+  const title = isDM ? partnerName : (room.roomName ?? "(이름 없음)");
+  const sub = isDM ? partnerNick : null;
+
+  // 아바타 후보
   const candidates = useMemo(() => {
     if (isDM) {
       const arr: (string | undefined)[] = [];
       const partnerImg = (room as any).dmPartnerProfileImageUrl as string | undefined;
 
-      // 1) 명시 dmUserId → 프로필 URL
-      if (typeof dmUserId === "number") arr.push(userProfileUrl(dmUserId));
+      // 1) partnerId 기반
+      if (typeof partnerId === "number") arr.push(userProfileUrl(partnerId));
 
-      // 2) 백에서 내려준 절대/상대 이미지 URL
+      // 2) 백에서 내려준 이미지 URL
       if (partnerImg) arr.push(partnerImg);
       if ((room as any).friendImage) arr.push((room as any).friendImage as string);
 
-      // 3) friendUserId 기반 URL
-      const friendUserId = (room as any).friendUserId as number | undefined;
-      if (typeof friendUserId === "number") arr.push(userProfileUrl(friendUserId));
-
-      // 4) 성별 기본 이미지 (없으면 Default로)
+      // 3) 성별 기본 이미지
       const g = readGender(room as any);
       arr.push(genderFallbackSrc(g));
 
@@ -91,14 +91,12 @@ export default function BackChatProfileHeader({
     const colorId = Number(room.themeColor);
     const name = COLOR_ICON_NAME[colorId as keyof typeof COLOR_ICON_NAME];
     return [name ? asset(`icons/color/${name}`) : roomBackgroundUrl(room.roomId)].filter(Boolean);
-  }, [isDM, dmUserId, room]);
+  }, [isDM, partnerId, room]);
 
-  // 후보 순차 시도 (에러 시 다음 후보로)
   const [idx, setIdx] = useState(0);
   const [failed, setFailed] = useState(false);
   const avatarSrc = candidates[idx];
 
-  // room/candidates 바뀌면 초기화
   useEffect(() => {
     setIdx(0);
     setFailed(false);

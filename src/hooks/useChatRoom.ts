@@ -99,7 +99,7 @@ export function useChatRoom(roomId: number) {
                 id: partnerId,
               }
             : {
-                name: "탈퇴한 사용자",
+                name: null,
                 nick: null,
                 id: null,
               },
