@@ -14,6 +14,7 @@ import RoomPreviewModal from "@/components/modal/RoomPreviewModal";
 import { extendLinkerCreatedDate, deductUserBalance } from "@/api/mapApi";
 import { Button } from "@/components/ui/button"
 import { withdrawBalance, getBalance } from "@/api/payApi";
+import { Grid, Users, Crown } from "lucide-react";
 
 export type LinkerDetail = {
   linkerId: number;
@@ -52,7 +53,7 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
   const [loggedInUserId, setLoggedInUserId] = useState<number | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
-  const [activeTab, setActiveTab] = useState<"post" | "light" | "class">("post");
+  const [activeTab, setActiveTab] = useState<"posts" | "participation" | "state">("posts");
 
   const [posts, setPosts] = useState<LinkerPost[]>([]);
   const [postLoading, setPostLoading] = useState(false);
@@ -72,6 +73,8 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
   const [showExtendModal, setShowExtendModal] = useState(false);
   const [localDetail, setLocalDetail] = useState<LinkerDetail | null>(detail);
   const [insufficientBalance, setInsufficientBalance] = useState(false);
+
+
 
 
   useEffect(() => {
@@ -310,7 +313,136 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
       }
     }
   };
+  // 탭 렌더링 함수
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "posts":
+        return (
+          <>
+            {postLoading && posts.length === 0 ? (
+              <div className="p-6 text-center text-gray-500 text-sm">불러오는 중…</div>
+            ) : postError ? (
+              <div className="p-6 text-center text-red-500 text-sm">{postError}</div>
+            ) : posts.length === 0 ? (
+              <div className="mt-4 flex justify-center opacity-50">
+                <div className="max-w-[90%] rounded-2xl border border-gray-300 bg-white px-5 py-4 text-center text-[15px] md:text-base font-medium text-black shadow-md">
+                  아직 포스트가 없어요!
+                  <br />
+                  이 장소의 사진을 공유해 보세요.
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-1 overflow-auto" style={{ maxHeight: "37vh" }}>
+                {posts.map((p) => (
+                  <button
+                    key={p.postId}
+                    className="aspect-square bg-gray-100"
+                    title={p.content ?? ""}
+                    onClick={() => navigate(`/post/${p.postId}`, { state: { linker: detail } })}
+                  >
+                    {p.imageUrl ? (
+                      <img src={p.imageUrl} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="h-full w-full p-2 text-[11px] text-left line-clamp-2">
+                        {p.content ?? "(이미지 없음)"}
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        );
+      case "participation":
+        return (
+          <div
+            className={`space-y-2 ${isLocked ? "opacity-50 pointer-events-none select-none" : ""
+              }`}
+          >
+            {filteredRooms.filter((r) => r.roomType === "LIGHT").length > 0 ? (
+              filteredRooms
+                .filter((r) => r.roomType === "LIGHT")
+                .map((r) => (
+                  <ChatListItem2
+                    key={r.roomId}
+                    title={r.roomName ?? "그룹 톡"}
+                    memo={r.memo ?? r.description ?? ""}
+                    memberCount={r.memberCount ?? undefined}
+                    roomType={r.roomType}
+                    startDate={r.startDate ?? undefined}
+                    avatarUrl={`/api/chat/view/background/${r.roomId}`}
+                    themeColor={r.themeColor as any}
+                    onClick={() => openPreview(r)}
+                  />
+                ))
+            ) : (
+              !isLocked && (
+                <div className="mt-4 flex justify-center opacity-50">
+                  <div className="max-w-[90%] rounded-2xl border border-gray-300 bg-white px-5 py-4 text-center text-[15px] md:text-base font-medium text-black shadow-md">
+                    그룹톡을 생성해보세요!
+                    <br />
+                    이 장소에 대한 의견을 나눠보세요.
+                  </div>
+                </div>
+              )
+            )}
 
+            {isLocked && (
+              <div className="mt-4 flex justify-center">
+                <div className="max-w-[90%] rounded-2xl border border-gray-300 bg-white px-5 py-4 text-center text-[15px] md:text-base font-medium text-black shadow-md">
+                  링커에 참여해 보세요!
+                  <br />
+                  참여 후 채팅방 입장/생성이 가능합니다.
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      case "state":
+        return (
+          <div className={`space-y-2 ${isLocked ? "opacity-50 pointer-events-none select-none" : ""}`}>
+            {filteredRooms.filter((r) => r.roomType === "CLASS").length > 0 ? (
+              filteredRooms
+                .filter((r) => r.roomType === "CLASS")
+                .map((r) => (
+                  <ChatListItem2
+                    key={r.roomId}
+                    title={r.roomName ?? "클래스 채팅"}
+                    memo={r.memo ?? r.description ?? ""}
+                    memberCount={r.memberCount ?? undefined}
+                    roomType={r.roomType}
+                    startDate={r.startDate ?? undefined}
+                    avatarUrl={`/api/chat/view/background/${r.roomId}`}
+                    themeColor={r.themeColor as any}
+                    onClick={() => openPreview(r)}
+                  />
+                ))
+            ) : (
+              !isLocked && (
+                <div className="mt-4 flex justify-center opacity-50">
+                  <div className="max-w-[90%] rounded-2xl border border-gray-300 bg-white px-5 py-4 text-center text-[15px] md:text-base font-medium text-black shadow-md">
+                    링클톡을 생성해보세요!
+                    <br />
+                    참가비를 받고 소규모 모임을 운영해보세요.
+                  </div>
+                </div>
+              )
+            )}
+            {isLocked && (
+              <div className="mt-4 flex justify-center">
+                <div className="max-w-[90%] rounded-2xl border border-gray-300 bg-white px-5 py-4 text-center text-[15px] md:text-base font-medium text-black shadow-md">
+                  링커에 참여해 보세요!
+                  <br />
+                  참여 후 채팅방 입장/생성이 가능합니다.
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
   return (
     <>
       <Sheet
@@ -388,155 +520,34 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
               )}
             </div>
 
-            {/* 탭 */}
-            <div className="mt-2 border-b">
-              <div className="flex items-center justify-around text-sm">
+            {/* 탭 선택 */}
+            <div className="bg-white border-b sticky top-0 z-10">
+              <div className="flex">
                 <button
-                  className={activeTab === "post" ? "relative py-2 font-semibold" : "py-2 text-gray-400"}
-                  onClick={() => setActiveTab("post")}
-                  type="button"
+                  className={`flex-1 py-3 flex items-center justify-center border-b-2 ${activeTab === "posts" ? "border-gray-900" : "border-transparent"}`}
+                  onClick={() => setActiveTab("posts")}
                 >
-                  <img src="/icons/mapicon/Vector.png" alt="" />
-                  {activeTab === "post" && <span className="absolute -bottom-[1px] left-0 right-0 h-[2px] bg-black" />}
+                  <Grid className={`w-5 h-5 ${activeTab === "posts" ? "text-gray-900" : "text-gray-400"}`} />
                 </button>
                 <button
-                  className={activeTab === "light" ? "relative py-2 font-semibold" : "py-2 text-gray-400"}
-                  onClick={() => setActiveTab("light")}
-                  type="button"
+                  className={`flex-1 py-3 flex items-center justify-center border-b-2 ${activeTab === "participation" ? "border-gray-900" : "border-transparent"}`}
+                  onClick={() => setActiveTab("participation")}
                 >
-                  <img src="/icons/mapicon/User Account.png" alt="" />
-                  {activeTab === "light" && <span className="absolute -bottom-[1px] left-0 right-0 h-[2px] bg-black" />}
+                  <Users className={`w-5 h-5 ${activeTab === "participation" ? "text-gray-900" : "text-gray-400"}`} />
                 </button>
                 <button
-                  className={activeTab === "class" ? "relative py-2 font-semibold" : "py-2 text-gray-400"}
-                  onClick={() => setActiveTab("class")}
-                  type="button"
+                  className={`flex-1 py-3 flex items-center justify-center border-b-2 ${activeTab === "state" ? "border-gray-900" : "border-transparent"}`}
+                  onClick={() => setActiveTab("state")}
                 >
-                  <img src="/icons/mapicon/lucide_crown.png" alt="" />
-                  {activeTab === "class" && <span className="absolute -bottom-[1px] left-0 right-0 h-[2px] bg-black" />}
+                  <Crown className={`w-5 h-5 ${activeTab === "state" ? "text-gray-900" : "text-gray-400"}`} />
                 </button>
               </div>
             </div>
 
-            {/* 포스트 그리드 / 채팅 리스트 (탭에 따라 분기) */}
-            <div className="px-1 pt-2 pb-6">
-              {/* 포스트 탭 */}
-              {activeTab === "post" &&
-                (postLoading && posts.length === 0 ? (
-                  <div className="p-6 text-center text-gray-500 text-sm">불러오는 중…</div>
-                ) : postError ? (
-                  <div className="p-6 text-center text-red-500 text-sm">{postError}</div>
-                ) : posts.length === 0 ? (
-                  <div className="p-6 text-center text-gray-400 text-sm">아직 등록된 포스트가 없어요.</div>
-                ) : (
-                  <div
-                    className="grid grid-cols-3 gap-1 overflow-auto"
-                    style={{ maxHeight: "37vh" }}
-                  >
-                    {posts.map((p) => (
-                      <button
-                        key={p.postId}
-                        className="aspect-square bg-gray-100"
-                        title={p.content ?? ""}
-                        onClick={() => navigate(`/post/${p.postId}`, { state: { linker: detail } })}
-                      >
-                        {p.imageUrl ? (
-                          <img src={p.imageUrl} alt="" className="h-full w-full object-cover" />
-                        ) : (
-                          <div className="h-full w-full p-2 text-[11px] text-left line-clamp-2">
-                            {p.content ?? "(이미지 없음)"}
-                          </div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                ))}
+            {/* 탭 컨텐츠 */}
+            <div className="px-1 pt-2 pb-6">{renderTabContent()}</div>
 
-              {/* 그룹채팅 (LIGHT) */}
-              {activeTab === "light" &&
-                (roomLoading ? (
-                  <div className="p-6 text-center text-gray-500 text-sm">채팅방 불러오는 중…</div>
-                ) : roomError ? (
-                  <div className="p-6 text-center text-red-500 text-sm">{roomError}</div>
-                ) : filteredRooms.filter((r) => r.roomType === "LIGHT").length === 0 ? (
-                  <div className="p-6 text-center text-gray-400 text-sm">아직 생성된 그룹 채팅방이 없어요.</div>
-                ) : (
-                  // 리스트와 오버레이를 겹치기 위해 relative 컨테이너 사용
-                  <div className="relative">
-                    {/* 리스트 (잠금 시 흐릿/클릭불가) */}
-                    <div className={`space-y-2 ${isLocked ? "opacity-50 pointer-events-none select-none" : ""}`}>
-                      {filteredRooms
-                        .filter((r) => r.roomType === "LIGHT")
-                        .map((r) => (
-                          <ChatListItem2
-                            key={r.roomId}
-                            title={r.roomName ?? "그룹 톡"}
-                            memo={r.memo ?? r.description ?? ""}
-                            memberCount={r.memberCount ?? undefined}
-                            roomType={r.roomType}
-                            startDate={r.startDate ?? undefined}
-                            avatarUrl={`/api/chat/view/background/${r.roomId}`}
-                            themeColor={r.themeColor as any}
-                            onClick={() => openPreview(r)}
-                          />
-                        ))}
-                    </div>
 
-                    {/* 참여 전 중앙(상단 여백) 오버레이 */}
-                    {isLocked && (
-                      <div className="absolute inset-0 z-10 flex items-start justify-center pt-20 sm:pt-12">
-                        <div className="max-w-[90%] rounded-2xl border border-gray-300 bg-white backdrop-blur-sm px-5 py-4 text-center text-[15px] md:text-base font-medium text-black shadow-md">
-                          링커에 참여해 보세요!
-                          <br />
-                          참여 후 채팅방 입장/생성이 가능합니다.
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-
-              {/* 클래스채팅 (CLASS) */}
-              {activeTab === "class" &&
-                (roomLoading ? (
-                  <div className="p-6 text-center text-gray-500 text-sm">채팅방 불러오는 중…</div>
-                ) : roomError ? (
-                  <div className="p-6 text-center text-red-500 text-sm">{roomError}</div>
-                ) : filteredRooms.filter((r) => r.roomType === "CLASS").length === 0 ? (
-                  <div className="p-6 text-center text-gray-400 text-sm">아직 생성된 클래스톡이 없어요.</div>
-                ) : (
-                  <div className="relative">
-                    {/* 리스트 (잠금 시 흐릿/클릭불가) */}
-                    <div className={`space-y-2 ${isLocked ? "opacity-50 pointer-events-none select-none" : ""}`}>
-                      {filteredRooms
-                        .filter((r) => r.roomType === "CLASS")
-                        .map((r) => (
-                          <ChatListItem2
-                            key={r.roomId}
-                            title={r.roomName ?? "클래스 채팅"}
-                            memo={r.memo ?? r.description ?? ""}
-                            memberCount={r.memberCount ?? undefined}
-                            roomType={r.roomType}
-                            startDate={r.startDate ?? undefined}
-                            avatarUrl={`/api/chat/view/background/${r.roomId}`}
-                            themeColor={r.themeColor as any}
-                            onClick={() => openPreview(r)} //
-                          />
-                        ))}
-                    </div>
-
-                    {/* 참여 전 중앙(상단 여백) 오버레이 */}
-                    {isLocked && (
-                      <div className="absolute inset-0 z-10 flex items-start justify-center pt-20 sm:pt-12">
-                        <div className="max-w-[90%] rounded-2xl border border-gray-300 bg-white backdrop-blur-sm px-5 py-4 text-center text-[15px] md:text-base font-medium text-black shadow-md">
-                          링커에 참여해 보세요!
-                          <br />
-                          참여 후 채팅방 입장/생성이 가능합니다.
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-            </div>
           </Sheet.Content>
         </Sheet.Container>
         <Sheet.Backdrop style={{ bottom: footerHeight, zIndex: 1490, background: "transparent" }} />

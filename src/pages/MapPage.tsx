@@ -212,6 +212,7 @@ export default function MapPage(): React.ReactElement {
     setDetailError(null);
     setDetailData(null);
     setShowClusterList(false);
+    setSearchOpen(false);
 
     (async () => {
       try {
@@ -849,7 +850,9 @@ export default function MapPage(): React.ReactElement {
       window.history.replaceState({}, document.title);
     }
   }, [location.state, setLinkerCreateMode]);
-
+  useEffect(() => {
+    linkerCreateModeRef.current = linkerCreateMode; // prop으로 받은 값
+  }, [linkerCreateMode]);
 
   useViewportHeight();
   const { headerHeight, footerHeight } = useOutletContext<LayoutContext>();
