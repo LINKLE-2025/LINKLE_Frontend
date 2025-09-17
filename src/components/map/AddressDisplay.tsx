@@ -54,18 +54,25 @@ export default function AddressDisplay({
   // 링커 추천
   const fetchLinkers = async () => {
     try {
-      const data = await getRecommend(loggedInUserId!); // userId 전달
-      console.log(loggedInUserId, data, "asd");
+      const data = await getRecommend(loggedInUserId!, address); // userId + 지도에서 뽑은 address 같이 보냄
+      console.log(loggedInUserId, address, data, "추천 결과");
       setLinkerResults(data);
     } catch (err) {
       console.error("링커 조회", err);
     }
   };
+
   useEffect(() => {
-    if (isOpen && loggedInUserId) {
+    if (isOpen && loggedInUserId && address) {
       fetchLinkers();
     }
-  }, [isOpen, loggedInUserId]);
+  }, [isOpen, loggedInUserId, address]); // address 변경될 때마다 추천 갱신
+  // useEffect(() => {
+  //   if (isOpen && loggedInUserId) {
+  //     fetchLinkers();
+  //   }
+  // }, [isOpen, loggedInUserId]);
+  // console.log(loggedInUserId)
 
   // AI  추천을 위한 정보 전달
   const [linkerResults, setLinkerResults] = useState<SearchLinkerResponseDTO[]>([]);
