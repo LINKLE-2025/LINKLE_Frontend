@@ -1,4 +1,3 @@
-// src/hooks/useUserProfile.ts
 import { getUserProfile } from "@/api/profileApi";
 import { useEffect, useState } from "react";
 import { getProfileImageSrc } from "@/utils/profileUtils";
@@ -20,16 +19,16 @@ export function useUserProfile(userId?: number) {
       try {
         const data = await getUserProfile(userId);
 
+        // ✅ image 필드 활용
         const { src, isDefault } = getProfileImageSrc(
           data.userId,
-          data.profileImageUrl,
+          data.image, // <-- 여기! 기존 profileImageUrl → image
           data.gender,
         );
 
-        // ✅ 디버깅 로그 추가
         console.log("[useUserProfile] userId:", data.userId);
         console.log("[useUserProfile] gender:", data.gender);
-        console.log("[useUserProfile] profileImageUrl from API:", data.profileImageUrl);
+        console.log("[useUserProfile] image from API:", data.image);
         console.log("[useUserProfile] final src:", src);
         console.log("[useUserProfile] isDefault:", isDefault);
 
@@ -37,7 +36,7 @@ export function useUserProfile(userId?: number) {
           userId: data.userId,
           name: data.name,
           nickname: data.nickname,
-          profileImageUrl: src,
+          profileImageUrl: src, // 최종 URL (DB 이미지 or 기본 이미지)
           isDefault,
         });
       } catch (e) {

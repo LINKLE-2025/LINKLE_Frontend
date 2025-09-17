@@ -6,7 +6,6 @@ import { getPost, updatePost, deletePost } from "@/api/postApi";
 import { getCurrentUserId } from "@/api/authApi";
 import BackTitleHeader from "@/components/header/BackTitleHeader";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { get } from "http";
 
 type PostDTO = {
   postId: number;
@@ -32,6 +31,7 @@ export default function PostDetailPage(): React.ReactElement {
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
+  // 현재 로그인한 유저 ID 가져오기
   useEffect(() => {
     (async () => {
       try {
@@ -44,8 +44,11 @@ export default function PostDetailPage(): React.ReactElement {
   }, []);
 
   const isMine = post?.userId === Number(currentUserId);
+
+  // 🔥 작성자 프로필 가져오기 (DB에서 이미지 포함)
   const profile = useUserProfile(post?.userId);
 
+  // 포스트 조회
   useEffect(() => {
     if (!postId) return;
     (async () => {
@@ -61,6 +64,7 @@ export default function PostDetailPage(): React.ReactElement {
     })();
   }, [postId]);
 
+  // 포스트 수정
   const handleUpdate = async ({ text, file }: { text: string; file?: File | null }) => {
     if (!postId) return;
     try {
@@ -78,6 +82,7 @@ export default function PostDetailPage(): React.ReactElement {
     }
   };
 
+  // 포스트 삭제
   const handleDelete = async () => {
     if (!postId || !window.confirm("정말 삭제하시겠습니까?")) return;
     try {
@@ -96,9 +101,15 @@ export default function PostDetailPage(): React.ReactElement {
   if (error) return <div className="p-6 text-red-500">{error}</div>;
   if (!post) return <div className="p-6 text-gray-400">포스트 없음</div>;
 
+  // 🔥 프로필 이미지 최종 경로 (DB 값 or 기본 이미지)
+  const profileImageUrl = profile?.profileImageUrl ?? "/icons/profile/Man.png";
+
   return (
     <div className="flex flex-col min-h-screen w-full" style={{ paddingBottom: `${footerHeight}px` }}>
-      <BackTitleHeader title={isEditing ? "포스트 수정" : "포스트"} onBack={isEditing ? () => setIsEditing(false) : undefined} />
+      <BackTitleHeader
+        title={isEditing ? "포스트 수정" : "포스트"}
+        onBack={isEditing ? () => setIsEditing(false) : undefined}
+      />
 
       <PostForm
         key={`${post.postId}-${isEditing ? "edit" : "view"}`}
@@ -114,7 +125,7 @@ export default function PostDetailPage(): React.ReactElement {
         footerOffset={footerHeight}
         name={profile?.name}
         userNickname={profile?.nickname}
-        profileImageUrl={profile?.profileImageUrl}
+        profileImageUrl={profileImageUrl} // ✅ DB 이미지 반영
       />
 
       {isMine && !isEditing && (
