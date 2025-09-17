@@ -26,7 +26,7 @@ export default function FooterItem({ to, icon, label, linkerCreateMode, setLinke
     };
 
     return (
-        <button onClick={handleClick} className="px-3 py-2">
+        <button onClick={handleClick} className="px-1 xxs:px-3 py-2">
             <div
                 className={`w-[14vw] flex flex-col items-center rounded-xl 
                             transition-colors duration-100

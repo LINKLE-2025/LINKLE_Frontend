@@ -1,8 +1,7 @@
-// src/components/modal/useActionMenu.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, X } from "lucide-react";
+import { X } from "lucide-react";
 
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -145,7 +144,7 @@ export function useActionMenu() {
           onClick={state.closeOnOverlay ? () => close(null) : undefined}
         />
         {/* Container */}
-        <div className="absolute bottom-0 left-0 right-0 mx-auto w-full max-w-md rounded-t-2xl bg-white p-4 pb-[calc(env(safe-area-inset-bottom)+6rem)] shadow-2xl">
+        <div className="absolute bottom-0 left-0 right-0 mx-auto w-full max-w-md rounded-t-2xl bg-white p-4 pb-[calc(min(env(safe-area-inset-bottom),16px)+6rem)] shadow-2xl">
           {/* Header */}
           {(state.title || state.message) && (
             <div className="mb-3 flex items-center justify-between">

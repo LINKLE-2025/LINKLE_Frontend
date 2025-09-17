@@ -919,7 +919,7 @@ export default function MapPage(): React.ReactElement {
       {searchOpen && (
         <div className='absolute top-4 left-0 w-full flex justify-center z-20'>
           <button
-            className='px-3 py-1.5 text-sm rounded-lg bg-blue-500 text-white shadow'
+            className='px-3 py-1.5 text-[15px] rounded-lg bg-white text-gray-800 shadow-sm hover:bg-gray-50 transition-colors border border-gray-300'
             onClick={() => handleSearch(1)}
           >
             이 지역 재검색
@@ -1026,12 +1026,12 @@ export default function MapPage(): React.ReactElement {
         initialSnap={0}
         style={{ bottom: footerHeight }}
       >
-        <Sheet.Container>
+        <Sheet.Container className='z-[0]'>
           <Sheet.Header>
-            <div className='mx-auto my-2 h-1.5 w-12 rounded-full bg-gray-300' />
+            <div className='mx-auto my-1 h-1 w-24 rounded-full bg-gray-300' />
           </Sheet.Header>
           <Sheet.Content>
-            <div className='flex flex-col h-[400px]'>
+            <div className='flex flex-col h-full pb-[calc(min(4px,env(safe-area-inset-bottom))+285px)]'>
               <div className='flex-1 min-h-0 overflow-y-auto'>
                 <SearchPanel
                   searchQuery={searchQuery}

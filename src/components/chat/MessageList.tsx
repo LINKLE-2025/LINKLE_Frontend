@@ -56,7 +56,7 @@ export default function MessageList({
       ref={listContainerRef}
       className="w-full bg-[#fafafa] overflow-y-auto"
       style={{
-        height: `calc(100dvh - ${headerHeightPx}px - ${footerHeightPx}px - ${inputHeightPx}px - env(safe-area-inset-bottom, 0px))`,
+        height: `calc(100dvh - ${headerHeightPx}px - ${inputHeightPx}px - env(safe-area-inset-bottom, 0px))`,
         paddingBottom: 0,
         overscrollBehavior: "contain",
       }}
