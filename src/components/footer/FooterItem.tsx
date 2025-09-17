@@ -7,9 +7,10 @@ interface FooterItemProps {
     label?: string;
     linkerCreateMode?: boolean;
     setLinkerCreateMode?: React.Dispatch<React.SetStateAction<boolean>>;
+    onClick?: () => void;
 }
 
-export default function FooterItem({ to, icon, label, linkerCreateMode, setLinkerCreateMode }: FooterItemProps) {
+export default function FooterItem({ to, icon, label, linkerCreateMode, setLinkerCreateMode, onClick }: FooterItemProps) {
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -17,6 +18,7 @@ export default function FooterItem({ to, icon, label, linkerCreateMode, setLinke
     const isActive = !linkerCreateMode && location.pathname.startsWith(to);
 
     const handleClick = () => {
+        onClick?.(); // 외부에서 초기화 함수 실행 가능
         if (linkerCreateMode) {
             setLinkerCreateMode?.(false); // 다른 버튼 누르면 항상 OFF
         }
