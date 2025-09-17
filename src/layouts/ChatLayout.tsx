@@ -77,11 +77,10 @@ export default function ChatLayout() {
   }, [isChatRoom, roomHeader]);
 
   return (
-    <div className="relative flex flex-col min-h-screen text-black">
+    <div className="h-[100dvh] flex flex-col overflow-hidden text-black">
       <div ref={headerHostRef}>
         {isChatList && <ChatHeader title="채팅" className="bg-white" />}
         {isCreateRoom && <BackTitleHeader title="그룹채팅방 만들기" className="bg-white" />}
-
         {isChatRoom && roomHeader && (
           <BackChatProfileHeader
             room={roomHeader.room}
@@ -93,15 +92,22 @@ export default function ChatLayout() {
             dmUserId={roomHeader.dmUserId}
           />
         )}
-
-
       </div>
 
-      <main className="flex-1" style={{ paddingTop: headerHeight, paddingBottom: footerHeight }}>
+      {/* 메인만 스크롤되게 */}
+      <main
+        className="flex-1 overflow-y-auto"
+        style={{
+          paddingTop: headerHeight,
+          // iOS 하단 홈바 안전영역까지 고려
+          paddingBottom: `calc(${footerHeight}px + env(safe-area-inset-bottom, 0px))`,
+        }}
+      >
         <Outlet context={{ headerHeight, footerHeight, setRoomHeader }} />
       </main>
 
       <MainFooter />
     </div>
   );
+
 }
