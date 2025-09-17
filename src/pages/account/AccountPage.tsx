@@ -21,7 +21,6 @@ export default function AccountPage() {
     const [amount, setAmount] = useState<string>("");
     const { open: openMenu, confirm, ActionMenu } = useActionMenu();
     const [loading, setLoading] = useState(false);
-    const [refreshKey, setRefreshKey] = useState(0);
     const [balance, setBalance] = useState<number>(0);
     const [history, setHistory] = useState<HistoryItem[]>([]);
     const [userId, setUserId] = useState<string>("");
@@ -97,8 +96,9 @@ export default function AccountPage() {
         });
     };
 
-    const handleCharge2 = async () => {
+    const handleCharge = async () => {
         if (!userId) return alert("로그인이 필요합니다.");
+        if (!bankId || !accountNumber) return alert("계좌를 등록해주세요.");
         const numAmount = Number(amount);
         if (!numAmount || numAmount < 100) return alert("입금 금액은 100원 이상이어야 합니다.");
 
@@ -150,11 +150,16 @@ export default function AccountPage() {
 
     const handleWithdraw = async () => {
         if (!userId) return;
+        if (!bankId || !accountNumber) return alert("계좌를 등록해주세요.");
         const numAmount = Number(amount);
 
         if (numAmount < 100) return alert("출금 금액은 100원 이상이어야 합니다.");
         setLoading(true);
         try {
+            if (!window.confirm("정말 출금하시겠습니까?")) {
+                setLoading(false);
+                return;
+            }
             await withdrawBalance(userId, numAmount, "잔액 출금");
             refreshData(userId);
         } catch {
@@ -227,7 +232,7 @@ export default function AccountPage() {
                             <div className="flex justify-around space-x-4">
                                 <button
                                     className="w-screen border rounded-lg bg-gray-100/20 hover:bg-gray-100/60 py-1.5"
-                                    onClick={() => handleCharge2()}
+                                    onClick={() => handleCharge()}
                                 >
                                     <p>입금</p>
                                 </button>
