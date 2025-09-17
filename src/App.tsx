@@ -36,6 +36,8 @@ import useStomp from "./hooks/useStomp";
 import { useAuthStore } from "./store/authStore";
 import { useEffect } from "react";
 import ProtectedLayout from "./layouts/ProtectedLayout";
+import BalancePage from "./pages/pay/BalancePage";
+import PayRedirectPage from "./pages/pay/PayRedirectPage";
 
 export default function App() {
   const fetchUser = useAuthStore((s) => s.fetchUser);
@@ -96,6 +98,8 @@ export default function App() {
         <Route element={<AccountLayout />}>
           <Route path='/profile/account' element={<AccountPage />} />
           <Route path='/profile/account/edit' element={<AccountEditPage />} />
+          <Route path='/balance' element={<BalancePage />} />
+          <Route path="/pay" element={<PayRedirectPage />} />
         </Route>
       </Route>
 
