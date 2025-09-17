@@ -15,11 +15,11 @@ export default function AccountLayout() {
     // Header 컴포넌트 동적 설정
     let header;
     switch (true) {
-        case location.pathname.startsWith("/profile/account"):
-            header = <BackTitleHeader title="계좌 관리" backTo="/profile" className="bg-white" />;
-            break;
         case location.pathname.startsWith("/profile/account/edit"):
             header = <BackTitleHeader title="계좌 수정" backTo="/profile/account" className="bg-white" />;
+            break;
+        case location.pathname.startsWith("/profile/account"):
+            header = <BackTitleHeader title="계좌 관리" backTo="/profile" className="bg-white" />;
             break;
         default:
             header = <MainHeader />;
