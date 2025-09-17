@@ -6,7 +6,7 @@ export default function ProtectedLayout() {
     const { user, loading } = useAuthStore();
 
     // 로딩 중일 때 로더 표시
-    if (loading) { return <FullScreenLoader />; }
+    if (loading) { return; }
 
     // 로그인 안 된 상태면 로그인 페이지로 리다이렉트
     if (!user) {

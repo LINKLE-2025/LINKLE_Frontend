@@ -59,7 +59,7 @@ export default function BackChatProfileHeader({
   const navigate = useNavigate();
   const isDM = room.roomType === "DM";
 
-  // ✅ DM일 때 partnerId / partnerName / partnerNickname 우선
+  // DM일 때 partnerId / partnerName / partnerNickname 우선
   const partnerId = dmUserId ?? (room as any).dmPartnerId ?? room.friendUserId ?? null;
   const partnerName = dmName ?? (room as any).dmPartnerName ?? room.friendName ?? "(상대)";
   const partnerNick = dmNick ?? (room as any).dmPartnerNickname ?? room.friendNickname ?? null;
@@ -97,6 +97,10 @@ export default function BackChatProfileHeader({
   const [failed, setFailed] = useState(false);
   const avatarSrc = candidates[idx];
 
+  // 마운트 후에만 버튼/아바타 렌더 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   useEffect(() => {
     setIdx(0);
     setFailed(false);
@@ -104,16 +108,18 @@ export default function BackChatProfileHeader({
 
   return (
     <header className="fixed top-0 w-full flex items-center justify-between bg-white border-b border-gray-200 py-3 px-3 z-50">
-      <button
-        onClick={() => navigate(backTo)}
-        className="flex items-center justify-center w-10 h-10 rounded-xl hover:bg-gray-100/60 transition-colors"
-        aria-label="뒤로가기"
-      >
-        <ChevronLeft className="w-7 h-7 text-black" strokeWidth={1.6} />
-      </button>
+      {mounted && (
+        <button
+          onClick={() => navigate(backTo)}
+          className="flex items-center justify-center w-10 h-10 rounded-xl hover:bg-gray-100/60 transition-colors"
+          aria-label="뒤로가기"
+        >
+          <ChevronLeft className="w-7 h-7 text-black" strokeWidth={1.6} />
+        </button>
+      )}
 
       <div className="flex-1 flex items-center justify-start min-w-0 px-2">
-        {!failed && avatarSrc ? (
+        {mounted && !failed && avatarSrc ? (
           <img
             src={avatarSrc}
             alt={title}
@@ -127,9 +133,7 @@ export default function BackChatProfileHeader({
             draggable={false}
             referrerPolicy="no-referrer"
           />
-        ) : (
-          <div className="w-8 h-8 rounded-full bg-gray-200 mr-2" />
-        )}
+        ) : null}
 
         <div className="max-w-[72%] leading-tight">
           <div className="text-sm font-semibold text-gray-900 truncate">{title}</div>
@@ -137,13 +141,15 @@ export default function BackChatProfileHeader({
         </div>
       </div>
 
-      <button
-        onClick={onMenuClick}
-        className="flex items-center justify-center w-10 h-10 rounded-xl hover:bg-gray-100/60 transition-colors"
-        aria-label={menuOpen ? "닫기" : "메뉴"}
-      >
-        {menuOpen ? <X className="w-5 h-5 text-black" /> : <EllipsisVertical className="w-5 h-5 text-black" />}
-      </button>
+      {mounted && (
+        <button
+          onClick={onMenuClick}
+          className="flex items-center justify-center w-10 h-10 rounded-xl hover:bg-gray-100/60 transition-colors"
+          aria-label={menuOpen ? "닫기" : "메뉴"}
+        >
+          {menuOpen ? <X className="w-5 h-5 text-black" /> : <EllipsisVertical className="w-5 h-5 text-black" />}
+        </button>
+      )}
     </header>
   );
 }
