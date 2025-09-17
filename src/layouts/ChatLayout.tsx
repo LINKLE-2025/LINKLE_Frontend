@@ -94,19 +94,6 @@ export default function ChatLayout() {
           />
         )}
 
-        {isChatRoom && !roomHeader && (
-          <header className="fixed top-0 w-full bg-white border-b border-gray-200 py-3 px-3 z-50">
-            <div className="flex items-center">
-              <div className="w-10 h-10 rounded-xl bg-gray-100" />
-              <div className="w-10 h-10 rounded-full bg-gray-200 ml-2 mr-2" />
-              <div className="flex flex-col gap-1">
-                <div className="h-3 w-20 bg-gray-200 rounded" />
-                <div className="h-2.5 w-16 bg-gray-200 rounded" />
-              </div>
-            </div>
-            <div className="absolute right-3 w-10 h-10 rounded-xl bg-gray-100" />
-          </header>
-        )}
 
       </div>
 
