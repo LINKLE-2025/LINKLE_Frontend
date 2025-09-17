@@ -1,6 +1,7 @@
 // src/components/chat/ChatInput.tsx
 import { ArrowRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useKeyboardInset } from "@/hooks/useKeyboardInset";
 
 export default function ChatInput({
   onSend,
@@ -12,11 +13,12 @@ export default function ChatInput({
   onSend: (text: string) => void;
   onHeightChange?: (h: number) => void;
   footerHeightPx?: number;
-  disabled?: boolean;            // ← 추가
-  disabledMessage?: string;      // ← 추가
+  disabled?: boolean;
+  disabledMessage?: string;
 }) {
   const [text, setText] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
+  const { inset: keyboardInset } = useKeyboardInset();
 
   useEffect(() => {
     const el = rootRef.current;
@@ -28,21 +30,28 @@ export default function ChatInput({
   }, [onHeightChange]);
 
   const send = () => {
-    if (disabled) return;        // ← 비활성 시 완전 차단
+    if (disabled) return;
     const body = text.trim();
     if (!body) return;
     onSend(body);
     setText("");
   };
 
+  // 푸터 높이 + 키보드 높이만큼만 ChatInput을 올림 (푸터는 건드리지 않음)
+  const bottomPx = keyboardInset > 0
+    ? keyboardInset // 키보드 열렸을 땐, 푸터 높이는 제외
+    : footerHeightPx; // 닫혔을 땐 푸터 높이만
+
   return (
     <div
       ref={rootRef}
       className="fixed left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-2px_8px_rgba(0,0,0,0.04)] z-20"
-      style={{ bottom: `calc(${footerHeightPx}px + env(safe-area-inset-bottom, 0px))` }}
+      style={{
+        bottom: `calc(${bottomPx}px + env(safe-area-inset-bottom, 0px))`,
+      }}
     >
+
       <div className="w-full max-w-md mx-auto px-4 py-2">
-        {/* 비활성화 모드: 안내만 표시하고 입력/버튼 제거 */}
         {disabled ? (
           <div className="flex items-center gap-2">
             <div className="flex-1 rounded-2xl bg-gray-100 px-4 py-1.5 text-base text-gray-500">
