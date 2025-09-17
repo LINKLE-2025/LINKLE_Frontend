@@ -3,9 +3,10 @@ import { getCurrentUserInfo } from "@/api/authApi";
 import { getBalance } from "@/api/payApi";
 import apiClient from "@/api/apiClient";
 import { useState, useEffect } from "react";
-import { set } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 export default function AccountEditPage() {
+    const navigate = useNavigate();
     const [selectedBank, setSelectedBank] = useState<string | null>(null);
     const [accountNumber, setAccountNumber] = useState<string>("");
     const [userId, setUserId] = useState<string | null>(null);
@@ -56,6 +57,8 @@ export default function AccountEditPage() {
             });
             console.log("계좌 수정 결과:", response.data);
             alert("계좌 정보가 수정되었습니다.");
+            // 계좌 관리 페이지로 이동
+            navigate("/profile/account");
         } catch (error: any) {
             console.error("계좌 수정 실패:", error);
             alert(error.response?.data?.error || "계좌 수정 실패");

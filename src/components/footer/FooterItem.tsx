@@ -23,16 +23,19 @@ export default function FooterItem({ to, icon, label, linkerCreateMode, setLinke
     return (
         <Link to={to} onClick={handleClick} className="px-3 py-2">
             <div
-                className={`w-[14vw] flex flex-col items-center rounded-xl px-2 pt-2 pb-1 transition-colors duration-200
+                className={`w-[14vw] flex flex-col items-center rounded-xl 
+                            transition-colors duration-100
         ${isActive
                         ? "bg-gray-100/80 text-black"
                         : "hover:bg-gray-100/60 text-gray-900"
                     }`}
             >
-                {icon}
-                {label && (
-                    <span className="block text-[0.55rem] mt-0.5">{label}</span>
-                )}
+                <div className="flex flex-col items-center w-full h-full active:scale-95 transition-transform duration-100 px-2 pt-2 pb-1">
+                    {icon}
+                    {label && (
+                        <span className="block text-[0.55rem] mt-0.5">{label}</span>
+                    )}
+                </div>
             </div>
         </Link>
     );

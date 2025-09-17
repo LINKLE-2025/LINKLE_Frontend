@@ -37,7 +37,7 @@ export default function ProfileImageUploader({
             <img
                 src={displaySrc}
                 alt="프로필"
-                className="w-full h-full object-cover rounded-full border-4 border-white shadow-md cursor-pointer"
+                className="w-full h-full object-cover rounded-full border-4 bg-white border-white shadow-md cursor-pointer"
                 onClick={() => inputRef.current?.click()}
             />
             <button

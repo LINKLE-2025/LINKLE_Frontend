@@ -1,9 +1,7 @@
-import RandomPastelBackground from "@/components/background/RandomPastelBackground";
-import MainFooter from "@/components/footer/MainFooter";
-import BackTitleHeader from "@/components/header/BackTitleHeader";
-import MainHeader from "@/components/header/MainHeader";
 import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
+import MainHeader from "@/components/header/MainHeader";
+import MainFooter from "@/components/footer/MainFooter";
 
 export default function AppLayout() {
   const location = useLocation();
@@ -32,12 +30,7 @@ export default function AppLayout() {
   return (
     <div className='relative flex flex-col min-h-screen text-black'>
       {/* Header */}
-      {location.pathname.startsWith("/post") ? (
-        // <BackTitleHeader title='새 포스트 만들기' className='bg-white' />
-        <></>
-      ) : (
-        <MainHeader />
-      )}
+      <MainHeader />
 
       {/* Outlet */}
       <main

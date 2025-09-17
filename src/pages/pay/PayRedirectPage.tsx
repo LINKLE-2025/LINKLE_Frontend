@@ -1,5 +1,4 @@
-// src/pages/PayRedirectPage.tsx
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { chargeComplete } from "@/api/payApi";
 import { getCurrentUserInfo } from "@/api/authApi";

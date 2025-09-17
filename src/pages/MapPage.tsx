@@ -511,7 +511,7 @@ export default function MapPage(): React.ReactElement {
                 (userMarker as any).setPosition(newPosition);
                 (userCircle as any).setPosition(newPosition);
 
-                console.log("📍 실제 위치로 업데이트 완료:", myLat, myLng);
+                console.log("📍 위치 업데이트 성공: ( " + myLat + ", " + myLng + " )");
               },
               (err) => {
                 console.warn("⚠️ 위치 가져오기 실패, 기본 좌표 사용:", err);
