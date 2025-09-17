@@ -1,5 +1,5 @@
 // src/components/common/FooterItem.tsx
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 interface FooterItemProps {
     to: string;
@@ -11,6 +11,8 @@ interface FooterItemProps {
 
 export default function FooterItem({ to, icon, label, linkerCreateMode, setLinkerCreateMode }: FooterItemProps) {
     const location = useLocation();
+    const navigate = useNavigate();
+
     // 현재 경로가 to로 시작하면 active 처리 (링커 생성 모드가 아닐 때만)
     const isActive = !linkerCreateMode && location.pathname.startsWith(to);
 
@@ -18,10 +20,11 @@ export default function FooterItem({ to, icon, label, linkerCreateMode, setLinke
         if (linkerCreateMode) {
             setLinkerCreateMode?.(false); // 다른 버튼 누르면 항상 OFF
         }
+        navigate(to);
     };
 
     return (
-        <Link to={to} onClick={handleClick} className="px-3 py-2">
+        <button onClick={handleClick} className="px-3 py-2">
             <div
                 className={`w-[14vw] flex flex-col items-center rounded-xl 
                             transition-colors duration-100
@@ -37,6 +40,6 @@ export default function FooterItem({ to, icon, label, linkerCreateMode, setLinke
                     )}
                 </div>
             </div>
-        </Link>
+        </button>
     );
 }

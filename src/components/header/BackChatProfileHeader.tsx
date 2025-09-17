@@ -105,7 +105,7 @@ export default function BackChatProfileHeader({
   }, [room, candidates.length]);
 
   return (
-    <header className="fixed top-0 w-full flex items-center justify-between bg-white border-b border-gray-200 py-3 px-3 z-50">
+    <header className="select-none fixed top-0 w-full flex items-center justify-between bg-white border-b border-gray-200 py-3 px-3 z-50">
       <button
         onClick={() => navigate(backTo)}
         className="flex items-center justify-center w-10 h-10 rounded-xl hover:bg-gray-100/60 transition-colors"

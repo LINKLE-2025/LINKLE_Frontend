@@ -44,8 +44,8 @@ const SearchHeader = forwardRef<HTMLDivElement, SearchHeaderProps>(
         ref={ref}
         className={`fixed top-0 w-full bg-white z-50 border-b border-gray-200 ${className}`}
       >
-        <div className="flex items-center px-1 py-3 gap-2">
-          <div className="relative flex-1">
+        <div className="flex items-center px-1 py-2.5 gap-2">
+          <div className="relative flex-1 mx-4">
             <input
               ref={inputRef}
               type="text"
@@ -53,11 +53,11 @@ const SearchHeader = forwardRef<HTMLDivElement, SearchHeaderProps>(
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={placeholder}
               onKeyDown={handleKeyDown}
-              className="w-full pl-5 pr-10 py-1 bg-gray-100 rounded-full text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-5 pr-10 py-1.5 bg-gray-100 rounded-full text-base focus:outline-none"
             />
             <button
               type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-blue-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-black"
               onClick={() => {
                 if (searchQuery.trim() !== "" && onSearch) {
                   onSearch();

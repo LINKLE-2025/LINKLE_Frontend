@@ -254,22 +254,22 @@ export default function TotalSearchPanel({
                 style={{ marginTop: headerHeight }}
             >
                 <button
-                    className={`flex-1 px-4 py-2 border-b-2 mx-4 ${activeTab === "friend"
-                        ? "border-linkleGray/25 text-black"
+                    className={`flex-1 px-4 py-2 border-b-2 ${activeTab === "friend"
+                        ? "border-linkleGray/15 text-black"
                         : "border-transparent text-gray-400"
                         }`}
                     onClick={() => setActiveTab("friend")}
                 >
-                    친구 검색
+                    <p>친구 검색</p>
                 </button>
                 <button
-                    className={`flex-1 px-4 py-2 border-b-2 mx-4 ${activeTab === "linker"
-                        ? "border-linkleGray/25 text-black"
+                    className={`flex-1 px-4 py-2 border-b-2 ${activeTab === "linker"
+                        ? "border-linkleGray/15 text-black"
                         : "border-transparent text-gray-400"
                         }`}
                     onClick={() => setActiveTab("linker")}
                 >
-                    링커 검색
+                    <p>링커 검색</p>
                 </button>
             </nav>
 
