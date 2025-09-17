@@ -80,15 +80,47 @@ export default function MapPage(): React.ReactElement {
   const [mapReady, setMapReady] = useState(false); //지도 로드 완료 여부
   const [activeLinkers, setActiveLinkers] = useState<any[]>([]);  // 활성 링커 목록
 
+
   // 버튼 관련
   // const [linkerCreateMode, setLinkerCreateMode] = useState(false); // 🔥 링커 생성 모드
-  const { linkerCreateMode, setLinkerCreateMode } = useOutletContext<LayoutContext>();
-  const [showAddress, setShowAddress] = useState(false); // 🔥 주소 표시
 
-  // 검색 관련
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<SearchItem[]>([]);
+  interface LayoutContext {
+    linkerCreateMode: boolean;
+    setLinkerCreateMode: React.Dispatch<React.SetStateAction<boolean>>;
+    headerHeight: number;
+    footerHeight: number;
+    searchOpen: boolean;
+    setSearchOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    searchQuery: string;
+    setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
+    searchResults: SearchItem[];
+    setSearchResults: React.Dispatch<React.SetStateAction<SearchItem[]>>;
+    showAddress: boolean;
+    setShowAddress: React.Dispatch<React.SetStateAction<boolean>>;
+    showClusterList: boolean;
+    setShowClusterList: React.Dispatch<React.SetStateAction<boolean>>;
+    detailOpen: boolean;
+    setDetailOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  }
+
+  const {
+    linkerCreateMode,
+    setLinkerCreateMode,
+    searchOpen,
+    setSearchOpen,
+    searchQuery,
+    setSearchQuery,
+    searchResults,
+    setSearchResults,
+    showAddress,
+    setShowAddress,
+    showClusterList,
+    setShowClusterList,
+    detailOpen,
+    setDetailOpen,
+
+  } = useOutletContext<LayoutContext>();
+
 
   // ref들
   const mapRef = useRef<HTMLDivElement | null>(null);
@@ -102,15 +134,14 @@ export default function MapPage(): React.ReactElement {
   const linkerCreateModeRef = useRef(false);
   // 상태가 바뀔 때마다 ref 갱신
   useEffect(() => {
-    // 상태가 true로 바뀌는 순간 실행
-    if (linkerCreateMode && !linkerCreateModeRef.current) {
-      setSearchOpen(false);     // 검색창 닫기
-      setSearchOpen(false) // 하단바 닫기
-      setShowAddress(false); // 주소 표시 닫기
+    if (linkerCreateMode) {
+      linkerCreateModeRef.current = linkerCreateMode;
+      setSearchOpen(false);
+      setSearchQuery("");
+      setSearchResults([]);
+      setShowAddress(false);
+      setShowClusterList(false);
     }
-
-    // 항상 최신 상태 저장
-    linkerCreateModeRef.current = linkerCreateMode;
   }, [linkerCreateMode]);
 
   // AppLayout의 Outlet context에 상태 전달
@@ -130,7 +161,6 @@ export default function MapPage(): React.ReactElement {
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const [detailOpen, setDetailOpen] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [detailData, setDetailData] = useState<LinkerDetail | null>(null);
@@ -139,7 +169,7 @@ export default function MapPage(): React.ReactElement {
 
   // 클러스터 리스트 상태 
   const [clusterMarkers, setClusterMarkers] = useState<any[]>([]);
-  const [showClusterList, setShowClusterList] = useState(false);
+
 
   // ===== 3. 🔥 마커용 아이콘 상수 (지도에 표시되는 마커용) =====
   const CATEGORY_ICONS: Record<number, string> = {

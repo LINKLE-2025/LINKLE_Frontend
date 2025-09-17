@@ -5,11 +5,17 @@ import FooterItem from "./FooterItem";
 interface MainFooterProps {
   linkerCreateMode?: boolean;
   setLinkerCreateMode?: React.Dispatch<React.SetStateAction<boolean>>;
+  onResetSearch?: () => void; // 검색 상태 초기화 함수 추가
 }
 
-function MainFooter({ linkerCreateMode, setLinkerCreateMode }: MainFooterProps) {
+function MainFooter({ linkerCreateMode, setLinkerCreateMode, onResetSearch }: MainFooterProps) {
   const navigate = useNavigate();
   const location = useLocation();
+
+  const handleHomeClick = () => {
+    onResetSearch?.(); // 🔥 검색 상태 초기화
+    setLinkerCreateMode?.(false);
+  };
 
   // 링커 생성 버튼 클릭 핸들러
   const handleLinkerButton = () => {
@@ -33,6 +39,7 @@ function MainFooter({ linkerCreateMode, setLinkerCreateMode }: MainFooterProps) 
           label="홈"
           linkerCreateMode={linkerCreateMode}
           setLinkerCreateMode={setLinkerCreateMode}
+          onClick={handleHomeClick}
         />
         <FooterItem
           to="/search"
