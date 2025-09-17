@@ -1,5 +1,5 @@
 // src/components/chat/RoomMemberSheet.tsx
-import { Info, Users } from "lucide-react";
+import { Info, Users, MoonStar, StarsIcon, StarIcon, Crown } from "lucide-react";
 import type { MemberResponseDTO, RoomResponseDTO } from "@/types/chat";
 import { useMemo, useState } from "react";
 import { userProfileUrl, resolveImageUrl } from "@/utils/chat";
@@ -47,9 +47,11 @@ function initials(name?: string | null) {
 function MemberRow({
     m,
     isSelf,
+    showCrown,
 }: {
     m: MemberResponseDTO & { id?: number; nick?: string };
     isSelf: boolean;
+    showCrown?: boolean;
 }) {
     const name = m.name;
     const nick = pickMemberNick(m);
@@ -95,6 +97,12 @@ function MemberRow({
             <div className="min-w-0 flex-1 leading-tight">
                 <div className="flex items-center gap-1 text-sm font-semibold text-gray-900 truncate">
                     <span className="truncate">{name}</span>
+                    {showCrown && (
+                        <Crown
+                            className="w-4 h-4 shrink-0 text-yellow-400 fill-yellow-400"
+                            aria-label="방장"
+                        />
+                    )}
                     {isSelf && (
                         <img
                             src="/icons/profile/isSelf.svg"
@@ -123,6 +131,8 @@ export default function RoomMemberSheet({
     const [leaving, setLeaving] = useState(false);
     const [memoOpen, setMemoOpen] = useState(false);
 
+    const ownerId = (room as any).owner_id ?? (room as any).ownerId;
+
     const countLabel = useMemo(() => {
         const n = members?.length ?? room.memberCount ?? 0;
         return `${n}명 참여 중`;
@@ -132,10 +142,15 @@ export default function RoomMemberSheet({
     const normalizedMembers = useMemo(() => {
         const base = (members ?? []).map((m) => {
             const isSelf = currentUserId != null && Number(m.userId) === Number(currentUserId);
+            const isOwner =
+                room?.roomType === "CLASS" &&
+                ownerId != null &&
+                Number(m.userId) === Number(ownerId);
             return {
                 ...m,
                 id: m.userId,
                 isSelf,
+                isOwner,
             };
         });
         base.sort((a, b) => {
@@ -143,7 +158,7 @@ export default function RoomMemberSheet({
             return a.name.localeCompare(b.name);
         });
         return base;
-    }, [members, currentUserId]);
+    }, [members, currentUserId, room?.roomType, ownerId]);
 
     const handleLeave = async () => {
         if (leaving) return;
@@ -200,7 +215,7 @@ export default function RoomMemberSheet({
                 <div className="flex-1 overflow-y-auto px-4 py-3">
                     <ul className="space-y-3">
                         {normalizedMembers.map((m) => (
-                            <MemberRow key={m.id} m={m} isSelf={m.isSelf as boolean} />
+                            <MemberRow key={m.id} m={m} isSelf={m.isSelf as boolean} showCrown={m.isOwner} />
                         ))}
                     </ul>
                 </div>
