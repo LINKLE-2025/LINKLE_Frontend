@@ -7,6 +7,11 @@ export const getFriends = async (userId: number) => {
     return res.data;
 }
 
+export const getAllFriends = async (userId: number) => {
+    const res = await apiClient.get<FriendResponse[]>(`/friend/list/${userId}`);
+    return res.data;
+}
+
 // 친구 요청
 export const sendFriendRequest = async (userId1: number, userId2: number) => {
     const res = await apiClient.post(`/friend`, { userId1, userId2 });
@@ -53,3 +58,18 @@ export const getSentFriendRequests = async (userId: number) => {
     });
     return res.data;
 };
+
+
+// 친구 관계 단건 조회
+export const getFriendRelationship = async (userId1: number, userId2: number) => {
+    const res = await apiClient.get(`/friend/relationship`, {
+      params: { userId1, userId2 },
+    });
+    return res.data as {
+      exists: boolean;
+      friendId?: number;
+      state: "ACCEPTED" | "REQUESTED" | "NONE";
+      userId1?: number;
+      userId2?: number;
+    };
+  };

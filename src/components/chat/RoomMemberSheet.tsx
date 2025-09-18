@@ -1,9 +1,13 @@
 // src/components/chat/RoomMemberSheet.tsx
-import { Info, Users, MoonStar, StarsIcon, StarIcon, Crown } from "lucide-react";
+import { Info, Users, Crown } from "lucide-react";
 import type { MemberResponseDTO, RoomResponseDTO } from "@/types/chat";
-import { useMemo, useState } from "react";
-import { userProfileUrl, resolveImageUrl } from "@/utils/chat";
+import { useMemo, useState, useEffect } from "react";
+import { resolveImageUrl } from "@/utils/chat";
 import RoomMemoModal from "@/components/modal/RoomMemoModal";
+import { useLocation, useNavigate } from "react-router-dom";
+import { getAllFriends, getFriendRelationship } from "@/api/friendApi";
+import type { FriendResponse } from "@/types/friend";
+import { useRoomMute, setRoomMuted, toggleRoomMuted } from "@/utils/notifyPrefs";
 
 type Props = {
     open: boolean;
@@ -21,6 +25,8 @@ const asset = (p: string) => {
     const path = p.replace(/^\/+/, "");
     return `${base}/${path}`;
 };
+
+
 
 // 성별별 디폴트 이미지
 function genderFallbackSrc(gender?: string | null) {
@@ -43,15 +49,29 @@ function initials(name?: string | null) {
     return p.length === 1 ? p[0]!.slice(0, 2) : `${p[0]![0] ?? ""}${p[1]![0] ?? ""}`;
 }
 
-// 개별 멤버 행: 이미지 실패 시 순차 폴백
+/** 동일 출처의 /api/* 인지 판단 (blob 재시도 조건) */
+function isSameOriginApi(url: string | undefined) {
+    if (!url) return false;
+    try {
+        if (url.startsWith("/")) return url.startsWith("/api/");
+        const u = new URL(url, window.location.origin);
+        return u.origin === window.location.origin && u.pathname.startsWith("/api/");
+    } catch {
+        return false;
+    }
+}
+
+// 개별 멤버 행: 이미지 실패 시 순차 폴백 + blob 재시도 1회
 function MemberRow({
     m,
     isSelf,
     showCrown,
+    onClick,
 }: {
     m: MemberResponseDTO & { id?: number; nick?: string };
     isSelf: boolean;
     showCrown?: boolean;
+    onClick?: () => void;
 }) {
     const name = m.name;
     const nick = pickMemberNick(m);
@@ -60,11 +80,11 @@ function MemberRow({
     const raw = (m as any)?.image ?? (m as any)?.profileImageUrl ?? (m as any)?.userImage ?? null;
     const resolved = resolveImageUrl(raw ?? undefined);
 
-    // 후보 src 우선순위: resolved → userProfileUrl → genderFallback
+    // 후보 src 우선순위: resolved → /api/user/view/profile/:id → genderFallback
     const candidates = useMemo(() => {
         const arr: string[] = [];
         if (resolved) arr.push(resolved);
-        arr.push(userProfileUrl(m.userId));
+        if (typeof m.userId === "number") arr.push(`/api/user/view/profile/${m.userId}`);
         arr.push(genderFallbackSrc(m.gender));
         // 중복 제거
         return Array.from(new Set(arr.filter(Boolean)));
@@ -74,46 +94,94 @@ function MemberRow({
     const currentSrc = candidates[idx];
     const [exhausted, setExhausted] = useState(false);
 
+    // blob 재시도 상태
+    const [blobUrl, setBlobUrl] = useState<string | undefined>(undefined);
+    const [triedAuthFetch, setTriedAuthFetch] = useState(false);
+
+    useEffect(() => {
+        setIdx(0);
+        setExhausted(false);
+        setBlobUrl(undefined);
+        setTriedAuthFetch(false);
+    }, [candidates.length, resolved, m.userId, m.gender]);
+
+    useEffect(() => {
+        return () => {
+            if (blobUrl) URL.revokeObjectURL(blobUrl);
+        };
+    }, [blobUrl]);
+
+    const displaySrc = blobUrl ?? currentSrc;
+
+    const onImgError = async () => {
+        // 동일 출처 /api/* 이면 1회 쿠키 포함 fetch로 blob 재시도 (모바일 쿠키 미부착 대응)
+        if (!triedAuthFetch && isSameOriginApi(currentSrc)) {
+            setTriedAuthFetch(true);
+            try {
+                const res = await fetch(currentSrc!, { credentials: "include" });
+                if (res.ok) {
+                    const blob = await res.blob();
+                    const url = URL.createObjectURL(blob);
+                    setBlobUrl((prev) => {
+                        if (prev) URL.revokeObjectURL(prev);
+                        return url;
+                    });
+                    return; // 성공 시 종료
+                }
+            } catch {
+                // ignore → 다음 후보로
+            }
+        }
+
+        const next = idx + 1;
+        if (next < candidates.length) setIdx(next);
+        else setExhausted(true);
+    };
+
     return (
-        <li className="flex items-center gap-3">
-            {currentSrc && !exhausted ? (
-                <img
-                    src={currentSrc}
-                    alt={name}
-                    className="w-8 h-8 rounded-full object-cover"
-                    referrerPolicy="no-referrer"
-                    draggable={false}
-                    onError={() => {
-                        const next = idx + 1;
-                        if (next < candidates.length) setIdx(next);
-                        else setExhausted(true);
-                    }}
-                />
-            ) : (
-                <img src={asset("icons/user-default.png")} alt="기본 사용자 아이콘" className="w-8 h-8 rounded-full" />
+        <li>
+            <button
+                type="button"
+                onClick={onClick}
+                className="w-full flex items-center gap-3 text-left rounded-lg hover:bg-gray-50 active:bg-gray-100 px-2 py-1.5 transition"
+            >
+                {displaySrc && !exhausted ? (
+                    <img
+                        src={displaySrc}
+                        alt={name}
+                        className="w-8 h-8 rounded-full object-cover"
+                        draggable={false}
+                        onError={onImgError}
+                    />
+                ) : (
+                    <img
+                        src={asset("icons/user-default.png")}
+                        alt="기본 사용자 아이콘"
+                        className="w-8 h-8 rounded-full"
+                    />
+                )}
 
-            )}
-
-            <div className="min-w-0 flex-1 leading-tight">
-                <div className="flex items-center gap-1 text-sm font-semibold text-gray-900 truncate">
-                    <span className="truncate">{name}</span>
-                    {showCrown && (
-                        <Crown
-                            className="w-4 h-4 shrink-0 text-yellow-400 fill-yellow-400"
-                            aria-label="방장"
-                        />
-                    )}
-                    {isSelf && (
-                        <img
-                            src="/icons/profile/isSelf.svg"
-                            alt="본인 프로필"
-                            className="inline-block w-4 h-4 shrink-0"
-                            draggable={false}
-                        />
-                    )}
+                <div className="min-w-0 flex-1 leading-tight">
+                    <div className="flex items-center gap-1 text-sm font-semibold text-gray-900 truncate">
+                        <span className="truncate">{name}</span>
+                        {showCrown && (
+                            <Crown
+                                className="w-4 h-4 shrink-0 text-yellow-400 fill-yellow-400"
+                                aria-label="방장"
+                            />
+                        )}
+                        {isSelf && (
+                            <img
+                                src="/icons/profile/isSelf.svg"
+                                alt="본인 프로필"
+                                className="inline-block w-4 h-4 shrink-0"
+                                draggable={false}
+                            />
+                        )}
+                    </div>
+                    <div className="text-[11px] text-gray-500 truncate">@{nick}</div>
                 </div>
-                <div className="text-[11px] text-gray-500 truncate">@{nick}</div>
-            </div>
+            </button>
         </li>
     );
 }
@@ -131,7 +199,13 @@ export default function RoomMemberSheet({
     const [leaving, setLeaving] = useState(false);
     const [memoOpen, setMemoOpen] = useState(false);
 
+    const navigate = useNavigate();
+    const location = useLocation();
+
     const ownerId = (room as any).owner_id ?? (room as any).ownerId;
+
+    const roomIdNum = Number((room as any)?.roomId);
+    const muted = useRoomMute(roomIdNum);
 
     const countLabel = useMemo(() => {
         const n = members?.length ?? room.memberCount ?? 0;
@@ -159,6 +233,71 @@ export default function RoomMemberSheet({
         });
         return base;
     }, [members, currentUserId, room?.roomType, ownerId]);
+
+    // --- 친구목록 캐시: friendId, gender 맵 구성
+    const [friendIndex, setFriendIndex] = useState<Record<number, FriendResponse | undefined>>({});
+    useEffect(() => {
+        (async () => {
+            if (!open) return;
+            if (!currentUserId) return;
+            try {
+                const list = await getAllFriends(Number(currentUserId));
+                const idx: Record<number, FriendResponse> = {};
+                for (const f of list) {
+                    idx[f.userId1] = f;
+                    idx[f.userId2] = f;
+                }
+                setFriendIndex(idx);
+            } catch (err) {
+                console.error("친구 목록 불러오기 실패:", err);
+                setFriendIndex({});
+            }
+        })();
+    }, [open, currentUserId]);
+
+    // --- 멤버 클릭: 관계 조회 후 /profile 이동
+    const handleMemberClick = async (m: MemberResponseDTO) => {
+        if (!currentUserId || !m?.userId) return;
+
+        let type: "self" | "friend" | "sent" | "received" | "stranger" | undefined;
+        let friendId: number | undefined;
+
+        if (Number(currentUserId) === Number(m.userId)) {
+            type = "self";
+        } else {
+            try {
+                const relation = await getFriendRelationship(Number(currentUserId), Number(m.userId));
+
+                if (!relation.exists || relation.state === "NONE") {
+                    type = "stranger";
+                } else if (relation.state === "ACCEPTED") {
+                    type = "friend";
+                    friendId = relation.friendId;   // 서버 응답에서 friendId 가져오기
+                } else if (relation.state === "REQUESTED") {
+                    type = relation.userId1 === Number(currentUserId) ? "sent" : "received";
+                    friendId = relation.friendId;   // 요청 상태에서도 friendId 있음
+                }
+            } catch (e) {
+                console.warn("관계 조회 실패, type 생략하고 진행:", e);
+                type = undefined;
+            }
+        }
+
+        // 보조적으로 friendIndex에서 gender 가져오기
+        const friend = friendIndex[Number(m.userId)];
+        const gender = (friend as any)?.gender ?? (m as any)?.gender ?? "남성";
+
+        navigate("/profile", {
+            state: {
+                userId: m.userId,
+                friendId,  // ✅ relation 기반으로 보장
+                gender,
+                pathname: location.pathname,
+                ...(type ? { type } : {}),
+                currentUserId,
+            },
+        });
+    };
 
     const handleLeave = async () => {
         if (leaving) return;
@@ -215,18 +354,47 @@ export default function RoomMemberSheet({
                 <div className="flex-1 overflow-y-auto px-4 py-3">
                     <ul className="space-y-3">
                         {normalizedMembers.map((m) => (
-                            <MemberRow key={m.id} m={m} isSelf={m.isSelf as boolean} showCrown={m.isOwner} />
+                            <MemberRow
+                                key={m.id}
+                                m={m}
+                                isSelf={m.isSelf as boolean}
+                                showCrown={m.isOwner}
+                                onClick={() => handleMemberClick(m)}
+                            />
                         ))}
                     </ul>
                 </div>
 
                 {/* 하단 액션 */}
                 <div className="border-t border-gray-200 px-4 py-3 bg-white">
+
+                    {/* 알림 ON/OFF */}
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2 text-gray-700">
+                            <span className="text-sm">
+                                알림 {muted ? "꺼짐" : "켜짐"}
+                            </span>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => toggleRoomMuted(roomIdNum)}
+                            className={`relative w-10 h-6 rounded-full transition-colors
+                        ${muted ? "bg-red-500" : "bg-gray-300"}`}
+                            aria-pressed={muted}
+                            aria-label={muted ? "알림 켜기" : "알림 끄기"}
+                        >
+                            <span
+                                className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow
+                          transition-transform duration-200
+                          ${muted ? "translate-x-4" : "translate-x-0"}`}
+                            />
+                        </button>
+                    </div>
                     <button
                         onClick={handleLeave}
                         disabled={leaving}
                         className="w-full py-3 text-red-500 font-semibold rounded-xl border border-red-200 disabled:opacity-50
-                        hover:bg-red-50 transition-colors"
+            hover:bg-red-50 transition-colors"
                     >
                         {leaving ? "나가는 중..." : "채팅방 나가기"}
                     </button>

@@ -1,8 +1,8 @@
 import React, { useMemo, useState, useEffect } from "react";
 import type { RoomResponseDTO } from "@/types/chat";
-import { formatTimeLabel, userProfileUrl, roomBackgroundUrl } from "@/utils/chat";
+import { formatTimeLabel } from "@/utils/chat";
 
-// BASE_URL 안전 절대경로 생성 (루트/서브디렉토리 배포 모두 대응)
+// 정적 에셋용 BASE_URL 안전 절대경로
 const asset = (p: string) => {
   const base = (import.meta.env.BASE_URL || "/").replace(/\/+$/, "");
   const path = p.replace(/^\/+/, "");
@@ -16,7 +16,7 @@ function initials(name?: string | null) {
   return p.length === 1 ? p[0]!.slice(0, 2) : `${p[0]![0] ?? ""}${p[1]![0] ?? ""}`;
 }
 
-// participants에서 상대 id 추론 (필요 시)
+// participants에서 상대 id 추론
 function partnerFromArray(arr: any[] | undefined, me?: number) {
   if (!arr?.length) return undefined;
   const ids = arr
@@ -45,9 +45,8 @@ const COLOR_ICON_NAME: Record<number, string> = {
   6: "purple.png",
 };
 
-// --- 새로 추가: 탈퇴/성별 판별 유틸 ---
+// 탈퇴/성별 판별
 function isWithdrawn(item: any) {
-  // 백엔드가 어느 필드에 상태를 내려줄지 모를 때 방어적으로 확인
   const s =
     (item?.dmPartnerState ??
       item?.dmPartner?.state ??
@@ -60,9 +59,7 @@ function isWithdrawn(item: any) {
   const v = s.toString().trim().toUpperCase();
   return v === "DELETED" || v === "WITHDRAWN" || v === "INACTIVE";
 }
-
 function readGender(item: any): string | undefined {
-  // 가능성 있는 위치를 전부 스캔
   return (
     item?.dmPartnerGender ??
     item?.dmPartner?.gender ??
@@ -71,12 +68,10 @@ function readGender(item: any): string | undefined {
     undefined
   );
 }
-
 function genderFallbackSrc(gender?: string) {
-  // 성별 기본 이미지 경로
-  if (gender === "남성") return asset("/icons/profile/Man.png");
-  if (gender === "여성") return asset("/icons/profile/Woman.png");
-  return asset("/icons/profile/Default.png"); // 성별 없을 때
+  if (gender === "남성") return asset("icons/profile/Man.png");
+  if (gender === "여성") return asset("icons/profile/Woman.png");
+  return asset("icons/profile/Default.png");
 }
 
 export default function ChatListItem({
@@ -120,24 +115,23 @@ export default function ChatListItem({
   const colorIconName = COLOR_ICON_NAME[colorId as number];
   const colorIconSrc = colorIconName ? asset(`icons/color/${colorIconName}`) : undefined;
 
-  // --- 핵심: 이미지 후보 리스트 구성 ---
+  // --- 이미지 후보 구성 (절대경로 /api 사용) ---
   const gender = readGender(item);
   const candidates = useMemo(() => {
     if (isDM) {
       const arr: (string | undefined)[] = [];
-      // 1) 프로필 이미지
       if (typeof partnerId === "number") {
-        arr.push(userProfileUrl(partnerId));
+        // 공개 뷰 엔드포인트 가정
+        arr.push(`/api/user/view/profile/${partnerId}`);
       }
-      // 2) 탈퇴가 아니라면 성별 기본 이미지
       if (!withdrawn) {
         arr.push(genderFallbackSrc(gender));
       }
-      // 그룹과 달리 DM은 색 아이콘 사용 X (명확한 요구가 없으므로)
       return arr.filter(Boolean) as string[];
     } else {
-      // 그룹/방: themeColor 아이콘 우선 → 없으면 방 배경
-      return [colorIconSrc ?? roomBackgroundUrl((item as any).roomId)].filter(Boolean) as string[];
+      // 그룹: 배경 우선 → 색아이콘
+      const bg = `/api/chat/view/background/${(item as any).roomId}`;
+      return [bg, colorIconSrc].filter(Boolean) as string[];
     }
   }, [isDM, partnerId, withdrawn, gender, colorIconSrc, item]);
 
@@ -147,7 +141,6 @@ export default function ChatListItem({
   const avatarSrc = candidates[idx];
 
   useEffect(() => {
-    // item이 바뀌면 리셋
     setIdx(0);
     setAvatarError(false);
   }, [item, candidates.length]);
@@ -167,7 +160,6 @@ export default function ChatListItem({
           className="w-11 h-11 rounded-full object-cover"
           decoding="async"
           draggable={false}
-          referrerPolicy="no-referrer"
           onError={() => {
             const next = idx + 1;
             if (next < candidates.length) setIdx(next);
@@ -175,7 +167,11 @@ export default function ChatListItem({
           }}
         />
       ) : (
-        <img src={asset("icons/user-default.png")} alt="기본 사용자 아이콘" className="w-11 h-11 rounded-full" />
+        <img
+          src={asset("icons/user-default.png")}
+          alt="기본 사용자 아이콘"
+          className="w-11 h-11 rounded-full"
+        />
       )}
 
       {/* 텍스트 */}
@@ -186,9 +182,8 @@ export default function ChatListItem({
         </div>
 
         <div className="flex items-center justify-between gap-2">
-          <p className="text-sm text-gray-500 truncate">{preview}</p>
+          <p className="text-xs xs:text-sm text-gray-500 truncate">{preview}</p>
 
-          {/* 작은 빨간 점 + 숫자 (0이면 렌더 안함) */}
           {unread > 0 && (
             <span
               className="ml-2 shrink-0 inline-flex items-center gap-1.5"

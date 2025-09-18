@@ -1,6 +1,6 @@
 // src/pages/chat/ChatPage.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useSearchParams, useOutletContext } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import SegmentTabs, { TAB_DM, TAB_GROUP } from "@/components/chat/SegmentTabs";
 import ChatListItem from "@/components/chat/ChatListItem";
@@ -8,7 +8,7 @@ import { fetchRooms } from "@/services/chat";
 import type { RoomResponseDTO } from "@/types/chat";
 import { stompClient } from "@/lib/stompClient";
 import { getCurrentUserId } from "@/api/authApi";
-import type { ChatOutletContext } from "@/layouts/ChatLayout";
+import { Plus } from "lucide-react";
 
 function SkeletonList() {
   return (
@@ -59,9 +59,6 @@ export default function ChatPage() {
 
   const queryClient = useQueryClient();
   const [currentUserId, setCurrentUserId] = useState<number | undefined>(undefined);
-
-  // ✅ ChatLayout에서 footerHeight 받아오기
-  const { footerHeight } = useOutletContext<ChatOutletContext>();
 
   // 로그인 유저 id 1회 로드
   useEffect(() => {
@@ -220,10 +217,6 @@ export default function ChatPage() {
     };
   }, [refetch]);
 
-  // ------- 하단 오프셋 계산 (푸터 높이 + safe-area) -------
-  const bottomOffset = `calc(${footerHeight}px + env(safe-area-inset-bottom, 0px) + 28px)`;
-  const listBottomPad = `calc(${footerHeight}px + env(safe-area-inset-bottom, 0px) + 80px)`; // 80 = FAB지름(48) + 여유
-
   return (
     <div className="w-full max-w-md mx-auto px-2 sm:px-0">
       <SegmentTabs value={tab} onChange={onTab} />
@@ -245,7 +238,7 @@ export default function ChatPage() {
           </button>
         </div>
       ) : (
-        <div className="flex flex-col gap-2 px-2" style={{ paddingBottom: listBottomPad }}>
+        <div className="flex flex-col gap-2 px-2 pb-24">
           {list.length === 0 ? (
             <EmptyState tab={tab} />
           ) : (
@@ -262,11 +255,10 @@ export default function ChatPage() {
 
       <button
         onClick={() => navigate("/profile/friend")}
-        className="fixed right-6 sm:right-[calc(50%-16rem)] w-12 h-12 rounded-full shadow-lg bg-black text-white text-xl flex items-center justify-center z-50"
+        className="fixed bottom-[calc(min(env(safe-area-inset-bottom),16px)+6rem)] right-6 sm:right-[calc(50%-14rem)] w-10 h-10 xxs:w-12 xxs:h-12 rounded-full shadow-lg bg-black text-white text-xl flex items-center justify-center"
         aria-label="새 대화"
-        style={{ bottom: bottomOffset }}
       >
-        +
+        <Plus className="w-5 h-5 xxs:w-6 xxs:h-6 " />
       </button>
     </div>
   );

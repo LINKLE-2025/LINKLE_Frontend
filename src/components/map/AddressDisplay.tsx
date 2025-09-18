@@ -7,6 +7,7 @@ import { getCurrentUserInfo } from "@/api/authApi";
 import { getRecommend } from "@/api/pythonAPI";
 import { CATEGORY_DATA } from "@/constants/categoryData";
 import LinkerCardItem from "../linker/LinkerCardItem";
+import { LucideWand } from "lucide-react";
 
 declare global {
   interface Window {
@@ -70,12 +71,6 @@ export default function AddressDisplay({
       fetchLinkers();
     }
   }, [isOpen, loggedInUserId, address]); // address 변경될 때마다 추천 갱신
-  // useEffect(() => {
-  //   if (isOpen && loggedInUserId) {
-  //     fetchLinkers();
-  //   }
-  // }, [isOpen, loggedInUserId]);
-  // console.log(loggedInUserId)
 
   // AI  추천을 위한 정보 전달
   const [linkerResults, setLinkerResults] = useState<SearchLinkerResponseDTO[]>([]);
@@ -107,6 +102,28 @@ export default function AddressDisplay({
     };
     return map[raw] || raw;
   };
+
+
+  const [age, setAge] = useState<number | null>(null);
+  const [gender, setGender] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!map || !isOpen) return;
+
+    const fetchUserAndInit = async () => {
+      try {
+        const { age, gender } = await getCurrentUserInfo();
+        setAge(age);
+        setGender(gender);
+      } catch (err) {
+        console.error("유저 정보 불러오기 실패", err);
+      }
+    };
+
+    fetchUserAndInit();
+  }, [map, isOpen]);
+
+
   useEffect(() => {
     if (!map || !isOpen) return;
 
@@ -182,7 +199,7 @@ export default function AddressDisplay({
       isOpen={isOpen}
       onClose={onClose}
       snapPoints={[0.65, 0.3, 0]}
-      initialSnap={1}
+      initialSnap={0}
       style={{ bottom: footerHeight }}
       {...({ onSpringEnd: (snapIndex: number) => { if (snapIndex === 0) onClose(); } } as any)}
     >
@@ -206,8 +223,20 @@ export default function AddressDisplay({
               </div>
             </div>
 
+            <div>
+              {age !== null && gender ? (
+                <div className="flex rounded-sm border-b-2 m-2 py-1 text-xs items-center justify-center">
+                  <LucideWand className="text-[#BA8ED4] mr-2" /> {address}에서 {age}대 {gender}이 많이 찾는 링커 목록입니다.
+                </div>
+              ) : (
+                <div>유저 정보를 불러오는 중...</div>
+              )}
+            </div>
+
             {/* 링커 리스트 */}
-            <div className="flex-1 overflow-y-auto max-h-[380px]">
+            <div className="flex-1 overflow-y-auto max-h-[380px]"
+              style={{ paddingBottom: footerHeight }}
+            >
               {linkerResults.length > 0 ? (
                 linkerResults.map((linker) => (
                   <LinkerCardItem

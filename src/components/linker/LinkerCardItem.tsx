@@ -32,16 +32,17 @@ const LinkerCardItem = ({ linker, onClick }: LinkerCardItemProps) => {
     return (
         <div className="px-3 py-1">
             <div
-                className="p-3 border-b flex items-center gap-3 rounded-xl"
+                className="p-3 border-b flex items-center gap-3 rounded-xl cursor-pointer hover:shadow-sm"
                 style={{ backgroundColor: isDeleted ? "#E5E7EB" : `${bgColor}10` }}
+                onClick={() => {
+                    if (!isDeleted && onClick) onClick(linker.linkerId); // 여기서 MapPage의 onOpenDetailById 호출
+                }}
             >
                 {/* 카테고리 아이콘 */}
                 <div
                     key={linker.linkerId}
-                    className={`flex items-center p-1 transition ${isDeleted ? "cursor-default" : "cursor-pointer hover:shadow-md"}`}
-                    onClick={() => {
-                        if (!isDeleted && onClick) onClick(linker.linkerId); // 여기서 MapPage의 onOpenDetailById 호출
-                    }}
+                    className={`flex items-center p-1 transition `}
+
                 >
                     <div
                         className="w-14 h-14 rounded-full shadow-sm flex items-center justify-center flex-shrink-0"

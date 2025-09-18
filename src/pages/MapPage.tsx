@@ -153,6 +153,8 @@ export default function MapPage(): React.ReactElement {
     }
   }, [linkerCreateMode]);
 
+
+
   // mapCenter 상태 변경될 때 저장
   useEffect(() => {
     if (mapCenter) {
@@ -223,14 +225,16 @@ export default function MapPage(): React.ReactElement {
       try {
         const json = await fetchLinkerDetail(linkerId);
         setDetailData(json);
-        console.log("name:", json.name);
-        console.log("address:", json.address ?? json.addressName ?? "(none)");
-        console.log("categoryId:", json.categoryId);
-        console.log("phone:", json.phone);
-        console.log("memo:", json.memo);
-        console.log("createdAt:", json.createdAt);
-        console.log("lat (from locationY):", json.locationY);
-        console.log("lng (from locationX):", json.locationX);
+
+        // ✅ 여기서 지도 이동
+        if (kakaoMapRef.current && json.locationY != null && json.locationX != null) {
+          kakaoMapRef.current.panTo(
+            new window.kakao.maps.LatLng(json.locationY - 0.0008, json.locationX)
+          );
+          setTimeout(() => kakaoMapRef.current?.setLevel(2), 400);
+        }
+
+
       } catch (e: any) {
         setDetailError(e?.message ?? String(e));
       } finally {
@@ -265,11 +269,7 @@ export default function MapPage(): React.ReactElement {
       // 🔥 클러스터러에서 기존 마커들 제거
       clusterer.clear();
 
-      // 🔥 커스텀 훅의 hasSelection 사용
-      if (!hasSelection) {
-        console.log("🚫 선택된 카테고리가 없음. 마커 생성 생략");
-        return;
-      }
+
 
       const kakao = (window as any).kakao;
       console.log(`🔍 현재 선택된 카테고리 수: ${selectedCount}`);
@@ -633,7 +633,7 @@ export default function MapPage(): React.ReactElement {
 
     const ps = new window.kakao.maps.services.Places();
     const center = kakaoMapRef.current.getCenter();
-    const options = { location: center, radius: 2000, page };  // 반경 2km
+    const options = { location: center, radius: 5000, page };  // 반경 5km
 
     ps.keywordSearch(
       searchQuery,
@@ -677,7 +677,6 @@ export default function MapPage(): React.ReactElement {
 
             const marker = new window.kakao.maps.Marker({
               map: kakaoMapRef.current!,
-              // 🔹 카카오 API에서는 y가 위도, x가 경도
               position,
             });
 

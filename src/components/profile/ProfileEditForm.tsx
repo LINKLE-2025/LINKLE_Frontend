@@ -35,7 +35,7 @@ function ProfileInputRow({
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="text-right text-sm text-gray-800 focus:outline-none w-2/3 bg-transparent"
+          className="text-left text-sm text-gray-800 focus:outline-none w-2/3 bg-transparent"
         >
           {options.map((opt) => (
             <option key={opt} value={opt}>
@@ -44,19 +44,31 @@ function ProfileInputRow({
           ))}
         </select>
       ) : as === "textarea" ? (
+        // 고정높이
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="text-right text-sm text-gray-800 focus:outline-none w-2/3 resize-none bg-transparent"
+          className="text-left text-base text-gray-800 focus:outline-none w-2/3 resize-none bg-transparent min-h-[100px] max-h-[200px]"
           rows={2}
         />
+        // 반응형 높이
+        // <textarea
+        //   value={value}
+        //   onChange={(e) => {
+        //     onChange(e.target.value);
+        //     e.target.style.height = "auto"; // 먼저 초기화
+        //     e.target.style.height = `${e.target.scrollHeight}px`; // 내용에 맞춰 높이 조절
+        //   }}
+        //   placeholder={placeholder}
+        //   className="text-right text-sm text-gray-800 focus:outline-none w-2/3 resize-none bg-transparent overflow-hidden"
+        // />
       ) : (
         <input
           type={type}
           value={value ?? ""}
           onChange={(e) => onChange(e.target.value)}
-          className="text-right text-base text-gray-800 focus:outline-none w-2/3 bg-transparent"
+          className="text-left text-base text-gray-800 focus:outline-none w-2/3 bg-transparent"
           placeholder={placeholder}
           readOnly={readOnly}
         />
@@ -68,14 +80,14 @@ function ProfileInputRow({
 
 function ProfileForm({ userId, profileData, updateField }: ProfileFormProps) {
   return (
-    <div className="bg-white rounded-xl shadow p-4 space-y-6">
+    <div className="bg-white rounded-xl p-4 space-y-4">
       {/* 기본 정보 변경 제목 */}
       <h2 className="text-center text-gray-800 font-semibold text-lg border-b pb-2">
         기본 정보 변경
       </h2>
 
       {/* 입력 필드 목록 */}
-      <div className="space-y-4">
+      <div className="space-y-4 justify-center">
         <ProfileInputRow
           label="이름"
           value={profileData.name}
@@ -101,8 +113,15 @@ function ProfileForm({ userId, profileData, updateField }: ProfileFormProps) {
           label="성별"
           value={profileData.gender}
           onChange={(v) => updateField("gender", v)}
-          // as="select"
-          // options={["남성", "여성"]}
+          readOnly
+        />
+
+
+        <ProfileInputRow
+          label="이메일"
+          type="email"
+          value={profileData.email}
+          onChange={(v) => updateField("email", v)}
           readOnly
         />
 
@@ -113,13 +132,6 @@ function ProfileForm({ userId, profileData, updateField }: ProfileFormProps) {
           as="textarea"
         />
 
-        <ProfileInputRow
-          label="이메일"
-          type="email"
-          value={profileData.email}
-          onChange={(v) => updateField("email", v)}
-          readOnly
-        />
       </div>
 
       {/* 회원탈퇴 버튼 */}

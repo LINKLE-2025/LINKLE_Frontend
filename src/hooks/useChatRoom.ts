@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { MemberResponseDTO, MessageResponseDTO, RoomResponseDTO } from "../types/chat";
 import { resolveImageUrl } from "../utils/chat";
 import apiClient from "../api/apiClient";
@@ -61,6 +61,59 @@ export function useChatRoom(roomId: number) {
   const lastAckedIdRef = useRef<number | null>(null);
   const readTimerRef = useRef<number | null>(null);
 
+  // 바닥 상태/변화 감지용 (모두 컴포넌트 내부!)
+  const wasAtBottomRef = useRef(false);
+  const prevFirstIdRef = useRef<number | undefined>(undefined);
+  const prevLastIdRef = useRef<number | undefined>(undefined);
+  const initialAutoScrollDoneRef = useRef(false);
+
+  // --- 먼저 선언: loadOlder (아래 useEffect에서 참조하므로 TDZ 방지) ---
+  const loadOlder = async () => {
+    if (loadingOlder || !hasMore || msgs.length === 0) return;
+    setLoadingOlder(true);
+    const oldest = msgs[0];
+
+    const scroller =
+      listContainerRef.current ?? document.scrollingElement ?? document.documentElement;
+    const prevScrollHeight = scroller.scrollHeight;
+    const prevScrollTop = scroller.scrollTop;
+
+    try {
+      const { data: older } = await apiClient.get<MessageResponseDTO[]>(
+        `/chat/room/${roomId}/messages`,
+        {
+          params: { size: PAGE_SIZE, beforeId: oldest.messageId },
+          headers: { "x-user-id": DEV_UID },
+        },
+      );
+
+      setMsgs((prev) => {
+        const ids = new Set(prev.map((x) => x.messageId));
+        const toPrepend = older
+          .map((x) => ({ ...x, content: x.content ?? (x as any).text ?? "" }))
+          .filter((x) => x.messageType === "TEXT" || x.messageType === "SYSTEM")
+          .filter((x) => typeof x.messageId === "number")
+          .filter((x) => typeof x.content === "string" && x.content.trim().length > 0)
+          .filter((x) => !ids.has(x.messageId))
+          .sort(byCreatedAsc);
+        return [...toPrepend, ...prev];
+      });
+
+      setHasMore(older.length === PAGE_SIZE);
+
+      // 프리펜드 델타 보정 (보던 자리 유지)
+      requestAnimationFrame(() => {
+        const newScrollHeight = scroller.scrollHeight;
+        scroller.scrollTop = newScrollHeight - prevScrollHeight + prevScrollTop;
+      });
+    } catch (e) {
+      console.error("[loadOlder] failed", e);
+    } finally {
+      setLoadingOlder(false);
+    }
+  };
+  // --------------------------------------------------------------------
+
   // 초기 로드
   useEffect(() => {
     if (!roomId) return;
@@ -117,6 +170,24 @@ export function useChatRoom(roomId: number) {
 
       setMsgs(initial);
       setHasMore((m ?? []).length === PAGE_SIZE);
+
+      // 초기 1회 자동 하강
+      requestAnimationFrame(() => {
+        const el = listContainerRef.current;
+        if (!el || initialAutoScrollDoneRef.current) return;
+        const prev = el.style.scrollBehavior;
+        el.style.scrollBehavior = "auto";
+        el.scrollTop = el.scrollHeight;
+        el.style.scrollBehavior = prev;
+        initialAutoScrollDoneRef.current = true;
+        wasAtBottomRef.current = true;
+      });
+
+      // 초기 바닥 상태 기록 + append/prepend 비교 초기화
+      const el = listContainerRef.current;
+      if (el) wasAtBottomRef.current = isNearBottom(el, 8);
+      prevFirstIdRef.current = initial[0]?.messageId;
+      prevLastIdRef.current = initial[initial.length - 1]?.messageId;
     })().catch(console.error);
   }, [roomId]);
 
@@ -143,7 +214,6 @@ export function useChatRoom(roomId: number) {
       if (typeof contentRaw !== "string" || contentRaw.trim().length === 0) return;
 
       const mt = (raw?.messageType as any) ?? "TEXT";
-      // TEXT, SYSTEM만 통과
       if (mt !== "TEXT" && mt !== "SYSTEM") return;
 
       const evt: MessageResponseDTO = {
@@ -169,32 +239,56 @@ export function useChatRoom(roomId: number) {
     };
   }, [roomId]);
 
-  // 스크롤 & 자동스크롤
+  // 스크롤 리스너: 바닥 상태 갱신 + 상단 임계치 로드
   useEffect(() => {
     const el = listContainerRef.current;
     if (!el) return;
-    const onScroll = () => {};
+
+    const onScroll = () => {
+      wasAtBottomRef.current = isNearBottom(el, 8);
+      if (el.scrollTop <= 80 && hasMore && !loadingOlder) {
+        loadOlder();
+      }
+    };
+
     el.addEventListener("scroll", onScroll, { passive: true });
     return () => el.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [hasMore, loadingOlder, loadOlder]); // loadOlder를 deps에 안전하게 포함
 
-  useLayoutEffect(() => {
-    if (!msgs.length) return;
-    const el = listContainerRef.current;
-    if (!el) return;
-    const scrollToBottom = () => {
-      el.scrollTop = el.scrollHeight;
-    };
-    scrollToBottom();
-    requestAnimationFrame(scrollToBottom);
-    const t = setTimeout(scrollToBottom, 0);
-    return () => clearTimeout(t);
-  }, [roomId, msgs.length]);
+  // append/prepend 판별
+  function detectAppendPrepend(nextMsgs: MessageResponseDTO[]) {
+    const firstId = nextMsgs[0]?.messageId;
+    const lastId = nextMsgs[nextMsgs.length - 1]?.messageId;
+    const prevFirst = prevFirstIdRef.current;
+    const prevLast = prevLastIdRef.current;
 
+    // 다음 비교를 위해 갱신
+    prevFirstIdRef.current = firstId;
+    prevLastIdRef.current = lastId;
+
+    if (prevFirst === undefined || prevLast === undefined) {
+      return { isAppend: false, isPrepend: false };
+    }
+    const isPrepend = lastId === prevLast && firstId !== prevFirst; // 위에 추가됨
+    const isAppend = firstId === prevFirst && lastId !== prevLast; // 아래에 추가됨
+    return { isAppend, isPrepend };
+  }
+
+  // msgs 변화 시 자동 하강(조건부)
   useEffect(() => {
     const el = listContainerRef.current;
-    if (!el || loadingOlder) return;
-    if (isNearBottom(el)) el.scrollTop = el.scrollHeight;
+    if (!el) return;
+
+    const { isAppend, isPrepend } = detectAppendPrepend(msgs);
+
+    // 과거 로드 직후/중에는 절대 하강 금지 (loadOlder에서 delta 보정)
+    if (loadingOlder || isPrepend) return;
+
+    // 새 메시지 append + 직전에 바닥이었을 때만 자동 하강
+    if (isAppend && wasAtBottomRef.current) {
+      el.scrollTop = el.scrollHeight;
+      wasAtBottomRef.current = true;
+    }
   }, [msgs, loadingOlder]);
 
   const send = (text: string) => {
@@ -218,50 +312,6 @@ export function useChatRoom(roomId: number) {
               : r,
           ),
     );
-  };
-
-  const loadOlder = async () => {
-    if (loadingOlder || !hasMore || msgs.length === 0) return;
-    setLoadingOlder(true);
-    const oldest = msgs[0];
-
-    const scroller =
-      listContainerRef.current ?? document.scrollingElement ?? document.documentElement;
-    const prevScrollHeight = scroller.scrollHeight;
-    const prevScrollTop = scroller.scrollTop;
-
-    try {
-      const { data: older } = await apiClient.get<MessageResponseDTO[]>(
-        `/chat/room/${roomId}/messages`,
-        {
-          params: { size: PAGE_SIZE, beforeId: oldest.messageId },
-          headers: { "x-user-id": DEV_UID },
-        },
-      );
-
-      setMsgs((prev) => {
-        const ids = new Set(prev.map((x) => x.messageId));
-        const toPrepend = older
-          .map((x) => ({ ...x, content: x.content ?? (x as any).text ?? "" }))
-          // TEXT + SYSTEM 모두
-          .filter((x) => x.messageType === "TEXT" || x.messageType === "SYSTEM")
-          .filter((x) => typeof x.messageId === "number")
-          .filter((x) => typeof x.content === "string" && x.content.trim().length > 0)
-          .filter((x) => !ids.has(x.messageId))
-          .sort(byCreatedAsc);
-        return [...toPrepend, ...prev];
-      });
-
-      setHasMore(older.length === PAGE_SIZE);
-      requestAnimationFrame(() => {
-        const newScrollHeight = scroller.scrollHeight;
-        scroller.scrollTop = newScrollHeight - prevScrollHeight + prevScrollTop;
-      });
-    } catch (e) {
-      console.error("[loadOlder] failed", e);
-    } finally {
-      setLoadingOlder(false);
-    }
   };
 
   // 읽음 동기화
@@ -338,6 +388,6 @@ export function useChatRoom(roomId: number) {
       loadingOlder,
       loadOlder,
     }),
-    [room, peer, msgs, status, membersById, isDM, hasMore, loadingOlder],
+    [room, peer, msgs, status, membersById, isDM, hasMore, loadingOlder, loadOlder],
   );
 }
