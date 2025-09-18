@@ -123,11 +123,13 @@ export default function RoomCreatePage() {
     // 부모가 overflow-hidden/h-screen이어도 독립 스크롤을 갖도록 고정 뷰포트 컨테이너로 래핑
     <div
       className={[
-        "fixed inset-0 z-0",
+        "fixed left-0 right-0 bottom-0",
         "overflow-y-auto overscroll-contain",
         "[-webkit-overflow-scrolling:touch]",
         "bg-white",
+        "top-[calc(var(--header-h,56px)+env(safe-area-inset-top))]",
       ].join(" ")}
+      style={{ "--header-h": "50px" } as React.CSSProperties}          // 헤더 높이(필요시 수정)
     >
       <main
         className={[
