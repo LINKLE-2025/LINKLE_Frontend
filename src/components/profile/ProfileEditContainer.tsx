@@ -66,6 +66,7 @@ export default function ProfileEditContainer({ userId }: { userId: number }) {
   return (
 
     <div className="max-w-full bg-white min-h-screen">
+
       {/* 배경 업로더 */}
       <BackgroundImageUploader
         bgPreview={bgPreview}
@@ -75,6 +76,14 @@ export default function ProfileEditContainer({ userId }: { userId: number }) {
           setBgPreview(previewUrl);
         }}
       />
+      <div className="p-4 flex justify-end">
+        <button
+          onClick={handleSave}
+          className="px-6 py-1 text-white text-sm bg-blue-500 rounded-md"
+        >
+          완료
+        </button>
+      </div>
 
       {/* 프로필 업로더 */}
       <ProfileImageUploader
@@ -87,6 +96,9 @@ export default function ProfileEditContainer({ userId }: { userId: number }) {
         }}
       />
 
+
+
+
       {/* 폼 */}
       <div className="space-y-4">
         < ProfileForm
@@ -94,14 +106,8 @@ export default function ProfileEditContainer({ userId }: { userId: number }) {
           profileData={profileData} updateField={updateField} />
       </div >
 
-      <div className="p-4">
-        <button
-          onClick={handleSave}
-          className="px-6 py-1 text-white text-sm bg-blue-500 rounded-full"
-        >
-          완료
-        </button>
-      </div>
+
+
     </div >
   );
 }

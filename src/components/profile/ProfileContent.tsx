@@ -61,7 +61,11 @@ function ProfileContent({
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   // profileType을 로컬 상태로 관리
-  // const [currentType, setCurrentType] = useState<ProfileType>(profileType);
+  const [currentType, setCurrentType] = useState<ProfileType>(profileType);
+
+  useEffect(() => {
+    setCurrentType(profileType);
+  }, [profileType]);
 
   // 채팅 연결 구현
   const navigate = useNavigate();
@@ -87,11 +91,16 @@ function ProfileContent({
 
 
   // 부모에서 내려오는 profileType이 바뀌면 동기화
-  // useEffect(() => {
-  //   if (currentType !== 'stranger') {
-  //     setCurrentType(profileType);
-  //   }
-  // }, [profileType]);
+  useEffect(() => {
+    if (profileType !== currentType) {
+      setCurrentType(profileType);
+    }
+  }, [profileType]);
+  const [friendCount, setFriendCount] = useState(friendList.length);
+
+  useEffect(() => {
+    setFriendCount(friendList.length);
+  }, [friendList]);
 
 
   const isDefaultBackground = background === 'public.png' || !background;
@@ -118,7 +127,7 @@ function ProfileContent({
       const data = await sendFriendRequest(loggedInUserId, targetUserId);
 
       // 현재 프로필의 상태도 업데이트
-      // setCurrentType(data.state === "ACCEPTED" ? "friend" : "wait");
+      setCurrentType(data.state === "ACCEPTED" ? "friend" : "wait");
 
       // 검색 결과 리스트도 업데이트
       setSearchResults(prev =>
@@ -143,7 +152,7 @@ function ProfileContent({
     : `/api/user/view/background/${userId}?v=${Date.now()}`;
 
   const renderButton = () => {
-    switch (profileType) {
+    switch (currentType) {
       case 'self':
         return (
           <Link
@@ -216,7 +225,7 @@ function ProfileContent({
             onFriendDeleted={() => {
               console.log("onFriendDeleted 호출됨");
               // 프로필의 상태 변경
-              // setCurrentType("stranger");
+              setCurrentType("stranger");
 
               // 검색 결과 목록도 반영
               setSearchResults(prev =>
@@ -255,7 +264,7 @@ function ProfileContent({
               <div className="flex flex-col">
                 <h1 className="flex flex-grow gap-1 font-bold text-black text-base xxs:text-xl leading-tight">
                   {name}
-                  {profileType === 'self' && (<img src="/icons/profile/isSelf.svg" alt={`본인 프로필`} />)}
+                  {currentType === 'self' && (<img src="/icons/profile/isSelf.svg" alt={`본인 프로필`} />)}
                 </h1>
                 <p className="text-sm text-gray-500 leading-tight">@{nickname}</p>
               </div>
@@ -279,7 +288,7 @@ function ProfileContent({
           <div className="flex items-center space-x-2">
             <span>👥</span>
             {/* <Users className="w-3.5 h-3.5" strokeWidth={2} /> */}
-            <span>{friendList.length}명의 친구</span>
+            <span>{friendCount}명의 친구</span>
           </div>
           <div className="flex items-center space-x-2">
             <span>🗺️</span>

@@ -1,11 +1,13 @@
 // src/pages/PostDetailPage.tsx
-import React, { useEffect, useState } from "react";
-import { useNavigate, useOutletContext, useParams } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import PostForm, { LinkerLite } from "@/components/post/PostForm";
 import { getPost, updatePost, deletePost } from "@/api/postApi";
 import { getCurrentUserId } from "@/api/authApi";
 import BackTitleHeader from "@/components/header/BackTitleHeader";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { FriendResponse } from "@/types/friend";
+import { getFriends } from "@/api/friendApi";
 
 type PostDTO = {
   postId: number;
@@ -30,6 +32,35 @@ export default function PostDetailPage(): React.ReactElement {
   const [isEditing, setIsEditing] = useState(false);
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // ----------------------------
+  // 친구 값 불러 오기
+  const [friendList, setFriendList] = useState<FriendResponse[]>([]);
+  const location = useLocation();
+  useEffect(() => {
+    (async () => {
+      try {
+        if (!currentUserId) return;
+        const data = await getFriends(Number(currentUserId));
+        setFriendList(data);
+      } catch (err) {
+        console.error("친구 목록 불러오기 실패:", err);
+      }
+    })();
+
+  }, [currentUserId, location.key]);
+
+  const friendInfo = useMemo(() => {
+    if (!post || !friendList.length) return null;
+    return friendList.find(
+      (friend) =>
+        friend.userId1 === post.userId || friend.userId2 === post.userId
+    );
+  }, [post, friendList]);
+
+  console.log('asdasdsadsadasdsa')
+  console.log("adafas", friendList)
+  // ----------------------------
 
   // 현재 로그인한 유저 ID 가져오기
   useEffect(() => {
@@ -104,6 +135,8 @@ export default function PostDetailPage(): React.ReactElement {
   // 🔥 프로필 이미지 최종 경로 (DB 값 or 기본 이미지)
   const profileImageUrl = profile?.profileImageUrl ?? "/icons/profile/Man.png";
 
+
+
   return (
     <div className="flex flex-col min-h-screen w-full" style={{ paddingBottom: `${footerHeight}px` }}>
       <BackTitleHeader
@@ -126,6 +159,12 @@ export default function PostDetailPage(): React.ReactElement {
         name={profile?.name}
         userNickname={profile?.nickname}
         profileImageUrl={profileImageUrl} // ✅ DB 이미지 반영
+        // -------------------
+        userId={post.userId}
+        friendId={friendInfo?.friendId}
+        gender={friendInfo?.gender}
+      // -------------------
+
       />
 
       {isMine && !isEditing && (
