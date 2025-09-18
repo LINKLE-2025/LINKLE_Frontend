@@ -628,7 +628,7 @@ export default function MapPage(): React.ReactElement {
 
     const ps = new window.kakao.maps.services.Places();
     const center = kakaoMapRef.current.getCenter();
-    const options = { location: center, radius: 2000, page };  // 반경 2km
+    const options = { location: center, radius: 5000, page };  // 반경 5km
 
     ps.keywordSearch(
       searchQuery,
