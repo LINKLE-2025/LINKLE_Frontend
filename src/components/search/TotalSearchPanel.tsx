@@ -114,6 +114,32 @@ export default function TotalSearchPanel({
         }
     }, []);
 
+    const [isSearchingLinker, setIsSearchingLinker] = useState(false);
+
+    useEffect(() => {
+        if (activeTab === "linker") {
+            if (searchQuery.trim() === "") {
+                // 검색어 없으면 초기화
+                setLinkerResults([]);
+                setLinkerPage(0);
+                setLinkerTotalPages(0);
+                setIsSearchingLinker(false);
+                return;
+            }
+
+            setIsSearchingLinker(true);
+
+            const delayDebounce = setTimeout(() => {
+                fetchLinkers(0).finally(() => {
+                    setIsSearchingLinker(false);
+                });
+            }, 500);
+
+            return () => clearTimeout(delayDebounce);
+        }
+    }, [searchQuery, activeTab]);
+
+
 
     const fetchLinkers = async (pageToFetch = 0) => {
         try {
@@ -226,8 +252,7 @@ export default function TotalSearchPanel({
     // 검색 결과 없음 UI (중앙 정렬)
     const renderEmptyState = (message: string) => (
         <div className="flex flex-col items-center text-gray-300"
-            style={{ marginBottom: footerHeight }}
-        >
+            style={{ marginBottom: footerHeight }}>
             <img
                 src="/icons/favicon/favicon.svg"
                 alt="검색 없음"
@@ -244,6 +269,15 @@ export default function TotalSearchPanel({
             setHeaderHeight(header.clientHeight);
         }
     }, []);
+
+    const handleTabChange = (tab: "friend" | "linker") => {
+        setActiveTab(tab);
+        if (tab === "linker" && searchQuery.trim() !== "") {
+            // 탭 전환할 때는 바로 불러오기
+            setIsSearchingLinker(true);
+            fetchLinkers(0).finally(() => setIsSearchingLinker(false));
+        }
+    };
     return (
         <div className="flex flex-col h-full bg-white">
             {/* 검색창 */}
@@ -272,14 +306,13 @@ export default function TotalSearchPanel({
                     <p>친구 검색</p>
                 </button>
                 <button
-                    className={`flex-1 px-4 py-2 border-b-2 ${activeTab === "linker"
-                        ? "border-linkleGray/15 text-black"
-                        : "border-transparent text-gray-400"
+                    className={`flex-1 px-4 py-2 border-b-2 ${activeTab === "linker" ? "border-linkleGray/15 text-black" : "border-transparent text-gray-400"
                         }`}
-                    onClick={() => setActiveTab("linker")}
+                    onClick={() => handleTabChange("linker")}
                 >
                     <p>링커 검색</p>
                 </button>
+
             </nav>
 
             {/* 검색 결과 */}
@@ -364,13 +397,19 @@ export default function TotalSearchPanel({
                             </>
                         ) : (
                             <div className="flex flex-1 items-center justify-center">
-                                {renderEmptyState("검색 결과가 없습니다")}
+                                {searchQuery.trim() === ""
+                                    ? renderEmptyState("검색어를 입력하세요")
+                                    : renderEmptyState("검색 결과가 없습니다")}
                             </div>
                         )}
                     </>
                 ) : (
                     <>
-                        {linkerResults.length > 0 ? (
+                        {isSearchingLinker ? (
+                            <div className="flex flex-1 items-center justify-center text-gray-400">
+
+                            </div>
+                        ) : linkerResults.length > 0 ? (
                             <>
                                 {linkerResults.map((linker) => (
                                     <div
@@ -383,7 +422,7 @@ export default function TotalSearchPanel({
                                     </div>
                                 ))}
 
-                                {/* 더보기 버튼 (마지막 페이지가 아닐 때만 표시) */}
+                                {/* 더보기 버튼 */}
                                 {linkerPage + 1 < linkerTotalPages && (
                                     <div className="flex justify-center mt-3">
                                         <button
@@ -397,7 +436,9 @@ export default function TotalSearchPanel({
                             </>
                         ) : (
                             <div className="flex flex-1 items-center justify-center">
-                                {renderEmptyState("링커 검색 결과가 없습니다")}
+                                {searchQuery.trim() === ""
+                                    ? renderEmptyState("검색어를 입력하세요")
+                                    : renderEmptyState("링커 검색 결과가 없습니다")}
                             </div>
                         )}
 

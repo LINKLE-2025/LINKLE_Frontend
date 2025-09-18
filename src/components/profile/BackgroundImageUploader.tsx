@@ -1,7 +1,7 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 
 interface BackgroundImageUploaderProps {
-    onChange: (file: File | null, previewUrl: string) => void; // 기본 배경일 때 file은 null
+    onChange: (file: File | null, previewUrl: string) => void;
     height?: number;
     getBackgroundImageSrc?: any;
     bgPreview: string;
@@ -11,10 +11,30 @@ export default function BackgroundImageUploader({
     onChange,
     height = 160,
     getBackgroundImageSrc,
-    bgPreview
+    bgPreview,
 }: BackgroundImageUploaderProps) {
     const inputRef = useRef<HTMLInputElement>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
     const [menuOpen, setMenuOpen] = useState(false);
+
+    // 메뉴 외부 클릭 시 닫기
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+                setMenuOpen(false);
+            }
+        };
+
+        if (menuOpen) {
+            document.addEventListener("mousedown", handleClickOutside);
+        } else {
+            document.removeEventListener("mousedown", handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [menuOpen]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -39,26 +59,32 @@ export default function BackgroundImageUploader({
     const displaySrc = bgPreview || getBackgroundImageSrc;
 
     return (
-        <div className="relative max-w-full bg-gray-200" style={{ height: height * 2 }}>
+        <div
+            className="relative max-w-full bg-gray-200"
+            style={{ height: height * 2 }}
+        >
             {/* 현재 배경 */}
-            <img
-                src={displaySrc}
-                alt="배경"
-                className="w-full h-full object-cover"
-            />
+            <img src={displaySrc} alt="배경" className="w-full h-full object-cover" />
 
             {/* 배경 변경 버튼 */}
             <button
                 onClick={() => setMenuOpen((prev) => !prev)}
                 className="absolute flex gap-1.5 bottom-3.5 right-3 bg-white hover:bg-gray-100/90 transition-colors text-linkleGray items-center px-2 py-1 text-xs rounded shadow"
             >
-                <img src="/icons/common/imageUpload.svg" alt="변경" className="w-4 h-4" />
+                <img
+                    src="/icons/common/imageUpload.svg"
+                    alt="변경"
+                    className="w-4 h-4"
+                />
                 <p className="mt-0.5">배경사진 추가</p>
             </button>
 
             {/* 옵션 메뉴 */}
             {menuOpen && (
-                <div className="absolute bottom-14 right-3 w-40 bg-white border rounded-lg shadow-md z-50">
+                <div
+                    ref={menuRef}
+                    className="absolute bottom-14 right-3 w-40 bg-white border rounded-lg shadow-md z-50"
+                >
                     <button
                         onClick={handleResetBackground}
                         className="w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-red-50"
