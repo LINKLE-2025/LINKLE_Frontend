@@ -48,7 +48,7 @@ export default function ChatInput({
       className="fixed left-0 right-0 bg-white border-t 
                border-gray-200 shadow-[0_-2px_8px_rgba(0,0,0,0.04)] z-20"
     >
-      <div className="w-full max-w-xl mx-auto px-5 py-2">
+      <div className="w-full max-w-xl mx-auto px-5 py-2 xs:py-3.5 ">
         {
           disabled ? (
             <div className="flex items-center gap-2">
@@ -57,21 +57,21 @@ export default function ChatInput({
               </div>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 xs:gap-2.5">
               <input
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && send()}
                 placeholder="채팅을 입력하세요"
-                className="flex-1 rounded-2xl bg-gray-100 px-4 py-1.5 text-base focus:outline-none"
+                className="flex-1 rounded-2xl bg-gray-100 px-4 py-1.5  xs:px-5 xs:py-3 text-base focus:outline-none"
               />
               <button
                 onClick={send}
-                className="p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition"
+                className="p-1.5 xs:p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition"
                 aria-label="send"
                 type="button"
               >
-                <ArrowRight size={20} className="text-linkleGray" />
+                <ArrowRight className="text-linkleGray w-5 h-5 xs:w-6 xs:h-6" />
               </button>
             </div>
           )
