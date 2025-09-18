@@ -116,10 +116,26 @@ export default function TotalSearchPanel({
 
     const [isSearchingLinker, setIsSearchingLinker] = useState(false);
 
+    const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+    const debouncedFetchLinkers = useCallback((query: string, page = 0) => {
+        if (debounceRef.current) {
+            clearTimeout(debounceRef.current);
+        }
+
+        setIsSearchingLinker(true);
+
+        debounceRef.current = setTimeout(() => {
+            fetchLinkers(page).finally(() => {
+                setIsSearchingLinker(false);
+            });
+        }, 300); // 0.5초 지연
+    }, []);
+
+
     useEffect(() => {
         if (activeTab === "linker") {
             if (searchQuery.trim() === "") {
-                // 검색어 없으면 초기화
                 setLinkerResults([]);
                 setLinkerPage(0);
                 setLinkerTotalPages(0);
@@ -127,17 +143,9 @@ export default function TotalSearchPanel({
                 return;
             }
 
-            setIsSearchingLinker(true);
-
-            const delayDebounce = setTimeout(() => {
-                fetchLinkers(0).finally(() => {
-                    setIsSearchingLinker(false);
-                });
-            }, 500);
-
-            return () => clearTimeout(delayDebounce);
+            debouncedFetchLinkers(searchQuery, 0);
         }
-    }, [searchQuery, activeTab]);
+    }, [searchQuery, activeTab, debouncedFetchLinkers]);
 
 
 
