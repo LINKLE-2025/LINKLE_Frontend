@@ -127,31 +127,31 @@ export default function MessageItem({
 
   const renderAvatar = () => {
     if (isMine) return null;
-    if (!showAvatar) return <div className="w-11 h-px flex-shrink-0" />;
+    if (!showAvatar) return <div className="w-8 h-8 xxs:w-11 xxs:h-11 flex-shrink-0" />;
 
     if (!avatarError && displaySrc) {
       return (
         <img
           src={displaySrc}
           alt={name ?? ""}
-          className="w-11 h-11 bg-white shadow-sm rounded-full object-cover flex-shrink-0 mt-0.5"
+          className="w-8 h-8 xxs:w-11 xxs:h-11 bg-white shadow-sm rounded-full object-cover flex-shrink-0 mt-0.5"
           onError={handleImgError}
           decoding="async"
           draggable={false}
         />
       );
     }
-    return <div className="w-11 h-11 shadow-sm rounded-full bg-gray-200 flex-shrink-0 mt-0.5" />;
+    return <div className="w-8 h-8 xxs:w-11 xxs:h-11 shadow-sm rounded-full bg-gray-200 flex-shrink-0 mt-0.5" />;
   };
 
   return (
     <div className={`${outerMarginTop} ${outerMarginBottom}`} data-after-system={compactAfterSystem ? "1" : "0"}>
-      <div className={`flex items-start gap-2 ${isMine ? "justify-end" : "justify-start"}`}>
+      <div className={`flex items-start gap-1 xxs:gap-2 ${isMine ? "justify-end" : "justify-start"}`}>
         {renderAvatar()}
 
         <div className="max-w-[72%]">
           {!isMine && showAvatar && (
-            <div className="text-[12px] text-gray-600 mb-1 ml-1 text-left">
+            <div className="text-[12px] text-gray-600 mb-0.5 ml-0.5 xxs:ml-1 xxs:mb-1 text-left">
               {name ?? (withdrawn ? "탈퇴한 사용자" : "알 수 없음")}
             </div>
           )}
@@ -161,16 +161,16 @@ export default function MessageItem({
               <div className="text-[11px] text-gray-500 mb-0.5 whitespace-nowrap">
                 {formatTimeAmPmKR(m.createdDate)}
               </div>
-              <div className="inline-block px-3 py-2 rounded-2xl bg-[#f5f5f5] border border-gray-300 shadow-sm whitespace-pre-wrap break-words">
+              <div className="inline-block px-[11px] py-1.5 xxs:px-3 xxs:py-2 text-sm xxs:text-base rounded-xl xxs:rounded-2xl bg-[#f5f5f5] border border-gray-300 shadow-sm whitespace-pre-wrap break-words">
                 {m.content}
               </div>
             </div>
           ) : (
             <div className="flex items-end gap-1.5">
-              <div className="inline-block px-3 py-2 rounded-2xl bg-white border border-gray-300 shadow-sm whitespace-pre-wrap break-words">
+              <div className="inline-block px-[11px] py-1.5 xxs:px-3 xxs:py-2 text-sm xxs:text-base rounded-xl xxs:rounded-2xl bg-white border border-gray-300 shadow-sm whitespace-pre-wrap break-words">
                 {m.content}
               </div>
-              <div className="text-[11px] text-gray-500 mb-0.5 whitespace-nowrap">
+              <div className="text-[9px] xxs:text-[11px] text-gray-500 mb-0.5 whitespace-nowrap">
                 {formatTimeAmPmKR(m.createdDate)}
               </div>
             </div>
