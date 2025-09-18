@@ -222,12 +222,11 @@ export default function RoomMemberSheet({
 
                 {/* 하단 액션 */}
                 <div className="border-t border-gray-200 px-4 py-3 bg-white">
-
-
                     <button
                         onClick={handleLeave}
                         disabled={leaving}
-                        className="w-full py-3 text-red-500 font-semibold rounded-xl border border-red-200 hover:bg-red-50 disabled:opacity-50"
+                        className="w-full py-3 text-red-500 font-semibold rounded-xl border border-red-200 disabled:opacity-50
+                        hover:bg-red-50 transition-colors"
                     >
                         {leaving ? "나가는 중..." : "채팅방 나가기"}
                     </button>

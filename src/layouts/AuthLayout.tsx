@@ -1,10 +1,13 @@
 import RandomPastelBackground from "@/components/background/RandomPastelBackground";
 import TeamNameFooter from "@/components/footer/TeamNameFooter";
 import MainHeader from "@/components/header/MainHeader";
+import { usePreventTouchScroll } from "@/hooks/usePreventTouchScroll";
 import { Outlet, useLocation } from "react-router-dom";
 
 export default function AuthLayout() {
   const location = useLocation();
+
+  usePreventTouchScroll(true);  // 터치 스크롤 방지 훅 사용
 
   return (
     <div className='relative flex flex-col min-h-[100dvh] text-black'>

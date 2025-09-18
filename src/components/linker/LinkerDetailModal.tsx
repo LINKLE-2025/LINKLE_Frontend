@@ -556,11 +556,11 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
       {showExtendModal &&
         ReactDOM.createPortal(
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[2147483647]">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-80 text-center">
+            <div className="bg-white px-6 py-7 rounded-lg shadow-lg w-72 xxs:w-80 text-center">
               {insufficientBalance ? (
                 <>
-                  <p className="mb-4">잔액이 부족합니다.</p>
-                  <p className="mb-4">충전하러 이동하시겠습니까?</p>
+                  <p className="mb-2 xxs:text-lg">잔액이 부족합니다.</p>
+                  <p className="mb-6 xxs:text-lg">충전하러 이동하시겠습니까?</p>
                 </>
               ) : (
                 <>
@@ -568,9 +568,9 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
                   <p className="mb-4 pb-2">(5000원이 차감됩니다.)</p>
                 </>
               )}
-              <div className="flex justify-center gap-24">
-                <Button onClick={handleModalConfirm}>예</Button>
-                <Button variant="outline" onClick={() => setShowExtendModal(false)}>
+              <div className="flex justify-center w-full gap-6 px-3">
+                <Button className="flex-1" onClick={handleModalConfirm}>예</Button>
+                <Button className="flex-1" variant="outline" onClick={() => setShowExtendModal(false)}>
                   취소
                 </Button>
               </div>

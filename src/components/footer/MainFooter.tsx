@@ -30,9 +30,9 @@ function MainFooter({ linkerCreateMode, setLinkerCreateMode, onResetSearch }: Ma
   };
 
   return (
-    <footer className='w-full bg-white border-t z-40 border-gray-200 text-gray-400
-                       text-xs py-0 text-center fixed bottom-0 pb-[env(safe-area-inset-bottom)]'>
-      <div className='flex items-center justify-around'>
+    <footer className='select-none w-full bg-white border-t z-40 border-gray-200 text-gray-400
+                       text-xs py-0 text-center fixed bottom-0 pb-[min(env(safe-area-inset-bottom),16px)]'>
+      <div className='flex items-center justify-evenly'>
         <FooterItem
           to="/map"
           icon={<Home className="w-6 h-6" />}
@@ -51,9 +51,9 @@ function MainFooter({ linkerCreateMode, setLinkerCreateMode, onResetSearch }: Ma
         <button
           type="button"
           onClick={handleLinkerButton}
-          className="px-3 py-2 text-gray-900"
+          className="px-1 xxs:px-3 py-2 text-gray-900"
         >
-          <div className='w-[14vw] flex flex-col items-center rounded-xl hover:bg-gray-100/60 '>
+          <div className='w-[16vw] xxs:w-[14vw] flex flex-col items-center rounded-xl hover:bg-gray-100/60 '>
             <div className="w-full h-full flex flex-col items-center p-2.5 active:scale-95 transition-all duration-100">
               <img
                 src={

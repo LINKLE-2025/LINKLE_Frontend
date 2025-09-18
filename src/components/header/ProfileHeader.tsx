@@ -11,7 +11,7 @@ export default function ProfileHeader({ title, backTo, className }: Props) {
 
   return (
     <header
-      className={`fixed top-0 w-full flex items-center justify-center bg-white border-b border-gray-200 px-5 py-3 z-50 ${className}`}
+      className={`select-none fixed top-0 w-full flex items-center justify-center bg-white border-b border-gray-200 px-5 py-3 z-50 ${className}`}
     >
       {/* 뒤로가기 버튼 */}
       <button
