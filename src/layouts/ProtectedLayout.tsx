@@ -1,6 +1,7 @@
 import { Outlet, Navigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore"; // 전역 상태 관리 사용
 import FullScreenLoader from "@/components/common/FullScreenLoader";
+import ChatToasts from "@/components/chat/ChatToasts";
 
 export default function ProtectedLayout() {
     const { user, loading } = useAuthStore();
@@ -15,5 +16,10 @@ export default function ProtectedLayout() {
     }
 
     // 로그인 성공 시 내부 라우트 랜더링
-    return <Outlet />;
+    return (
+        <>
+            <Outlet />
+            <ChatToasts />
+        </>
+    );
 }

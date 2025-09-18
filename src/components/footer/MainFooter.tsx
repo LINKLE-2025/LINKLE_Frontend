@@ -130,7 +130,7 @@ function MainFooter({ linkerCreateMode, setLinkerCreateMode, onResetSearch }: Ma
         </button>
         <FooterItem
           to="/chat"
-          icon={chatIcon} // ✅ 배지가 얹힌 아이콘
+          icon={chatIcon} // 배지가 얹힌 아이콘
           label="채팅"
           linkerCreateMode={linkerCreateMode}
           setLinkerCreateMode={setLinkerCreateMode}
