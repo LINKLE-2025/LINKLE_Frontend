@@ -1,4 +1,5 @@
 // src/components/post/PostForm.tsx
+import { getFriendRelationship } from "@/api/friendApi";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -25,6 +26,7 @@ type Props = {
   userId?: number;
   friendId?: number;
   gender?: string;
+  currentUserId?: number;
   // ---------------
 };
 
@@ -43,9 +45,12 @@ export default function PostForm({
   userNickname,
   name,
   profileImageUrl,
+  // ---------------
   userId,
   friendId,
   gender,
+  currentUserId,
+  // ---------------
 }: Props) {
   const [text, setText] = useState(initialText);
   const [file, setFile] = useState<File | null>(null);
@@ -92,6 +97,39 @@ export default function PostForm({
       if (!linker) return;
       navigate("/map", { state: { openLinkerId: linker.linkerId } });
     });
+
+
+  // ---------------
+  const [relationshipType, setRelationshipType] = useState<
+    "self" | "friend" | "sent" | "received" | "stranger" | undefined
+  >();
+
+  useEffect(() => {
+    if (currentUserId === undefined || userId === undefined) return;
+    if (currentUserId === userId) {
+      setRelationshipType("self");
+      return;
+    }
+
+    (async () => {
+      try {
+        const relation = await getFriendRelationship(currentUserId, userId);
+        if (!relation.exists || relation.state === "NONE") {
+          setRelationshipType("stranger");
+        } else if (relation.state === "ACCEPTED") {
+          setRelationshipType("friend");
+        } else if (relation.state === "REQUESTED") {
+          setRelationshipType(
+            relation.userId1 === currentUserId ? "sent" : "received"
+          );
+        }
+      } catch (err) {
+        console.error("관계 정보 가져오기 실패", err);
+        setRelationshipType(undefined);
+      }
+    })();
+  }, [currentUserId, userId]);
+  // ---------------
 
   return (
     <div className="flex w-full flex-col bg-[#f6f6f6]">
@@ -140,6 +178,7 @@ export default function PostForm({
                     friendId,
                     gender,
                     pathname: location.pathname,
+                    ...(relationshipType ? { type: relationshipType } : {}),
                   }}
                 >
                   <img src={profileImageUrl} alt="프로필" className="h-full w-full object-cover" />
