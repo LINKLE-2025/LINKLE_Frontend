@@ -7,6 +7,7 @@ import RoomMemoModal from "@/components/modal/RoomMemoModal";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getAllFriends, getFriendRelationship } from "@/api/friendApi";
 import type { FriendResponse } from "@/types/friend";
+import { useRoomMute, setRoomMuted, toggleRoomMuted } from "@/utils/notifyPrefs";
 
 type Props = {
     open: boolean;
@@ -24,6 +25,8 @@ const asset = (p: string) => {
     const path = p.replace(/^\/+/, "");
     return `${base}/${path}`;
 };
+
+
 
 // 성별별 디폴트 이미지
 function genderFallbackSrc(gender?: string | null) {
@@ -201,6 +204,9 @@ export default function RoomMemberSheet({
 
     const ownerId = (room as any).owner_id ?? (room as any).ownerId;
 
+    const roomIdNum = Number((room as any)?.roomId);
+    const muted = useRoomMute(roomIdNum);
+
     const countLabel = useMemo(() => {
         const n = members?.length ?? room.memberCount ?? 0;
         return `${n}명 참여 중`;
@@ -366,6 +372,29 @@ export default function RoomMemberSheet({
 
                 {/* 하단 액션 */}
                 <div className="border-t border-gray-200 px-4 py-3 bg-white">
+
+                    {/* 알림 ON/OFF */}
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2 text-gray-700">
+                            <span className="text-sm">
+                                알림 {muted ? "꺼짐" : "켜짐"}
+                            </span>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => toggleRoomMuted(roomIdNum)}
+                            className={`relative w-10 h-6 rounded-full transition-colors
+                        ${muted ? "bg-red-500" : "bg-gray-300"}`}
+                            aria-pressed={muted}
+                            aria-label={muted ? "알림 켜기" : "알림 끄기"}
+                        >
+                            <span
+                                className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow
+                          transition-transform duration-200
+                          ${muted ? "translate-x-4" : "translate-x-0"}`}
+                            />
+                        </button>
+                    </div>
                     <button
                         onClick={handleLeave}
                         disabled={leaving}
