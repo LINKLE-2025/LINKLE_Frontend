@@ -14,7 +14,8 @@ import RoomPreviewModal from "@/components/modal/RoomPreviewModal";
 import { extendLinkerCreatedDate, deductUserBalance } from "@/api/mapApi";
 import { Button } from "@/components/ui/button"
 import { withdrawBalance, getBalance } from "@/api/payApi";
-import { Grid, Users, Crown } from "lucide-react";
+import { Grid, Users, Crown, ImagePlus, MessagesSquare } from "lucide-react";
+import ActionCircleButton from "../common/ActionCircleButton";
 
 export type LinkerDetail = {
   linkerId: number;
@@ -485,20 +486,18 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
                         </button>
                       ) : (
                         <>
-                          <button
-                            className="h-10 w-10 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center"
-                            title="포스트작성"
+                          {/* 포스트 생성 버튼 */}
+                          <ActionCircleButton
                             onClick={CreatePost}
+                            icon={<ImagePlus className="w-5 h-5" />}
                           >
-                            <img src="/icons/mapicon/photo.png" alt="" />
-                          </button>
-                          <button
-                            className="h-10 w-10 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center"
-                            title="채팅방생성"
+                          </ActionCircleButton>
+                          {/* 채팅방 생성 버튼 */}
+                          <ActionCircleButton
                             onClick={CreateChatRoom}
+                            imgSrc="/icons/common/createChat.svg"
                           >
-                            <img src="/icons/mapicon/chat.png" alt="" />
-                          </button>
+                          </ActionCircleButton>
                         </>
                       )}
                     </div>

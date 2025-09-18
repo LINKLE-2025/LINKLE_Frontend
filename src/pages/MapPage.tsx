@@ -30,6 +30,8 @@ import { useViewportHeight } from "@/hooks/useViewportHeight";
 import { set } from "date-fns";
 import { getCurrentUserId } from "@/api/authApi";
 import { usePreventTouchScroll } from "@/hooks/usePreventTouchScroll";
+import ActionCircleButton from "@/components/common/ActionCircleButton";
+import { RotateCw, Search } from "lucide-react";
 
 interface LayoutContext {
   linkerCreateMode: boolean;
@@ -694,7 +696,7 @@ export default function MapPage(): React.ReactElement {
               map: kakaoMapRef.current,
               position,   // 마커와 동일한 LatLng 객체
               xAnchor: 0.5,
-              yAnchor: 1.3,
+              yAnchor: 0.25,
             });
 
             // 🔹 저장
@@ -961,52 +963,55 @@ export default function MapPage(): React.ReactElement {
 
         {/* 지도 컨트롤 버튼들 (오른쪽 하단) */}
         {!searchOpen && (
-          <div className='absolute bottom-5 right-4 flex flex-col gap-3 z-10'>
+          <div className='absolute bottom-5 right-4 flex flex-col gap-3 z-10 pb-[calc(min(8px,env(safe-area-inset-bottom)))]'>
             {linkerCreateMode ? (
               <>
                 {/* 링커 생성 모드일 때 버튼 */}
-                <CircleButton
-                  imgSrc='/icons/mapicon/search.png'
-                  alt='검색'
+                <ActionCircleButton
+                  className='text-linkleGray'
+                  icon={<Search className='w-6 h-6' strokeWidth={2.5} />}
                   onClick={() => {
                     setSearchOpen(true)
                     setLinkerCreateMode(false);
-                  }
-                  }
+                  }}
                 />
-                <CircleButton
-                  imgSrc='/icons/mapicon/refresh.png'
-                  alt='새로고침'
+                <ActionCircleButton
+                  className='text-linkleGray'
+                  icon={<RotateCw className='w-6 h-6' strokeWidth={2.5} />}
                   onClick={() => {
                     if (kakaoMapRef.current && clustererRef.current) {
                       loadExistingLinkers(kakaoMapRef.current, clustererRef.current, onOpenDetailById);
                     }
                   }}
                 />
-                <CircleButton
-                  imgSrc='/icons/mapicon/location.png'
-                  alt='내 위치'
+                <ActionCircleButton
+                  className='text-linkleGray'
+                  icon={<img src='/icons/mapicon/findLocation.svg' className='w-6 h-6' />}
                   onClick={handleMyLocation}
                 />
               </>
             ) : (
               <>
                 {/* 기본 버튼 리스트 */}
-                <CircleButton
-                  imgSrc='/icons/mapicon/search.png'
-                  alt='검색'
+                <ActionCircleButton
+                  className='text-linkleGray'
+                  icon={<Search className='w-6 h-6' strokeWidth={2.5} />}
                   onClick={() => setSearchOpen(true)}
                 />
-                <CircleButton
-                  imgSrc='/icons/mapicon/info.png'
-                  alt='주소 표시 토글'
+                <ActionCircleButton
+                  className='text-linkleGray'
+                  icon={<img src='/icons/mapicon/recommendAi.svg' className='w-6 h-6' />}
                   onClick={() => setShowAddress((prev) => !prev)}
                 />
-                <CircleButton
-                  imgSrc='/icons/mapicon/location.png'
-                  alt='내 위치'
+                <ActionCircleButton
+                  className='text-linkleGray'
                   onClick={handleMyLocation}
-                />
+                >
+                  <img
+                    src='/icons/mapicon/findLocation.svg'
+                    className='w-6 h-6'
+                  />
+                </ActionCircleButton>
               </>
             )}
           </div>
