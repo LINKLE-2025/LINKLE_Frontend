@@ -267,11 +267,7 @@ export default function MapPage(): React.ReactElement {
       // 🔥 클러스터러에서 기존 마커들 제거
       clusterer.clear();
 
-      // 🔥 커스텀 훅의 hasSelection 사용
-      if (!hasSelection) {
-        console.log("🚫 선택된 카테고리가 없음. 마커 생성 생략");
-        return;
-      }
+
 
       const kakao = (window as any).kakao;
       console.log(`🔍 현재 선택된 카테고리 수: ${selectedCount}`);
@@ -679,7 +675,6 @@ export default function MapPage(): React.ReactElement {
 
             const marker = new window.kakao.maps.Marker({
               map: kakaoMapRef.current!,
-              // 🔹 카카오 API에서는 y가 위도, x가 경도
               position,
             });
 
