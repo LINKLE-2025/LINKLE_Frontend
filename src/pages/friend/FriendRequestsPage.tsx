@@ -133,7 +133,7 @@ function FriendRequestsPage() {
 
       {/* 본문 */}
       {isEmpty ? (
-        <EmptyState />
+        <EmptyState footerHeight={footerHeight} />
       ) : (
         <div className="flex-1 overflow-y-auto">
           {/* 받은 요청 */}

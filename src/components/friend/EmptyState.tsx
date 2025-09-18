@@ -1,15 +1,22 @@
 import React from 'react';
 
-function EmptyState() {
+interface EmptyStateProps {
+  footerHeight?: number;
+}
+
+function EmptyState({ footerHeight = 0 }: EmptyStateProps) {
   return (
-    <div className="flex-1 bg-linkleGray-50 flex flex-col items-center justify-center py-20">
-      <img
-        src='/icons/favicon/favicon.svg' // 🔹 워터마크 이미지 경로
-        alt='워터마크'
-        className='w-24 h-24 opacity-20 mb-4' // 크기, 투명도, 아래 여백
-      />
-      <div className="text-center px-8">
-        <p className="text-linkleGray-400 text-base mb-2">링커에 참여하여</p>
+    <div
+      className="flex-1 bg-linkleGray-50 flex flex-col items-center justify-center"
+      style={{ marginBottom: footerHeight }}
+    >
+      <div className="flex flex-col items-center text-gray-300">
+        <img
+          src="/icons/favicon/favicon.svg"
+          alt="검색 없음"
+          className="w-44 h-44 xxs:w-56 xxs:h-56 opacity-10 mb-4"
+        />
+        <p className="text-center text-xl xxs:text-[23px]">링커에 참여하여</p>
         <p className="text-linkleGray-400 text-base">다양한 친구들을 만나보세요</p>
       </div>
     </div>
