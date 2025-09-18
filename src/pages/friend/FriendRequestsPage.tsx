@@ -144,7 +144,7 @@ function FriendRequestsPage() {
                   {filteredReceived.length}명의 친구 요청
                 </h2>
               </div>
-              <div className="bg-white divide-y divide-gray-100">
+              <div className="divide-y divide-white-100">
                 {filteredReceived.map((request) => (
                   <FriendRequestItem
                     key={request.friendId}
@@ -173,7 +173,7 @@ function FriendRequestsPage() {
                   {filteredSent.length}명 수락 대기 중
                 </h2>
               </div>
-              <div className="bg-white divide-y divide-gray-100">
+              <div className="divide-y divide-white-100">
                 {filteredSent.map((request) => (
                   <FriendRequestItem
                     key={request.friendId}

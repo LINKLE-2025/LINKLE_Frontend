@@ -240,7 +240,7 @@ function ProfileContent({
                 )
               );
 
-              // ✅ 친구 목록 다시 패칭
+              // 친구 목록 다시 패칭
               onFriendRequestSuccess?.()
             }}
           />

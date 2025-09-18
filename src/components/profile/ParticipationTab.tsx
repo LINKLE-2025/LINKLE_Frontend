@@ -21,7 +21,6 @@ interface ParticipationTabProps {
 function ParticipationTab({ participations }: ParticipationTabProps) {
   const navigate = useNavigate();
 
-  // 카테고리 필터 상태
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -41,7 +40,7 @@ function ParticipationTab({ participations }: ParticipationTabProps) {
     );
   }
 
-  // "삭제된(DELETED)" 링커는 맨 뒤로
+  // 삭제된 링커 맨 뒤로
   const sortedParticipations = [...participations].sort((a, b) => {
     if (a.state === "DELETED" && b.state !== "DELETED") return 1;
     if (a.state !== "DELETED" && b.state === "DELETED") return -1;
@@ -53,12 +52,19 @@ function ParticipationTab({ participations }: ParticipationTabProps) {
     ? sortedParticipations.filter((p) => p.categoryId === selectedCategory)
     : sortedParticipations;
 
+  // 선택된 카테고리 이름 찾기
+  const selectedCategoryName = selectedCategory
+    ? CATEGORY_DATA.find((_, idx) => idx + 1 === selectedCategory)?.name
+    : null;
+
   return (
     <div>
       {/* 상단 필터 영역 */}
       <div className="flex justify-between items-center px-3 mt-3">
         <div className="text-left text-sm font-medium text-gray-700">
-          {participations.length}개의 링커 참여함
+          {selectedCategory
+            ? `${filteredParticipations.length}개의 링커 참여함`
+            : `${participations.length}개의 링커 참여함`}
         </div>
 
         <div className="relative">
@@ -117,22 +123,28 @@ function ParticipationTab({ participations }: ParticipationTabProps) {
 
       {/* 참여한 링커 카드들 */}
       <div className="mt-3">
-        {filteredParticipations.map((linker) => {
-          const isDeleted = linker.state === "DELETED";
-          return (
-            <div
-              key={linker.linkerId}
-              className={isDeleted ? "cursor-default" : "cursor-pointer"}
-              onClick={() => {
-                if (!isDeleted) {
-                  navigate("/map", { state: { openLinkerId: linker.linkerId } });
-                }
-              }}
-            >
-              <LinkerCardItem linker={linker} />
-            </div>
-          );
-        })}
+        {filteredParticipations.length > 0 ? (
+          filteredParticipations.map((linker) => {
+            const isDeleted = linker.state === "DELETED";
+            return (
+              <div
+                key={linker.linkerId}
+                className={isDeleted ? "cursor-default" : "cursor-pointer"}
+                onClick={() => {
+                  if (!isDeleted) {
+                    navigate("/map", { state: { openLinkerId: linker.linkerId } });
+                  }
+                }}
+              >
+                <LinkerCardItem linker={linker} />
+              </div>
+            );
+          })
+        ) : (
+          <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+            <p>참여하지 않은 카테고리입니다</p>
+          </div>
+        )}
       </div>
     </div>
   );
