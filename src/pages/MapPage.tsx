@@ -151,6 +151,8 @@ export default function MapPage(): React.ReactElement {
     }
   }, [linkerCreateMode]);
 
+
+
   // mapCenter 상태 변경될 때 저장
   useEffect(() => {
     if (mapCenter) {
@@ -221,14 +223,16 @@ export default function MapPage(): React.ReactElement {
       try {
         const json = await fetchLinkerDetail(linkerId);
         setDetailData(json);
-        console.log("name:", json.name);
-        console.log("address:", json.address ?? json.addressName ?? "(none)");
-        console.log("categoryId:", json.categoryId);
-        console.log("phone:", json.phone);
-        console.log("memo:", json.memo);
-        console.log("createdAt:", json.createdAt);
-        console.log("lat (from locationY):", json.locationY);
-        console.log("lng (from locationX):", json.locationX);
+
+        // ✅ 여기서 지도 이동
+        if (kakaoMapRef.current && json.locationY != null && json.locationX != null) {
+          kakaoMapRef.current.panTo(
+            new window.kakao.maps.LatLng(json.locationY - 0.0008, json.locationX)
+          );
+          setTimeout(() => kakaoMapRef.current?.setLevel(2), 400);
+        }
+
+
       } catch (e: any) {
         setDetailError(e?.message ?? String(e));
       } finally {
