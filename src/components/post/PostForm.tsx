@@ -1,6 +1,6 @@
 // src/components/post/PostForm.tsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export type LinkerLite = { linkerId: number; name: string; address?: string | null };
 
@@ -20,6 +20,12 @@ type Props = {
   userNickname?: string;
   name?: string;
   profileImageUrl?: string | null;
+
+  // ---------------
+  userId?: number;
+  friendId?: number;
+  gender?: string;
+  // ---------------
 };
 
 export default function PostForm({
@@ -37,6 +43,9 @@ export default function PostForm({
   userNickname,
   name,
   profileImageUrl,
+  userId,
+  friendId,
+  gender,
 }: Props) {
   const [text, setText] = useState(initialText);
   const [file, setFile] = useState<File | null>(null);
@@ -124,7 +133,17 @@ export default function PostForm({
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-full bg-gray-300 overflow-hidden">
               {profileImageUrl ? (
-                <img src={profileImageUrl} alt="프로필" className="h-full w-full object-cover" />
+                <Link
+                  to={`/profile`}
+                  state={{
+                    userId,
+                    friendId,
+                    gender,
+                    pathname: location.pathname,
+                  }}
+                >
+                  <img src={profileImageUrl} alt="프로필" className="h-full w-full object-cover" />
+                </Link>
               ) : (
                 <img src="/icons/default-profile.png" alt="기본 프로필" className="h-full w-full object-cover" />
               )}

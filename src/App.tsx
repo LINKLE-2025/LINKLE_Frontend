@@ -17,6 +17,8 @@ import ProfileLayout from "./layouts/ProfileLayout";
 import ChatRoomPage from "./pages/chat/ChatRoomPage";
 import ChatListPage from "./pages/chat/ChatListPage";
 import RoomCreatePage from "./pages/chat/RoomCreatePage";
+import RequireRoomAccess from "@/routes/RequireRoomAccess";
+import RoomPreviewGate from "@/routes/RoomPreviewGate";
 
 import AppLayout from "./layouts/AppLayout";
 import PostDetailPage from "./pages/post/PostDetailPage";
@@ -77,7 +79,15 @@ export default function App() {
         {/* 채팅 관련 레이아웃 */}
         <Route element={<ChatLayout />}>
           <Route path='/chat' element={<ChatListPage />} />
-          <Route path='/chat/room/:roomId' element={<ChatRoomPage />} />
+          <Route path='/chat/preview/:roomId' element={<RoomPreviewGate />} />
+          <Route
+            path='/chat/room/:roomId'
+            element={
+              <RequireRoomAccess>
+                <ChatRoomPage />
+              </RequireRoomAccess>
+            }
+          />
           <Route path='/chat/room/create' element={<RoomCreatePage />} />
         </Route>
 

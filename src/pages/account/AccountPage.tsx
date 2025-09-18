@@ -186,7 +186,7 @@ export default function AccountPage() {
 
 
     return (
-        <div className="flex flex-col flex-1 w-full bg-blue-50/40 items-center gap-4 p-4">
+        <div className="flex flex-col flex-1 w-full bg-blue-50/40 items-center gap-4 p-4 pb-[calc(min(env(safe-area-inset-bottom),16px)+1rem)]">
             {/* 상단 컨텐츠 */}
             <div className="w-full max-w-2xl border bg-white p-5 rounded-xl space-y-6 shadow-sm">
                 {/* 계좌 정보 */}

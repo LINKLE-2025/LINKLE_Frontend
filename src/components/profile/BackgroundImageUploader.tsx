@@ -32,7 +32,7 @@ export default function BackgroundImageUploader({
     };
     const displaySrc = bgPreview || getBackgroundImageSrc;
     return (
-        <div className="relative max-w-full bg-gray-200" style={{ height }}>
+        <div className="relative max-w-full bg-gray-200" style={{ height: height * 2 }}>
             <img
                 src={displaySrc}
                 alt="배경"

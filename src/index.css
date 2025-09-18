@@ -96,6 +96,12 @@ body {
   min-height: -webkit-fill-available;
 } /* iOS 사파리 주소창 수축 대응 */
 
+img {
+  -webkit-user-drag: none; /* Safari/Chrome에서 이미지 드래그 방지 */
+  user-drag: none; /* 일부 브라우저 */
+  -webkit-touch-callout: none; /* iOS 롱탭 시 메뉴 방지 */
+}
+
 /* // 검색 결과 마커에 상호명 띄우기 스타일
 // 마커 위에 표시되는 정보창 스타일 */
 .custom-wrap {

@@ -1,7 +1,7 @@
 import MainFooter from "@/components/footer/MainFooter";
 import BackTitleHeader from "@/components/header/BackTitleHeader";
 import MainHeader from "@/components/header/MainHeader";
-import { useEffect, useState } from "react";
+import { JSX, useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 
 export default function AccountLayout() {
@@ -12,8 +12,11 @@ export default function AccountLayout() {
     // 전역 상태로 링커 생성 모드 관리
     const [linkerCreateMode, setLinkerCreateMode] = useState(false);
 
-    // Header 컴포넌트 동적 설정
-    let header;
+    // Header, Footer 컴포넌트 동적 설정
+    let header: JSX.Element | null = null;
+    let footer: JSX.Element | null = null;
+    let paddingBottom = "";
+
     switch (true) {
         case location.pathname.startsWith("/profile/account/edit"):
             header = <BackTitleHeader title="계좌 수정" backTo="/profile/account" className="bg-white" />;
@@ -23,6 +26,8 @@ export default function AccountLayout() {
             break;
         default:
             header = <MainHeader />;
+            footer = <MainFooter linkerCreateMode={linkerCreateMode} setLinkerCreateMode={setLinkerCreateMode} />
+            paddingBottom = "pb-[calc(4.8rem+env(safe-area-inset-bottom))]";
             break;
     }
 
@@ -49,14 +54,14 @@ export default function AccountLayout() {
 
             {/* Outlet */}
             <main
-                className={`flex flex-col flex-1 items-center text-center pt-[52px] pb-[calc(4.8rem+env(safe-area-inset-bottom))]
+                className={`flex flex-col flex-1 items-center text-center pt-[52px] ${paddingBottom} 
           ${location.pathname === "/signup" ? "justify-start sm:justify-center" : "justify-center"}`}
             >
                 <Outlet context={{ headerHeight, footerHeight, linkerCreateMode, setLinkerCreateMode }} />
             </main>
 
             {/* Footer */}
-            <MainFooter linkerCreateMode={linkerCreateMode} setLinkerCreateMode={setLinkerCreateMode} />
+            {footer}
         </div>
     );
 }

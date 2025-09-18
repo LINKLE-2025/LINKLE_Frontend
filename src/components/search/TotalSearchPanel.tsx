@@ -80,8 +80,8 @@ export default function TotalSearchPanel({
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState<"friend" | "linker">("friend");
     const [linkerResults, setLinkerResults] = useState<SearchLinkerResponseDTO[]>([]);
-    // const { headerHeight, footerHeight } =
-    //     useOutletContext<OutletContextType>();
+    const { footerHeight } =
+        useOutletContext<OutletContextType>();
     const [totalPage, setTotalPages] = useState(0);
 
     const [linkerPage, setLinkerPage] = useState(0);
@@ -225,7 +225,9 @@ export default function TotalSearchPanel({
 
     // 검색 결과 없음 UI (중앙 정렬)
     const renderEmptyState = (message: string) => (
-        <div className="flex flex-col items-center text-gray-300 pt-24 xxs:pt-52">
+        <div className="flex flex-col items-center text-gray-300"
+            style={{ marginBottom: footerHeight }}
+        >
             <img
                 src="/icons/favicon/favicon.svg"
                 alt="검색 없음"
@@ -261,22 +263,22 @@ export default function TotalSearchPanel({
                 style={{ marginTop: headerHeight }}
             >
                 <button
-                    className={`flex-1 px-4 py-2 border-b-2 mx-4 ${activeTab === "friend"
-                        ? "border-linkleGray/25 text-black"
+                    className={`flex-1 px-4 py-2 border-b-2 ${activeTab === "friend"
+                        ? "border-linkleGray/15 text-black"
                         : "border-transparent text-gray-400"
                         }`}
                     onClick={() => setActiveTab("friend")}
                 >
-                    친구 검색
+                    <p>친구 검색</p>
                 </button>
                 <button
-                    className={`flex-1 px-4 py-2 border-b-2 mx-4 ${activeTab === "linker"
-                        ? "border-linkleGray/25 text-black"
+                    className={`flex-1 px-4 py-2 border-b-2 ${activeTab === "linker"
+                        ? "border-linkleGray/15 text-black"
                         : "border-transparent text-gray-400"
                         }`}
                     onClick={() => setActiveTab("linker")}
                 >
-                    링커 검색
+                    <p>링커 검색</p>
                 </button>
             </nav>
 

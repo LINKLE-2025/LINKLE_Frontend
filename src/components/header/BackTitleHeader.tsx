@@ -13,7 +13,7 @@ export default function BackTitleHeader({ title, backTo, className, onBack }: Pr
 
   return (
     <header
-      className={`fixed top-0 w-full flex items-center justify-center bg-white border-b border-gray-200 py-3 z-50 ${className}`}
+      className={`select-none fixed top-0 w-full flex items-center justify-center bg-white border-b border-gray-200 py-3 z-50 ${className}`}
     >
       {/* 뒤로가기 버튼 */}
       <button
