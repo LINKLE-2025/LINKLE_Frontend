@@ -1,8 +1,8 @@
 // src/components/chat/RoomMemberSheet.tsx
-import { Info, Users, MoonStar, StarsIcon, StarIcon, Crown } from "lucide-react";
+import { Info, Users, Crown } from "lucide-react";
 import type { MemberResponseDTO, RoomResponseDTO } from "@/types/chat";
-import { useMemo, useState } from "react";
-import { userProfileUrl, resolveImageUrl } from "@/utils/chat";
+import { useMemo, useState, useEffect } from "react";
+import { resolveImageUrl } from "@/utils/chat";
 import RoomMemoModal from "@/components/modal/RoomMemoModal";
 
 type Props = {
@@ -43,7 +43,19 @@ function initials(name?: string | null) {
     return p.length === 1 ? p[0]!.slice(0, 2) : `${p[0]![0] ?? ""}${p[1]![0] ?? ""}`;
 }
 
-// 개별 멤버 행: 이미지 실패 시 순차 폴백
+/** 동일 출처의 /api/* 인지 판단 (blob 재시도 조건) */
+function isSameOriginApi(url: string | undefined) {
+    if (!url) return false;
+    try {
+        if (url.startsWith("/")) return url.startsWith("/api/");
+        const u = new URL(url, window.location.origin);
+        return u.origin === window.location.origin && u.pathname.startsWith("/api/");
+    } catch {
+        return false;
+    }
+}
+
+// 개별 멤버 행: 이미지 실패 시 순차 폴백 + blob 재시도 1회
 function MemberRow({
     m,
     isSelf,
@@ -60,11 +72,11 @@ function MemberRow({
     const raw = (m as any)?.image ?? (m as any)?.profileImageUrl ?? (m as any)?.userImage ?? null;
     const resolved = resolveImageUrl(raw ?? undefined);
 
-    // 후보 src 우선순위: resolved → userProfileUrl → genderFallback
+    // 후보 src 우선순위: resolved → /api/user/view/profile/:id → genderFallback
     const candidates = useMemo(() => {
         const arr: string[] = [];
         if (resolved) arr.push(resolved);
-        arr.push(userProfileUrl(m.userId));
+        if (typeof m.userId === "number") arr.push(`/api/user/view/profile/${m.userId}`);
         arr.push(genderFallbackSrc(m.gender));
         // 중복 제거
         return Array.from(new Set(arr.filter(Boolean)));
@@ -74,24 +86,66 @@ function MemberRow({
     const currentSrc = candidates[idx];
     const [exhausted, setExhausted] = useState(false);
 
+    // blob 재시도 상태
+    const [blobUrl, setBlobUrl] = useState<string | undefined>(undefined);
+    const [triedAuthFetch, setTriedAuthFetch] = useState(false);
+
+    useEffect(() => {
+        setIdx(0);
+        setExhausted(false);
+        setBlobUrl(undefined);
+        setTriedAuthFetch(false);
+    }, [candidates.length, resolved, m.userId, m.gender]);
+
+    useEffect(() => {
+        return () => {
+            if (blobUrl) URL.revokeObjectURL(blobUrl);
+        };
+    }, [blobUrl]);
+
+    const displaySrc = blobUrl ?? currentSrc;
+
+    const onImgError = async () => {
+        // 동일 출처 /api/* 이면 1회 쿠키 포함 fetch로 blob 재시도 (모바일 쿠키 미부착 대응)
+        if (!triedAuthFetch && isSameOriginApi(currentSrc)) {
+            setTriedAuthFetch(true);
+            try {
+                const res = await fetch(currentSrc!, { credentials: "include" });
+                if (res.ok) {
+                    const blob = await res.blob();
+                    const url = URL.createObjectURL(blob);
+                    setBlobUrl((prev) => {
+                        if (prev) URL.revokeObjectURL(prev);
+                        return url;
+                    });
+                    return; // 성공 시 종료
+                }
+            } catch {
+                // ignore → 다음 후보로
+            }
+        }
+
+        const next = idx + 1;
+        if (next < candidates.length) setIdx(next);
+        else setExhausted(true);
+    };
+
     return (
         <li className="flex items-center gap-3">
-            {currentSrc && !exhausted ? (
+            {displaySrc && !exhausted ? (
                 <img
-                    src={currentSrc}
+                    src={displaySrc}
                     alt={name}
                     className="w-8 h-8 rounded-full object-cover"
-                    referrerPolicy="no-referrer"
                     draggable={false}
-                    onError={() => {
-                        const next = idx + 1;
-                        if (next < candidates.length) setIdx(next);
-                        else setExhausted(true);
-                    }}
+                    onError={onImgError}
                 />
             ) : (
-                <img src={asset("icons/user-default.png")} alt="기본 사용자 아이콘" className="w-8 h-8 rounded-full" />
-
+                <img
+                    src={asset("icons/user-default.png")}
+                    alt="기본 사용자 아이콘"
+                    className="w-8 h-8 rounded-full"
+                />
             )}
 
             <div className="min-w-0 flex-1 leading-tight">
@@ -226,7 +280,7 @@ export default function RoomMemberSheet({
                         onClick={handleLeave}
                         disabled={leaving}
                         className="w-full py-3 text-red-500 font-semibold rounded-xl border border-red-200 disabled:opacity-50
-                        hover:bg-red-50 transition-colors"
+            hover:bg-red-50 transition-colors"
                     >
                         {leaving ? "나가는 중..." : "채팅방 나가기"}
                     </button>

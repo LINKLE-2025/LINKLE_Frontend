@@ -3,7 +3,7 @@ import { ChevronLeft, EllipsisVertical, X } from "lucide-react";
 import type { RoomResponseDTO } from "@/types/chat";
 import { useNavigate } from "react-router-dom";
 import { useMemo, useState, useEffect } from "react";
-import { userProfileUrl, roomBackgroundUrl } from "@/utils/chat";
+import { roomBackgroundUrl } from "@/utils/chat";
 
 const COLOR_ICON_NAME: Record<number, string> = {
   1: "red.png",
@@ -42,6 +42,18 @@ function genderFallbackSrc(g?: string | null) {
   return asset("icons/profile/Default.png");
 }
 
+/** 동일 출처의 /api/* 인지 판단 (blob 재시도 조건) */
+function isSameOriginApi(url: string | undefined) {
+  if (!url) return false;
+  try {
+    if (url.startsWith("/")) return url.startsWith("/api/");
+    const u = new URL(url, window.location.origin);
+    return u.origin === window.location.origin && u.pathname.startsWith("/api/");
+  } catch {
+    return false;
+  }
+}
+
 export default function BackChatProfileHeader({
   room,
   backTo = "/chat",
@@ -60,51 +72,92 @@ export default function BackChatProfileHeader({
   const isDM = room.roomType === "DM";
 
   // DM일 때 partnerId / partnerName / partnerNickname 우선
-  const partnerId = dmUserId ?? (room as any).dmPartnerId ?? room.friendUserId ?? null;
-  const partnerName = dmName ?? (room as any).dmPartnerName ?? room.friendName ?? "(상대)";
-  const partnerNick = dmNick ?? (room as any).dmPartnerNickname ?? room.friendNickname ?? null;
+  const partnerId = dmUserId ?? (room as any).dmPartnerId ?? (room as any).friendUserId ?? null;
+  const partnerName = dmName ?? (room as any).dmPartnerName ?? (room as any).friendName ?? "(상대)";
+  const partnerNick = dmNick ?? (room as any).dmPartnerNickname ?? (room as any).friendNickname ?? null;
 
   const title = isDM ? partnerName : (room.roomName ?? "(이름 없음)");
   const sub = isDM ? partnerNick : null;
 
-  // 아바타 후보
+  // 아바타 후보 구성
   const candidates = useMemo(() => {
     if (isDM) {
       const arr: (string | undefined)[] = [];
       const partnerImg = (room as any).dmPartnerProfileImageUrl as string | undefined;
 
-      // 1) partnerId 기반
-      if (typeof partnerId === "number") arr.push(userProfileUrl(partnerId));
+      // 1) partnerId 기반 공개 뷰 엔드포인트
+      if (typeof partnerId === "number") arr.push(`/api/user/view/profile/${partnerId}`);
 
       // 2) 백에서 내려준 이미지 URL
       if (partnerImg) arr.push(partnerImg);
       if ((room as any).friendImage) arr.push((room as any).friendImage as string);
 
       // 3) 성별 기본 이미지
-      const g = readGender(room as any);
-      arr.push(genderFallbackSrc(g));
+      arr.push(genderFallbackSrc(readGender(room as any)));
 
       return arr.filter(Boolean) as string[];
     }
 
-    // 그룹/클래스
+    // 그룹/클래스: 배경 우선 → 테마 컬러 아이콘
+    const bg = roomBackgroundUrl(room.roomId);
     const colorId = Number(room.themeColor);
-    const name = COLOR_ICON_NAME[colorId as keyof typeof COLOR_ICON_NAME];
-    return [name ? asset(`icons/color/${name}`) : roomBackgroundUrl(room.roomId)].filter(Boolean);
+    const colorName = COLOR_ICON_NAME[colorId as keyof typeof COLOR_ICON_NAME];
+    const colorIcon = colorName ? asset(`icons/color/${colorName}`) : undefined;
+
+    return [bg, colorIcon].filter(Boolean) as string[];
   }, [isDM, partnerId, room]);
 
   const [idx, setIdx] = useState(0);
   const [failed, setFailed] = useState(false);
   const avatarSrc = candidates[idx];
 
-  // 마운트 후에만 버튼/아바타 렌더 
+  // blob 재시도 상태 (모바일 쿠키 미부착 대응)
+  const [blobUrl, setBlobUrl] = useState<string | undefined>(undefined);
+  const [triedAuthFetch, setTriedAuthFetch] = useState(false);
+
+  // 마운트 후에만 버튼/아바타 렌더
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     setIdx(0);
     setFailed(false);
+    setBlobUrl(undefined);
+    setTriedAuthFetch(false);
   }, [room, candidates.length]);
+
+  useEffect(() => {
+    return () => {
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+    };
+  }, [blobUrl]);
+
+  const displaySrc = blobUrl ?? avatarSrc;
+
+  const handleImgError = async () => {
+    // 동일 출처 /api/* 이면 1회 쿠키 포함 fetch로 blob 재시도
+    if (!triedAuthFetch && isSameOriginApi(avatarSrc)) {
+      setTriedAuthFetch(true);
+      try {
+        const res = await fetch(avatarSrc!, { credentials: "include" });
+        if (res.ok) {
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          setBlobUrl((prev) => {
+            if (prev) URL.revokeObjectURL(prev);
+            return url;
+          });
+          return; // 성공 시 종료
+        }
+      } catch {
+        // ignore -> 다음 후보로 진행
+      }
+    }
+
+    const next = idx + 1;
+    if (next < candidates.length) setIdx(next);
+    else setFailed(true);
+  };
 
   return (
     <header className="select-none fixed top-0 w-full flex items-center justify-between bg-white border-b border-gray-200 py-3 px-3 z-50">
@@ -119,22 +172,21 @@ export default function BackChatProfileHeader({
       )}
 
       <div className="flex-1 flex items-center justify-start min-w-0 px-2">
-        {mounted && !failed && avatarSrc ? (
+        {mounted && !failed && displaySrc ? (
           <img
-            src={avatarSrc}
+            src={displaySrc}
             alt={title}
             className="w-10 h-10 rounded-full object-cover mr-2"
-            onError={() => {
-              const next = idx + 1;
-              if (next < candidates.length) setIdx(next);
-              else setFailed(true);
-            }}
+            onError={handleImgError}
             decoding="async"
             draggable={false}
-            referrerPolicy="no-referrer"
           />
         ) : (
-          <img src={asset("icons/user-default.png")} className="w-10 h-10 rounded-full object-cover mr-2" />
+          <img
+            src={asset("icons/user-default.png")}
+            className="w-10 h-10 rounded-full object-cover mr-2"
+            alt="기본 사용자 아이콘"
+          />
         )}
 
         <div className="max-w-[72%] leading-tight">
