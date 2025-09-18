@@ -4,6 +4,9 @@ import type { MemberResponseDTO, RoomResponseDTO } from "@/types/chat";
 import { useMemo, useState, useEffect } from "react";
 import { resolveImageUrl } from "@/utils/chat";
 import RoomMemoModal from "@/components/modal/RoomMemoModal";
+import { useLocation, useNavigate } from "react-router-dom";
+import { getAllFriends, getFriendRelationship } from "@/api/friendApi";
+import type { FriendResponse } from "@/types/friend";
 
 type Props = {
     open: boolean;
@@ -60,10 +63,12 @@ function MemberRow({
     m,
     isSelf,
     showCrown,
+    onClick,
 }: {
     m: MemberResponseDTO & { id?: number; nick?: string };
     isSelf: boolean;
     showCrown?: boolean;
+    onClick?: () => void;
 }) {
     const name = m.name;
     const nick = pickMemberNick(m);
@@ -131,43 +136,49 @@ function MemberRow({
     };
 
     return (
-        <li className="flex items-center gap-3">
-            {displaySrc && !exhausted ? (
-                <img
-                    src={displaySrc}
-                    alt={name}
-                    className="w-8 h-8 rounded-full object-cover"
-                    draggable={false}
-                    onError={onImgError}
-                />
-            ) : (
-                <img
-                    src={asset("icons/user-default.png")}
-                    alt="기본 사용자 아이콘"
-                    className="w-8 h-8 rounded-full"
-                />
-            )}
+        <li>
+            <button
+                type="button"
+                onClick={onClick}
+                className="w-full flex items-center gap-3 text-left rounded-lg hover:bg-gray-50 active:bg-gray-100 px-2 py-1.5 transition"
+            >
+                {displaySrc && !exhausted ? (
+                    <img
+                        src={displaySrc}
+                        alt={name}
+                        className="w-8 h-8 rounded-full object-cover"
+                        draggable={false}
+                        onError={onImgError}
+                    />
+                ) : (
+                    <img
+                        src={asset("icons/user-default.png")}
+                        alt="기본 사용자 아이콘"
+                        className="w-8 h-8 rounded-full"
+                    />
+                )}
 
-            <div className="min-w-0 flex-1 leading-tight">
-                <div className="flex items-center gap-1 text-sm font-semibold text-gray-900 truncate">
-                    <span className="truncate">{name}</span>
-                    {showCrown && (
-                        <Crown
-                            className="w-4 h-4 shrink-0 text-yellow-400 fill-yellow-400"
-                            aria-label="방장"
-                        />
-                    )}
-                    {isSelf && (
-                        <img
-                            src="/icons/profile/isSelf.svg"
-                            alt="본인 프로필"
-                            className="inline-block w-4 h-4 shrink-0"
-                            draggable={false}
-                        />
-                    )}
+                <div className="min-w-0 flex-1 leading-tight">
+                    <div className="flex items-center gap-1 text-sm font-semibold text-gray-900 truncate">
+                        <span className="truncate">{name}</span>
+                        {showCrown && (
+                            <Crown
+                                className="w-4 h-4 shrink-0 text-yellow-400 fill-yellow-400"
+                                aria-label="방장"
+                            />
+                        )}
+                        {isSelf && (
+                            <img
+                                src="/icons/profile/isSelf.svg"
+                                alt="본인 프로필"
+                                className="inline-block w-4 h-4 shrink-0"
+                                draggable={false}
+                            />
+                        )}
+                    </div>
+                    <div className="text-[11px] text-gray-500 truncate">@{nick}</div>
                 </div>
-                <div className="text-[11px] text-gray-500 truncate">@{nick}</div>
-            </div>
+            </button>
         </li>
     );
 }
@@ -184,6 +195,9 @@ export default function RoomMemberSheet({
 }: Props) {
     const [leaving, setLeaving] = useState(false);
     const [memoOpen, setMemoOpen] = useState(false);
+
+    const navigate = useNavigate();
+    const location = useLocation();
 
     const ownerId = (room as any).owner_id ?? (room as any).ownerId;
 
@@ -213,6 +227,76 @@ export default function RoomMemberSheet({
         });
         return base;
     }, [members, currentUserId, room?.roomType, ownerId]);
+
+    // --- 친구목록 캐시: friendId, gender 맵 구성
+    const [friendIndex, setFriendIndex] = useState<Record<number, FriendResponse | undefined>>({});
+    useEffect(() => {
+        (async () => {
+            if (!open) return;
+            if (!currentUserId) return;
+            try {
+                const list = await getAllFriends(Number(currentUserId));
+                const idx: Record<number, FriendResponse> = {};
+                for (const f of list) {
+                    const otherId = f.userId1 === currentUserId ? f.userId2 : f.userId1;
+                    idx[otherId] = f;
+                }
+                setFriendIndex(idx);
+            } catch (err) {
+                console.error("친구 목록 불러오기 실패:", err);
+                setFriendIndex({});
+            }
+        })();
+    }, [open, currentUserId]);
+
+    // --- 멤버 클릭: 관계 조회 후 /profile 이동
+    const handleMemberClick = async (m: MemberResponseDTO) => {
+        if (!currentUserId || !m?.userId) return;
+
+        let type:
+            | "self"
+            | "friend"
+            | "sent"
+            | "received"
+            | "stranger"
+            | undefined;
+
+        if (Number(currentUserId) === Number(m.userId)) {
+            type = "self";
+        } else {
+            try {
+                const relation = await getFriendRelationship(Number(currentUserId), Number(m.userId));
+                if (!relation.exists || relation.state === "NONE") {
+                    type = "stranger";
+                } else if (relation.state === "ACCEPTED") {
+                    type = "friend";
+                } else if (relation.state === "REQUESTED") {
+                    type = relation.userId1 === Number(currentUserId) ? "sent" : "received";
+                }
+            } catch (e) {
+                console.warn("관계 조회 실패, type 생략하고 진행:", e);
+                type = undefined;
+            }
+        }
+
+        const friend = friendIndex[m.userId];
+        const friendId = friend?.friendId;
+        const gender =
+            (friend as any)?.gender ??
+            (m as any)?.gender ??
+            "남성"; // 기본값(백엔드 상황에 맞게 조정)
+
+        navigate("/profile", {
+            state: {
+                userId: m.userId,
+                friendId,
+                gender,
+                pathname: location.pathname,
+                ...(type ? { type } : {}),
+                currentUserId,
+            },
+        });
+    };
 
     const handleLeave = async () => {
         if (leaving) return;
@@ -269,7 +353,13 @@ export default function RoomMemberSheet({
                 <div className="flex-1 overflow-y-auto px-4 py-3">
                     <ul className="space-y-3">
                         {normalizedMembers.map((m) => (
-                            <MemberRow key={m.id} m={m} isSelf={m.isSelf as boolean} showCrown={m.isOwner} />
+                            <MemberRow
+                                key={m.id}
+                                m={m}
+                                isSelf={m.isSelf as boolean}
+                                showCrown={m.isOwner}
+                                onClick={() => handleMemberClick(m)}
+                            />
                         ))}
                     </ul>
                 </div>
