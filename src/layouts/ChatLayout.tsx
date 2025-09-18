@@ -2,7 +2,7 @@ import ChatHeader from "@/components/header/ChatHeader";
 import BackTitleHeader from "@/components/header/BackTitleHeader";
 import BackChatProfileHeader, { BackChatHeaderDMOverride } from "@/components/header/BackChatProfileHeader";
 import MainFooter from "@/components/footer/MainFooter";
-import { Outlet, useLocation } from "react-router-dom";
+import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { JSX, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { RoomResponseDTO } from "@/types/chat";
 
@@ -29,7 +29,7 @@ export default function ChatLayout() {
   const isChatList = pathname === "/chat" || pathname === "/chat/";
   const isCreateRoom = pathname.startsWith("/chat/room/create");
   const isChatRoom = pathname.startsWith("/chat/room/") && !isCreateRoom;
-
+  const navigate = useNavigate();
   const [roomHeader, setRoomHeader] = useState<
     (
       {
@@ -56,7 +56,15 @@ export default function ChatLayout() {
       paddingBottom = "pb-[calc(4.8rem+env(safe-area-inset-bottom))]";
       break;
     case isCreateRoom:  // 채팅방 생성
-      header = <BackTitleHeader title="그룹채팅방 만들기" className="bg-white" />;
+      const location = useLocation();
+      const linkerFromState = location.state?.linker;
+      header = <BackTitleHeader title="그룹채팅방 만들기" className="bg-white"
+        onBack={() => {
+          const linkerId = linkerFromState?.linkerId
+          navigate("/map", { state: { openLinkerId: linkerId } });
+          console.log("채팅방생성뒤로가기: ", linkerId)
+        }}
+      />;
       break;
     case isChatRoom:  // 채팅방
       if (roomHeader) {
