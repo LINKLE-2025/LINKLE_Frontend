@@ -107,17 +107,16 @@ function FriendsListPage() {
       />
 
       {/* 친구 요청 버튼 */}
-      <div className="bg-white mb-2 border-b z-10"
-      >
+      <div className="bg-white m-3 z-10">
         <Link to="/profile/friend/received" className="text-gray-900 font-medium">
           <button
-            className="fixed w-full flex items-center justify-between px-4 py-4 bg-white hover:bg-gray-50 rounded-xl shadow-md mb-4"
+            className="w-full  flex items-center justify-between px-5 py-3.5 bg-white hover:bg-gray-50 rounded-xl shadow-sm border border-gray-200/80"
           >
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 rounded-full flex items-center justify-center mr-2">
-
-                <img src="/icons/friend/User.png"></img>
-              </div> {receivedCount}명의 친구 요청
+                <img src="/icons/friend/User.png" />
+              </div>
+              {receivedCount}명의 친구 요청
             </div>
             <ChevronRight className="w-5 h-5 text-gray-400" />
           </button>
@@ -125,8 +124,7 @@ function FriendsListPage() {
       </div>
 
       {/* 친구 목록 */}
-      <div
-        style={{ marginTop: headerHeight }}></div>
+
       <div className="bg-white flex-1"
       >
         {(debouncedQuery ? filteredFriends : friendList).length > 0 ? (

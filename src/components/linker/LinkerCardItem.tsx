@@ -32,7 +32,7 @@ const LinkerCardItem = ({ linker, onClick }: LinkerCardItemProps) => {
     return (
         <div className="px-3 py-1">
             <div
-                className="p-3 border-b flex items-center gap-3 rounded-xl cursor-pointer hover:shadow-md"
+                className="p-3 border-b flex items-center gap-3 rounded-xl cursor-pointer hover:shadow-sm"
                 style={{ backgroundColor: isDeleted ? "#E5E7EB" : `${bgColor}10` }}
                 onClick={() => {
                     if (!isDeleted && onClick) onClick(linker.linkerId); // 여기서 MapPage의 onOpenDetailById 호출

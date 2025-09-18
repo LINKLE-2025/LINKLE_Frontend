@@ -348,7 +348,7 @@ export default function RoomCreatePage() {
             >
               생성하기
             </button>
-            <button className="py-3 rounded-2xl bg-gray-100" onClick={() => navigate(-1)}>
+            <button className="py-3 rounded-2xl bg-gray-100" onClick={() => navigate("/map", { state: { openLinkerId: linker?.linkerId } })}>
               취소하기
             </button>
           </div>

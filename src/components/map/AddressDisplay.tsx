@@ -199,7 +199,7 @@ export default function AddressDisplay({
       isOpen={isOpen}
       onClose={onClose}
       snapPoints={[0.65, 0.3, 0]}
-      initialSnap={1}
+      initialSnap={0}
       style={{ bottom: footerHeight }}
       {...({ onSpringEnd: (snapIndex: number) => { if (snapIndex === 0) onClose(); } } as any)}
     >

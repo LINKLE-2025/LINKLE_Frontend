@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 
 interface ProfileImageUploaderProps {
     onChange: (file: File | null, previewUrl: string) => void;
@@ -16,7 +16,27 @@ export default function ProfileImageUploader({
     gender,
 }: ProfileImageUploaderProps) {
     const inputRef = useRef<HTMLInputElement>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
     const [menuOpen, setMenuOpen] = useState(false);
+
+    // 외부 클릭 시 메뉴 닫기
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+                setMenuOpen(false);
+            }
+        };
+
+        if (menuOpen) {
+            document.addEventListener("mousedown", handleClickOutside);
+        } else {
+            document.removeEventListener("mousedown", handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [menuOpen]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -65,7 +85,10 @@ export default function ProfileImageUploader({
 
             {/* 옵션 메뉴 */}
             {menuOpen && (
-                <div className="absolute bottom-12 right-0 w-36 bg-white border rounded-lg shadow-md z-50">
+                <div
+                    ref={menuRef}
+                    className="absolute bottom-12 right-0 w-36 bg-white border rounded-lg shadow-md z-50"
+                >
                     <button
                         onClick={handleResetProfile}
                         className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"

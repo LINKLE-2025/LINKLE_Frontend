@@ -1,7 +1,7 @@
 // src/components/chat/BackChatProfileHeader.tsx
 import { ChevronLeft, EllipsisVertical, X } from "lucide-react";
 import type { RoomResponseDTO } from "@/types/chat";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useMemo, useState, useEffect } from "react";
 // ✅ roomBackgroundUrl 대신, 리스트/모달과 동일한 /api 경로를 직접 사용
 
@@ -67,11 +67,13 @@ export default function BackChatProfileHeader({
   dmName,
   dmNick,
   dmUserId,
+  linkerId,
 }: {
   room: RoomResponseDTO;
   backTo?: string;
   onMenuClick?: () => void;
   menuOpen?: boolean;
+  linkerId?: number | null;
 } & BackChatHeaderDMOverride) {
   const navigate = useNavigate();
   const isDM = room.roomType === "DM";
@@ -179,7 +181,8 @@ export default function BackChatProfileHeader({
     if (next < candidates.length) setIdx(next);
     else setFailed(true);
   };
-
+  const location = useLocation();
+  const from = location.state?.from;
   /**
    * 모바일 IMG 쿠키 미부착 대비:
    * 그룹/클래스이고, bg 후보가 있고, same-origin이면
@@ -219,7 +222,15 @@ export default function BackChatProfileHeader({
     <header className="select-none fixed top-0 w-full flex items-center justify-between bg-white border-b border-gray-200 py-3 px-3 z-50">
       {mounted && (
         <button
-          onClick={() => navigate(backTo)}
+          onClick={() => {
+            if (from === "/map") {
+              console.log("채팅지도복귀: ", linkerId)
+              navigate("/map", { state: { openLinkerId: linkerId } }); // /map이면 /map으로 이동
+            } else {
+              navigate(-1); // 그 외에는 이전 페이지로
+              console.log("채팅뒤로가기");
+            }
+          }}
           className="flex items-center justify-center w-10 h-10 rounded-xl hover:bg-gray-100/60 transition-colors"
           aria-label="뒤로가기"
         >
