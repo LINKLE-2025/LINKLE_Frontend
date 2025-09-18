@@ -1,16 +1,61 @@
 import { Home, Search, Send, CircleUserRound } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useMemo, useRef } from "react";
+import type { Dispatch, SetStateAction } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import FooterItem from "./FooterItem";
+import { fetchRooms } from "@/services/chat";
+import type { RoomResponseDTO } from "@/types/chat";
+import { stompClient } from "@/lib/stompClient";
+import { useAuthStore } from "@/store/authStore";
 
 interface MainFooterProps {
   linkerCreateMode?: boolean;
-  setLinkerCreateMode?: React.Dispatch<React.SetStateAction<boolean>>;
+  setLinkerCreateMode?: Dispatch<SetStateAction<boolean>>;
   onResetSearch?: () => void; // 검색 상태 초기화 함수 추가
 }
 
 function MainFooter({ linkerCreateMode, setLinkerCreateMode, onResetSearch }: MainFooterProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
+  const user = useAuthStore((s) => s.user);
+
+  // 방 목록 구독 (캐시가 없으면 1회 로드, 있으면 캐시만 구독)
+  const { data: rooms } = useQuery<RoomResponseDTO[]>({
+    queryKey: ["chatRooms"],
+    queryFn: fetchRooms,
+    staleTime: 10_000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
+
+  // 전체 미읽음 합계
+  const unreadTotal = useMemo(
+    () =>
+      (rooms ?? []).reduce((sum, r: any) => {
+        const n = Number(r?.unreadCount ?? 0);
+        return sum + (Number.isFinite(n) ? Math.max(0, n) : 0);
+      }, 0),
+    [rooms],
+  );
+
+  // 유저 토픽 구독 → 방 목록 최신화(invalidate). 다른 페이지에서도 실시간 반영.
+  const rafRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!user?.userId) return;
+    const topic = `/sub/users.${user.userId}.room-updates`;
+    const off = stompClient.subscribe(topic, () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(() => {
+        queryClient.invalidateQueries({ queryKey: ["chatRooms"] });
+      }) as unknown as number;
+    });
+    return () => {
+      try { off?.(); } catch { }
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [user?.userId, queryClient]);
 
   const handleHomeClick = () => {
     onResetSearch?.(); // 🔥 검색 상태 초기화
@@ -28,6 +73,22 @@ function MainFooter({ linkerCreateMode, setLinkerCreateMode, onResetSearch }: Ma
       setLinkerCreateMode?.((prev) => !prev);
     }
   };
+
+  // ✈️ 아이콘 + 미읽음 배지
+  const chatIcon = (
+    <div className="relative">
+      <Send className="w-6 h-6" strokeWidth={1.7} />
+      {unreadTotal > 0 && (
+        <span
+          className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white
+                     text-[10px] leading-4 text-center border border-white shadow-sm"
+          aria-label={`안 읽은 메시지 ${unreadTotal}개`}
+        >
+          {unreadTotal > 99 ? "99+" : unreadTotal}
+        </span>
+      )}
+    </div>
+  );
 
   return (
     <footer className='select-none w-full bg-white border-t z-40 border-gray-200 text-gray-400
@@ -69,7 +130,7 @@ function MainFooter({ linkerCreateMode, setLinkerCreateMode, onResetSearch }: Ma
         </button>
         <FooterItem
           to="/chat"
-          icon={<Send className="w-6 h-6" strokeWidth={1.7} />}
+          icon={chatIcon} // ✅ 배지가 얹힌 아이콘
           label="채팅"
           linkerCreateMode={linkerCreateMode}
           setLinkerCreateMode={setLinkerCreateMode}
