@@ -182,7 +182,7 @@ export default function ChatListItem({
         </div>
 
         <div className="flex items-center justify-between gap-2">
-          <p className="text-sm text-gray-500 truncate">{preview}</p>
+          <p className="text-xs xs:text-sm text-gray-500 truncate">{preview}</p>
 
           {unread > 0 && (
             <span
