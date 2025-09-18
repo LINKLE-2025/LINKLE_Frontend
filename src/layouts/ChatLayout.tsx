@@ -69,6 +69,7 @@ export default function ChatLayout() {
             dmName={roomHeader.dmName}
             dmNick={roomHeader.dmNick}
             dmUserId={roomHeader.dmUserId}
+            linkerId={roomHeader.room.linkerId}
           />
         );
       }

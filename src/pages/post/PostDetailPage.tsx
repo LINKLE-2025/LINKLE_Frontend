@@ -34,6 +34,8 @@ export default function PostDetailPage(): React.ReactElement {
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
+
+
   // ----------------------------
   // 친구 값 불러 오기
   const [friendList, setFriendList] = useState<FriendResponse[]>([]);
@@ -132,14 +134,26 @@ export default function PostDetailPage(): React.ReactElement {
 
   // 🔥 프로필 이미지 최종 경로 (DB 값 or 기본 이미지)
   const profileImageUrl = profile?.profileImageUrl ?? "/icons/profile/Man.png";
-
+  const from = location.state?.from;
 
 
   return (
     <div className="flex flex-col min-h-screen w-full" style={{ paddingBottom: `${footerHeight}px` }}>
       <BackTitleHeader
         title={isEditing ? "포스트 수정" : "포스트"}
-        onBack={isEditing ? () => setIsEditing(false) : undefined}
+        onBack={
+          isEditing
+            ? () => setIsEditing(false)
+            : () => {
+              if (from === "/map") {
+                navigate("/map", { state: { openLinkerId: post.linker.linkerId } });
+                console.log("map으로 이동");
+              } else {
+                navigate(-1);
+                console.log("뒤로 가기 실행");
+              }
+            }
+        }
       />
       <PostForm
         key={`${post.postId}-${isEditing ? "edit" : "view"}`}
