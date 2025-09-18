@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import LinkerCardItem from "../linker/LinkerCardItem";
+import { CATEGORY_DATA } from "@/constants/categoryData";
 
 interface Linker {
   linkerId: number;
@@ -19,7 +20,10 @@ interface ParticipationTabProps {
 
 function ParticipationTab({ participations }: ParticipationTabProps) {
   const navigate = useNavigate();
-  const [visibleCount, setVisibleCount] = useState(10); // 처음엔 10개만 보여줌
+
+  // 카테고리 필터 상태
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   if (!participations || participations.length === 0) {
     return (
@@ -37,48 +41,99 @@ function ParticipationTab({ participations }: ParticipationTabProps) {
     );
   }
 
+  // "삭제된(DELETED)" 링커는 맨 뒤로
   const sortedParticipations = [...participations].sort((a, b) => {
     if (a.state === "DELETED" && b.state !== "DELETED") return 1;
     if (a.state !== "DELETED" && b.state === "DELETED") return -1;
     return 0;
   });
 
-  const visibleParticipations = sortedParticipations.slice(0, visibleCount);
+  // 카테고리 필터 적용
+  const filteredParticipations = selectedCategory
+    ? sortedParticipations.filter((p) => p.categoryId === selectedCategory)
+    : sortedParticipations;
 
   return (
     <div>
-      <div className="ml-3 mt-3 text-left text-sm font-medium text-gray-700">
-        {participations.length}개의 링커 참여함
+      {/* 상단 필터 영역 */}
+      <div className="flex justify-between items-center px-3 mt-3">
+        <div className="text-left text-sm font-medium text-gray-700">
+          {participations.length}개의 링커 참여함
+        </div>
+
+        <div className="relative">
+          <button
+            onClick={() => setDropdownOpen((prev) => !prev)}
+            className="px-3 py-0.5 bg-gray-100 rounded-md text-sm flex items-center gap-2 hover:bg-gray-200"
+          >
+            {selectedCategory
+              ? CATEGORY_DATA.find((c, idx) => idx + 1 === selectedCategory)?.name
+              : "전체"}
+            <svg
+              className={`w-4 h-4 transform transition-transform ${dropdownOpen ? "rotate-180" : "rotate-0"
+                }`}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {dropdownOpen && (
+            <div className="absolute right-0 mt-2 w-28 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
+              {/* 전체 버튼 */}
+              <button
+                onClick={() => {
+                  setSelectedCategory(null);
+                  setDropdownOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 ${selectedCategory === null ? "font-semibold text-blue-500" : ""
+                  }`}
+              >
+                전체
+              </button>
+
+              {/* 카테고리 목록 (13번 신한 제외) */}
+              {CATEGORY_DATA.filter((_, idx) => idx !== 12).map((cat, idx) => (
+                <button
+                  key={cat.name}
+                  onClick={() => {
+                    setSelectedCategory(idx + 1); // categoryId는 1부터 시작한다고 가정
+                    setDropdownOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 flex items-center gap-2 ${selectedCategory === idx + 1 ? "font-semibold text-blue-500" : ""
+                    }`}
+                >
+                  <img src={cat.icon} alt={cat.name} className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{cat.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {visibleParticipations.map((linker) => {
-        const isDeleted = linker.state === "DELETED";
-        return (
-          <div
-            key={linker.linkerId}
-            className={isDeleted ? "cursor-default" : "cursor-pointer"}
-            onClick={() => {
-              if (!isDeleted) {
-                navigate("/map", { state: { openLinkerId: linker.linkerId } });
-              }
-            }}
-          >
-            <LinkerCardItem linker={linker} />
-          </div>
-        );
-      })}
-
-      {/* 더보기 버튼 */}
-      {visibleCount < sortedParticipations.length && (
-        <div className="flex justify-center my-4">
-          <button
-            onClick={() => setVisibleCount((prev) => prev + 10)}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-          >
-            더보기
-          </button>
-        </div>
-      )}
+      {/* 참여한 링커 카드들 */}
+      <div className="mt-3">
+        {filteredParticipations.map((linker) => {
+          const isDeleted = linker.state === "DELETED";
+          return (
+            <div
+              key={linker.linkerId}
+              className={isDeleted ? "cursor-default" : "cursor-pointer"}
+              onClick={() => {
+                if (!isDeleted) {
+                  navigate("/map", { state: { openLinkerId: linker.linkerId } });
+                }
+              }}
+            >
+              <LinkerCardItem linker={linker} />
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

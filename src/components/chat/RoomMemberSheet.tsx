@@ -238,8 +238,8 @@ export default function RoomMemberSheet({
                 const list = await getAllFriends(Number(currentUserId));
                 const idx: Record<number, FriendResponse> = {};
                 for (const f of list) {
-                    const otherId = f.userId1 === currentUserId ? f.userId2 : f.userId1;
-                    idx[otherId] = f;
+                    idx[f.userId1] = f;
+                    idx[f.userId2] = f;
                 }
                 setFriendIndex(idx);
             } catch (err) {
@@ -253,25 +253,23 @@ export default function RoomMemberSheet({
     const handleMemberClick = async (m: MemberResponseDTO) => {
         if (!currentUserId || !m?.userId) return;
 
-        let type:
-            | "self"
-            | "friend"
-            | "sent"
-            | "received"
-            | "stranger"
-            | undefined;
+        let type: "self" | "friend" | "sent" | "received" | "stranger" | undefined;
+        let friendId: number | undefined;
 
         if (Number(currentUserId) === Number(m.userId)) {
             type = "self";
         } else {
             try {
                 const relation = await getFriendRelationship(Number(currentUserId), Number(m.userId));
+
                 if (!relation.exists || relation.state === "NONE") {
                     type = "stranger";
                 } else if (relation.state === "ACCEPTED") {
                     type = "friend";
+                    friendId = relation.friendId;   // 서버 응답에서 friendId 가져오기
                 } else if (relation.state === "REQUESTED") {
                     type = relation.userId1 === Number(currentUserId) ? "sent" : "received";
+                    friendId = relation.friendId;   // 요청 상태에서도 friendId 있음
                 }
             } catch (e) {
                 console.warn("관계 조회 실패, type 생략하고 진행:", e);
@@ -279,17 +277,14 @@ export default function RoomMemberSheet({
             }
         }
 
-        const friend = friendIndex[m.userId];
-        const friendId = friend?.friendId;
-        const gender =
-            (friend as any)?.gender ??
-            (m as any)?.gender ??
-            "남성"; // 기본값(백엔드 상황에 맞게 조정)
+        // 보조적으로 friendIndex에서 gender 가져오기
+        const friend = friendIndex[Number(m.userId)];
+        const gender = (friend as any)?.gender ?? (m as any)?.gender ?? "남성";
 
         navigate("/profile", {
             state: {
                 userId: m.userId,
-                friendId,
+                friendId,  // ✅ relation 기반으로 보장
                 gender,
                 pathname: location.pathname,
                 ...(type ? { type } : {}),

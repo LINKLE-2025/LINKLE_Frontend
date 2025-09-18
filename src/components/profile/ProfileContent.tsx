@@ -208,7 +208,11 @@ function ProfileContent({
           <img
             src={profileBackgroundSrc}
             className="absolute inset-0 w-full h-full object-cover cursor-pointer"
-            onClick={() => setPreviewImage(profileBackgroundSrc)} // 👈 추가
+            onClick={() => {
+              if (!isDefaultBackground) {
+                setPreviewImage(profileBackgroundSrc);
+              }
+            }}
           />
         </div>
         {/* 상단 바 */}
@@ -254,8 +258,13 @@ function ProfileContent({
             <img
               src={profileImageSrc}
               alt={`${name} 프로필`}
-              className={`w-14 h-14 object-cover rounded-full cursor-pointer ${isDefault ? 'opacity-65 bg-blue-100' : ''}`}
-              onClick={() => setPreviewImage(profileImageSrc)}
+              className={`w-14 h-14 object-cover rounded-full ${isDefault ? "opacity-65 bg-blue-100 cursor-default" : "cursor-pointer"
+                }`}
+              onClick={() => {
+                if (!isDefault) {
+                  setPreviewImage(profileImageSrc);
+                }
+              }}
             />
           </div>
           {/* 사용자 이름 및 닉네임 */}
