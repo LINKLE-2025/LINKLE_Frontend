@@ -220,7 +220,7 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
       //   await joinRoom(r.roomId);
       // }
 
-      navigate(`/chat/room/${r.roomId}`);
+      navigate(`/chat/room/${r.roomId}`, { state: { from: location.pathname } });
     } catch (e) {
       console.error(e);
       alert("방 참가에 실패했습니다.");
@@ -338,7 +338,7 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
                     key={p.postId}
                     className="aspect-square bg-gray-100"
                     title={p.content ?? ""}
-                    onClick={() => navigate(`/post/${p.postId}`, { state: { linker: detail } })}
+                    onClick={() => navigate(`/post/${p.postId}`, { state: { linker: detail, from: "/map" } })}
                   >
                     {p.imageUrl ? (
                       <img src={p.imageUrl} alt="" className="h-full w-full object-cover" />
