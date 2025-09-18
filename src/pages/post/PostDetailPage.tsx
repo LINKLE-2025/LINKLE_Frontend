@@ -7,7 +7,8 @@ import { getCurrentUserId } from "@/api/authApi";
 import BackTitleHeader from "@/components/header/BackTitleHeader";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { FriendResponse } from "@/types/friend";
-import { getFriends } from "@/api/friendApi";
+import { getAllFriends } from "@/api/friendApi";
+
 
 type PostDTO = {
   postId: number;
@@ -41,7 +42,7 @@ export default function PostDetailPage(): React.ReactElement {
     (async () => {
       try {
         if (!currentUserId) return;
-        const data = await getFriends(Number(currentUserId));
+        const data = await getAllFriends(Number(currentUserId));
         setFriendList(data);
       } catch (err) {
         console.error("친구 목록 불러오기 실패:", err);
@@ -57,9 +58,6 @@ export default function PostDetailPage(): React.ReactElement {
         friend.userId1 === post.userId || friend.userId2 === post.userId
     );
   }, [post, friendList]);
-
-  console.log('asdasdsadsadasdsa')
-  console.log("adafas", friendList)
   // ----------------------------
 
   // 현재 로그인한 유저 ID 가져오기
@@ -143,7 +141,6 @@ export default function PostDetailPage(): React.ReactElement {
         title={isEditing ? "포스트 수정" : "포스트"}
         onBack={isEditing ? () => setIsEditing(false) : undefined}
       />
-
       <PostForm
         key={`${post.postId}-${isEditing ? "edit" : "view"}`}
         linker={post.linker}
@@ -158,13 +155,14 @@ export default function PostDetailPage(): React.ReactElement {
         footerOffset={footerHeight}
         name={profile?.name}
         userNickname={profile?.nickname}
-        profileImageUrl={profileImageUrl} // ✅ DB 이미지 반영
-        // -------------------
+        profileImageUrl={profileImageUrl}
+
+        // ---------------
         userId={post.userId}
         friendId={friendInfo?.friendId}
-        gender={friendInfo?.gender}
-      // -------------------
-
+        currentUserId={Number(currentUserId)}
+        gender={friendInfo?.gender ?? "남성"}
+      // ---------------
       />
 
       {isMine && !isEditing && (
