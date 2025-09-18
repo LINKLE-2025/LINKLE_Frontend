@@ -133,13 +133,13 @@ export default function RoomCreatePage() {
     >
       <main
         className={[
-          "w-full max-w-md mx-auto px-2 sm:px-0",
+          "w-full max-w-md mx-auto px-2 xs:px-2 sm:px-0",
           "pb-[calc(env(safe-area-inset-bottom)+2rem)]",
           "min-h-[100dvh]",
         ].join(" ")}
       >
         {/* 프리뷰: 파일이 있으면 파일, 없으면 컬러 아이콘 */}
-        <div className="mt-6 mx-auto w-1/2 aspect-square rounded-2xl flex items-center justify-center overflow-hidden relative">
+        <div className="mt-4 mx-auto w-1/2 aspect-square rounded-2xl flex items-center justify-center overflow-hidden relative">
           {bgPreview ? (
             <>
               <img
@@ -170,7 +170,7 @@ export default function RoomCreatePage() {
         {/* 팔레트 + 카메라 */}
         <div className="mt-5">
           <div className="text-xs text-gray-600 text-left mb-1">채팅방 테마 선택</div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             {COLORS.map((c) => {
               const isActive = themeColor === c.id;
               return (
@@ -201,11 +201,11 @@ export default function RoomCreatePage() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="ml-1 flex items-center justify-center w-8 h-8 rounded-full border-2 bg-white text-gray-700 hover:bg-gray-50"
+              className="flex items-center justify-center w-9 h-9 rounded-full border-2 bg-white text-gray-700 hover:bg-gray-50 transition-colors duration-150"
               style={{ WebkitTapHighlightColor: "transparent", touchAction: "manipulation" }}
               aria-label="배경 이미지 업로드"
             >
-              <Camera className="w-5 h-5" />
+              <Camera className="w-5 h-5 text-linkleGray" />
             </button>
             <input
               ref={fileInputRef}

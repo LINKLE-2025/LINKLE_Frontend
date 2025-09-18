@@ -8,7 +8,7 @@ import BackTitleHeader from "@/components/header/BackTitleHeader";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { FriendResponse } from "@/types/friend";
 import { getAllFriends } from "@/api/friendApi";
-
+import { Edit } from "lucide-react";
 
 type PostDTO = {
   postId: number;
@@ -138,7 +138,8 @@ export default function PostDetailPage(): React.ReactElement {
 
 
   return (
-    <div className="flex flex-col min-h-screen w-full" style={{ paddingBottom: `${footerHeight}px` }}>
+    <div className="flex flex-col min-h-screen w-full">
+      {/* 헤더 */}
       <BackTitleHeader
         title={isEditing ? "포스트 수정" : "포스트"}
         onBack={
@@ -155,6 +156,8 @@ export default function PostDetailPage(): React.ReactElement {
             }
         }
       />
+
+      {/* 포스트 작성 폼 */}
       <PostForm
         key={`${post.postId}-${isEditing ? "edit" : "view"}`}
         linker={post.linker}
@@ -166,7 +169,6 @@ export default function PostDetailPage(): React.ReactElement {
         onDelete={handleDelete}
         readOnly={!(isMine && isEditing)}
         showDeleteButton={isMine}
-        footerOffset={footerHeight}
         name={profile?.name}
         userNickname={profile?.nickname}
         profileImageUrl={profileImageUrl}
@@ -179,10 +181,15 @@ export default function PostDetailPage(): React.ReactElement {
       // ---------------
       />
 
+      {/* 수정 버튼 */}
       {isMine && !isEditing && (
-        <div className="fixed bottom-2 right-4 z-40" style={{ paddingBottom: footerHeight }}>
-          <button className="px-4 py-2" onClick={() => setIsEditing(true)}>
-            <img src="/icons/post/FixPost.png" alt="edit" />
+        <div className="fixed bottom-6 right-5 z-40">
+          <button
+            className="flex flex-row items-center border rounded-xl px-3 py-1.5 gap-1.5
+            bg-white shadow-sm hover:bg-gray-50 transition duration-75"
+            onClick={() => setIsEditing(true)}>
+            <Edit className="w-4 text-gray-700" />
+            <p className="text-gray-700 text-[14px] font-semibold">포스트 수정</p>
           </button>
         </div>
       )}

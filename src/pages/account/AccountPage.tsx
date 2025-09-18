@@ -283,13 +283,13 @@ export default function AccountPage() {
                                 {/* 우측: 입금/출금 + 금액 */}
                                 <div className="flex flex-col items-end text-right">
                                     <p
-                                        className={`text-xs font-bold ${item.amount > 0 ? "text-blue-600/90" : "text-red-600/90"
+                                        className={`text-xs font-bold ${item.amount > 0 ? "text-red-600/90" : "text-blue-600/90"
                                             }`}
                                     >
                                         {item.amount > 0 ? "입금" : "출금"}
                                     </p>
                                     <p
-                                        className={`xxs:text-lg font-bold ${item.amount > 0 ? "text-blue-600/90" : "text-red-600/90"
+                                        className={`xxs:text-lg font-bold ${item.amount > 0 ? "text-red-600/90" : "text-blue-600/90"
                                             }`}
                                     >
                                         {Math.abs(item.amount).toLocaleString()}원

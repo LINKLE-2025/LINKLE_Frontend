@@ -107,7 +107,7 @@ img {
 .custom-wrap {
   position: relative;
   width: auto;
-  max-width: 180px;
+  max-width: 280px;
   bottom: 38px;
   text-align: center;
   font-family: "Malgun Gothic", dotum, sans-serif;
@@ -117,15 +117,17 @@ img {
 .custom-info {
   position: relative;
   background: #ffffff;
-  border-radius: 8px;
+  border-radius: 10px;
+  border: 1px solid #dddddd;
+  display: inline-block;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  padding: 6px 12px;
+  padding: 7px 12px;
 }
 
 .custom-info-content {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: #111827;
+  color: #111827e5;
   white-space: nowrap;
 }
 
@@ -138,10 +140,10 @@ img {
 .custom-info:after {
   content: "";
   position: absolute;
-  bottom: -8px;
+  bottom: -13px;
   left: 50%;
   transform: translateX(-50%);
-  border-width: 8px 8px 0;
+  border-width: 15px 9px 0;
   border-style: solid;
   border-color: #ffffff transparent transparent transparent;
 }

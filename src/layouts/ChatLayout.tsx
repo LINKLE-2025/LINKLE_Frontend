@@ -120,7 +120,7 @@ export default function ChatLayout() {
   }, [isChatRoom, roomHeader]);
 
   return (
-    <div className="h-[100dvh] flex flex-col overflow-hidden text-black">
+    <div className="h-[100dvh] flex flex-col text-black">
       <div ref={headerHostRef}>
         {header}
       </div>

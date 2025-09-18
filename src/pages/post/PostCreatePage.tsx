@@ -44,7 +44,12 @@ export default function PostCreatePage(): React.ReactElement {
       (async () => {
         try {
           const j = await getLinker(linkerId);
-          setLinker({ linkerId: j.linkerId, name: j.name, address: j.address ?? j.addressName });
+          setLinker({
+            linkerId: j.linkerId,
+            name: j.name,
+            categoryId: j.categoryId,
+            address: j.address ?? j.addressName,
+          });
         } catch {
           alert("링커 조회 실패");
         }
@@ -82,6 +87,10 @@ export default function PostCreatePage(): React.ReactElement {
 
   return (
     <div className="flex w-full flex-col">
+      {/* 헤더 */}
+      <BackTitleHeader title="새 포스트 만들기" className="bg-white" />
+
+      {/* 포스트 작성 폼 */}
       <BackTitleHeader title="새 포스트 만들기" className="bg-white"
         onBack={() => navigate("/map", { state: { openLinkerId: linker?.linkerId ?? linkerId } })}
       />
@@ -91,7 +100,6 @@ export default function PostCreatePage(): React.ReactElement {
         submitLabel="작성하기"
         onClickLinker={goToLinkerOnMap}
         onSubmit={handleSubmit}
-        footerOffset={footerHeight}
         showDeleteButton={false}
         name={meProfile?.name}
         userNickname={meProfile?.nickname}
