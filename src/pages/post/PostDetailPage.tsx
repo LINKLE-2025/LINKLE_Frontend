@@ -6,9 +6,9 @@ import { getPost, updatePost, deletePost } from "@/api/postApi";
 import { getCurrentUserId } from "@/api/authApi";
 import BackTitleHeader from "@/components/header/BackTitleHeader";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { Edit } from "lucide-react";
 import { FriendResponse } from "@/types/friend";
 import { getAllFriends } from "@/api/friendApi";
+import { Edit } from "lucide-react";
 
 type PostDTO = {
   postId: number;
