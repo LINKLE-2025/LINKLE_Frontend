@@ -82,7 +82,9 @@ export default function PostCreatePage(): React.ReactElement {
 
   return (
     <div className="flex w-full flex-col">
-      <BackTitleHeader title="새 포스트 만들기" className="bg-white" />
+      <BackTitleHeader title="새 포스트 만들기" className="bg-white"
+        onBack={() => navigate("/map", { state: { openLinkerId: linker?.linkerId ?? linkerId } })}
+      />
       <PostForm
         linker={linker ?? undefined}
         submitting={submitting}
