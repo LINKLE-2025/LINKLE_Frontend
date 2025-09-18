@@ -103,12 +103,18 @@ export default function ChatPage() {
     setParams(params, { replace: true });
   };
 
-  // ---- 이벤트 핸들러 (공통 적용) ----
+  // ⬇️ ChatPage.tsx: applyEventToCache 교체
   const applyEventToCache = (evt: any) => {
     queryClient.setQueryData<RoomResponseDTO[]>(["chatRooms"], (prev) => {
       if (!prev) return prev;
 
-      const rid = evt?.roomId ?? evt?.room?.id ?? evt?.id;
+      // roomId 다양성 케이스 보강
+      const rid =
+        evt?.roomId ??
+        evt?.room?.id ??
+        evt?.room?.roomId ??
+        evt?.id ??
+        evt?.message?.roomId;
       if (rid == null) return prev;
 
       const idx = prev.findIndex((r) => sameId((r as any).roomId, rid));
@@ -117,43 +123,61 @@ export default function ChatPage() {
       const before: any = prev[idx];
       const updated: any = { ...before };
 
-      const type = String(evt?.type ?? evt?.eventType ?? "").toUpperCase();
+      const type = String(evt?.type ?? evt?.eventType ?? evt?.messageType ?? "").toUpperCase();
+      const msgType = String(evt?.messageType ?? "").toUpperCase(); // IMAGE 등 처리용
 
-      // 미리보기/시간 폴백
-      const preview =
+      // 📌 미리보기 추출(우선순위 넓힘)
+      let preview: string | undefined =
         evt?.preview ??
         evt?.lastMessage ??
         evt?.lastMessagePreview ??
         evt?.text ??
-        (typeof evt?.content === "string" ? evt.content : undefined);
+        evt?.content ??
+        evt?.message?.text ??
+        evt?.message?.content ??
+        undefined;
 
+      // 이미지/파일이면 대체 문구
+      if (!preview && (msgType === "IMAGE" || type.includes("IMAGE"))) {
+        preview = "(사진)";
+      }
+
+      // 시간도 다양한 키에서 뽑기
       const when =
         evt?.createdDate ??
         evt?.sentAt ??
         evt?.lastMessageDate ??
         evt?.lastMessageAt ??
+        evt?.message?.createdDate ??
+        evt?.message?.sentAt ??
         null;
 
-      if (typeof preview === "string") updated.lastMessagePreview = preview;
-      if (when) updated.lastMessageDate = when;
+      if (typeof preview === "string") {
+        updated.lastMessagePreview = preview;
+        updated.lastMessage = preview;
+      }
+      if (when) {
+        updated.lastMessageDate = when;
+        (updated as any).lastMessageAt = when; // 정렬/표시 양쪽 호환
+      }
 
       // --- unread 갱신 ---
       const looksLikeRead = type.includes("READ") || type.includes("ACK");
       if (looksLikeRead) {
-        // ✅ 내가 읽은 경우에만 0 처리 (남이 읽은 READ 이벤트는 무시)
         const readerId = evt?.readerId ?? evt?.userId ?? evt?.reader?.id;
         const isMyRead =
           typeof readerId === "number" &&
           typeof currentUserId === "number" &&
           readerId === currentUserId;
-
-        updated.unreadCount = isMyRead
-          ? 0
-          : Number(before.unreadCount ?? 0); // 남이 읽은 건 유지
+        updated.unreadCount = isMyRead ? 0 : Number(before.unreadCount ?? 0);
       } else if (typeof evt?.unreadCount === "number") {
         updated.unreadCount = Math.max(0, evt.unreadCount);
-      } else if (type === "MESSAGE_CREATED" || type === "ROOM_LAST_MESSAGE_UPDATED") {
-        const sid = evt?.senderId ?? evt?.sender?.id ?? evt?.userId;
+      } else if (
+        type === "MESSAGE_CREATED" ||
+        type === "NEW_MESSAGE" ||
+        type === "ROOM_LAST_MESSAGE_UPDATED"
+      ) {
+        const sid = evt?.senderId ?? evt?.sender?.id ?? evt?.userId ?? evt?.message?.senderId;
         const isMine =
           typeof sid === "number" &&
           typeof currentUserId === "number" &&
@@ -168,6 +192,7 @@ export default function ChatPage() {
       return sortByLastMessage(next);
     });
   };
+
 
   // ✅ 유저 단일 토픽 구독
   useEffect(() => {
