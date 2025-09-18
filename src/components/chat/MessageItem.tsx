@@ -1,7 +1,7 @@
 // src/components/chat/MessageItem.tsx
 import { useEffect, useMemo, useState } from "react";
 import type { MessageResponseDTO } from "@/types/chat";
-import { formatTimeLabel } from "@/utils/chat";
+// import { formatTimeLabel } from "@/utils/chat"; // ← 더 이상 사용 안 함
 import { getCurrentUserId } from "@/api/authApi";
 
 const DEV_UID = await getCurrentUserId().catch(() => { });
@@ -12,6 +12,19 @@ function genderFallbackSrc(gender?: string | null) {
   if (gender === "여성") return "/icons/profile/Woman.png";
   return "/icons/profile/Default.png";
 }
+
+/** KR 고정 포맷: "오전 5:01" */
+function formatTimeAmPmKR(input: string | number | Date) {
+  const d = new Date(input);
+  const h24 = d.getHours();
+  const m = d.getMinutes();
+  const ampm = h24 < 12 ? "오전" : "오후";
+  let h12 = h24 % 12;
+  if (h12 === 0) h12 = 12; // 0시는 12로
+  const mm = String(m).padStart(2, "0");
+  return `${ampm} ${h12}:${mm}`;
+}
+
 
 export default function MessageItem({
   m,
@@ -93,8 +106,9 @@ export default function MessageItem({
 
           {isMine ? (
             <div className="flex items-end gap-1.5">
+              {/* ▼ 고정 포맷 사용 */}
               <div className="text-[11px] text-gray-500 mb-0.5 whitespace-nowrap">
-                {formatTimeLabel(m.createdDate)}
+                {formatTimeAmPmKR(m.createdDate)}
               </div>
               <div className="inline-block px-3 py-2 rounded-2xl bg-[#f5f5f5] border border-gray-300 shadow-sm whitespace-pre-wrap break-words">
                 {m.content}
@@ -105,8 +119,9 @@ export default function MessageItem({
               <div className="inline-block px-3 py-2 rounded-2xl bg-white border border-gray-300 shadow-sm whitespace-pre-wrap break-words">
                 {m.content}
               </div>
+              {/* ▼ 고정 포맷 사용 */}
               <div className="text-[11px] text-gray-500 mb-0.5 whitespace-nowrap">
-                {formatTimeLabel(m.createdDate)}
+                {formatTimeAmPmKR(m.createdDate)}
               </div>
             </div>
           )}
