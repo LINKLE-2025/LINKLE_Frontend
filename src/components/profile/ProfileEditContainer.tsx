@@ -94,6 +94,7 @@ export default function ProfileEditContainer({ userId }: { userId: number }) {
           setProfilePreview(previewUrl);
 
         }}
+        gender={gender}
       />
 
 
