@@ -166,7 +166,13 @@ export default function LinkerCreateModal({
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
                   className='w-full rounded-lg border border-gray-300 px-3 py-2.5'
+                  maxLength={24}
                 />
+                {tags.length >= 24 && (
+                  <div className="mt-1 text-xs text-red-500">
+                    최대 24자까지 입력 가능합니다.
+                  </div>
+                )}
               </div>
               {/* 주소 */}
               <div>
