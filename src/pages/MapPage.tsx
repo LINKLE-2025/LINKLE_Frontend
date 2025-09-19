@@ -740,7 +740,7 @@ export default function MapPage(): React.ReactElement {
       (l) => normalize(l.name) === key || normalize(l.addressName) === key,
     );
     if (matches.length === 0) {
-      alert("일치하는 링커가 없어요!");
+      alert("해당 위치에 생성된 링커가 없습니다.");
       return;
     }
     setFilteredLinkers(matches);

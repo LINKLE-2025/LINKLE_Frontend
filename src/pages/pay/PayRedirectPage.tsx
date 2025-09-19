@@ -37,7 +37,7 @@ const PayRedirectPage = () => {
             } finally {
                 setLoading(false);
                 setTimeout(() => {
-                    navigate("/balance");
+                    navigate("/profile/account");
                 }, 2000);
             }
         };
@@ -59,8 +59,8 @@ const PayRedirectPage = () => {
                 ) : (
                     <p
                         className={`text-lg font-bold ${msg.includes("성공")
-                                ? "text-indigo-600"
-                                : "text-red-500"
+                            ? "text-indigo-600"
+                            : "text-red-500"
                             }`}
                     >
                         {msg}
