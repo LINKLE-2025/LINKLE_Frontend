@@ -51,7 +51,9 @@ function TotalSearchPage() {
         [handleSearch, searchQuery]
     );
 
-
+    if (isAuthLoading) {
+        return <div></div>;
+    }
 
     return (
         <div className="h-screen flex flex-col bg-white">
