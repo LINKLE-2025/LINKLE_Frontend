@@ -1,4 +1,3 @@
-// src/components/chat/MessageList.tsx
 import type { MessageResponseDTO, MemberResponseDTO } from "@/types/chat";
 import React, { useEffect, useCallback, useRef, useState } from "react";
 import MessageItem from "./MessageItem";
@@ -47,7 +46,22 @@ export default function MessageList({
   const prevFirstIdRef = useRef<number | undefined>(undefined);
   const prevLastIdRef = useRef<number | undefined>(undefined);
 
-  // mount 시 실제 바닥 상태로 초기화 (초기 true 금지!)
+  // ★ mount 후 안전망: 컨테이너 준비 뒤 1회 하단으로
+  const initialScrollDoneRef = useRef(false);
+  useEffect(() => {
+    if (initialScrollDoneRef.current) return;
+    const el = listContainerRef.current;
+    if (!el) return;
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        if (!el) return;
+        el.scrollTop = el.scrollHeight;
+        initialScrollDoneRef.current = true;
+      }),
+    );
+  }, [listContainerRef, msgs.length]);
+
+  // mount 시 실제 바닥 상태로 초기화
   useEffect(() => {
     const el = listContainerRef.current;
     if (!el) return;
@@ -63,17 +77,13 @@ export default function MessageList({
     const prevFirst = prevFirstIdRef.current;
     const prevLast = prevLastIdRef.current;
 
-    // 초기 렌더 또는 비교 불가 시
     if (prevFirst === undefined || prevLast === undefined) {
       prevFirstIdRef.current = firstId;
       prevLastIdRef.current = lastId;
       return { isAppend: false, isPrepend: false };
     }
 
-    // prepend: 마지막은 그대로, 첫 번째만 바뀜(위로 과거 추가)
     const isPrepend = lastId === prevLast && firstId !== prevFirst;
-
-    // append: 첫 번째는 그대로, 마지막만 바뀜(아래로 새 메시지 추가)
     const isAppend = firstId === prevFirst && lastId !== prevLast;
 
     prevFirstIdRef.current = firstId;
@@ -87,7 +97,6 @@ export default function MessageList({
     const el = listContainerRef.current;
     if (!el) return;
 
-    // 현재 바닥 여부를 매 스크롤 시 업데이트 (append 시 자동 하강 판단에만 사용)
     const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 8;
     wasAtBottomRef.current = atBottom;
 
@@ -122,29 +131,26 @@ export default function MessageList({
     return () => el.removeEventListener("scroll", handleScroll);
   }, [handleScroll, listContainerRef]);
 
-  /**
-   * msgs 변경 시 자동 하강 로직:
-   * - prepend(과거 로드)거나 loadingOlder면 절대 하강 금지
-   * - append(새 메시지 도착)일 때 & 직전에 바닥에 있었을 때만 하강
-   */
+  // msgs 변경 시 자동 하강(조건부)
   useEffect(() => {
     const el = listContainerRef.current;
     if (!el) return;
 
     const { isAppend, isPrepend } = detectAppendPrepend();
 
-    if (loadingOlder || isPrepend) {
-      // 과거 로드 중/직후엔 절대 바닥으로 보내지 않음
-      return;
-    }
+    if (loadingOlder || isPrepend) return;
 
     if (isAppend && wasAtBottomRef.current) {
-      bottomRef.current?.scrollIntoView?.({ block: "end" });
-      // 하강 후에도 실제 바닥 상태 다시 기록
-      const atBottomNow = el.scrollTop + el.clientHeight >= el.scrollHeight - 8;
-      wasAtBottomRef.current = atBottomNow;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          bottomRef.current?.scrollIntoView({ block: "end", behavior: "smooth", });
+          const atBottomNow =
+            el.scrollTop + el.clientHeight >= el.scrollHeight - 8;
+          wasAtBottomRef.current = atBottomNow;
+        });
+      });
     }
-    // append가 아니면 아무 것도 하지 않음 (길이 동일 변경 등)
+
   }, [msgs, loadingOlder, bottomRef, listContainerRef, detectAppendPrepend]);
 
   return (
@@ -155,6 +161,7 @@ export default function MessageList({
         height: `calc(100dvh - ${headerHeightPx}px - ${inputHeightPx}px - env(safe-area-inset-bottom, 0px))`,
         paddingBottom: 0,
         overscrollBehavior: "contain",
+        overflowAnchor: "none", // 중간 멈춤 방지
       }}
     >
       <main
@@ -162,10 +169,7 @@ export default function MessageList({
         style={{ overflowAnchor: "auto" }}
       >
         {loadingOlder && (
-          <div
-            className="text-center text-xs text-gray-500 py-1"
-            style={{ overflowAnchor: "none" }}
-          >
+          <div className="text-center text-xs text-gray-500 py-1" style={{ overflowAnchor: "none" }}>
             이전 메시지 불러오는 중…
           </div>
         )}
