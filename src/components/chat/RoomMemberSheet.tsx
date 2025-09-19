@@ -371,25 +371,28 @@ export default function RoomMemberSheet({
                     {/* 알림 ON/OFF */}
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2 text-gray-700">
-                            <span className="text-sm">
-                                알림 {muted ? "꺼짐" : "켜짐"}
-                            </span>
+                            {/* 현재 상태 표시: muted => 꺼짐, !muted => 켜짐 */}
+                            <span className="text-sm">알림 {muted ? "꺼짐" : "켜짐"}</span>
                         </div>
+
                         <button
                             type="button"
                             onClick={() => toggleRoomMuted(roomIdNum)}
                             className={`relative w-10 h-6 rounded-full transition-colors
-                        ${muted ? "bg-red-500" : "bg-gray-300"}`}
-                            aria-pressed={muted}
+      ${!muted ? "bg-green-500" : "bg-gray-300"}`}
+                            role="switch"
+                            aria-checked={!muted}
+                            aria-pressed={!muted}
                             aria-label={muted ? "알림 켜기" : "알림 끄기"}
                         >
                             <span
                                 className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow
-                          transition-transform duration-200
-                          ${muted ? "translate-x-4" : "translate-x-0"}`}
+        transition-transform duration-200
+        ${!muted ? "translate-x-4" : "translate-x-0"}`}
                             />
                         </button>
                     </div>
+
                     <button
                         onClick={handleLeave}
                         disabled={leaving}
