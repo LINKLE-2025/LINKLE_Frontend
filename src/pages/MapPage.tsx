@@ -32,6 +32,7 @@ import { getCurrentUserId } from "@/api/authApi";
 import { usePreventTouchScroll } from "@/hooks/usePreventTouchScroll";
 import ActionCircleButton from "@/components/common/ActionCircleButton";
 import { RotateCw, Search } from "lucide-react";
+import { searchLinkers } from "@/api/searchApi";
 
 interface LayoutContext {
   linkerCreateMode: boolean;
@@ -920,7 +921,7 @@ export default function MapPage(): React.ReactElement {
 
       {/* <MainHeader /> */}
       {/* 검색창 열렸을 때 상단 버튼 */}
-      {searchOpen && (
+      {searchOpen && searchQuery.length > 0 && (
         <div className='absolute top-4 left-0 w-full flex justify-center z-20'>
           <button
             className='px-3 py-1.5 text-[15px] rounded-lg bg-white text-gray-800 shadow-sm hover:bg-gray-50 transition-colors border border-gray-300'
