@@ -150,13 +150,19 @@ export default function LinkerCreateModal({
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className='w-full rounded-lg border border-gray-300 px-3 py-2.5'
+                  maxLength={14}
                 />
+                {title.length >= 14 && (
+                  <div className="mt-1 text-xs text-red-500">
+                    최대 14자까지 입력 가능합니다.
+                  </div>
+                )}
               </div>
               {/* 태그 */}
               <div>
                 <div className='mb-1.5 text-xs text-gray-500'>태그를 입력해 주세요</div>
                 <input
-                  placeholder='#밥친구  #햄버거'
+                  placeholder='밥집, 데이트, 혼밥'
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
                   className='w-full rounded-lg border border-gray-300 px-3 py-2.5'
