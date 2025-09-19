@@ -53,6 +53,22 @@ export default function AccountPage() {
         9: "/icons/account/Kbank_Symbol.png",
     };
 
+    // 금액 입력 시 , 자동 포맷팅
+    const [rawAmount, setRawAmount] = useState<number>(0); // 실제 숫자
+
+    // 입력 핸들러
+    const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        // 숫자만 추출
+        const rawValue = e.target.value.replace(/[^0-9]/g, "");
+        const numericValue = rawValue ? parseInt(rawValue, 10) : 0;
+
+        // 3자리마다 콤마 추가
+        const formatted = rawValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+        setAmount(formatted);      // UI 표시
+        setRawAmount(numericValue); // 실제 값
+    };
+
     useEffect(() => {
         (async () => {
             try {
@@ -126,11 +142,10 @@ export default function AccountPage() {
                 channelKey: import.meta.env.VITE_PORTONE_CHANNEL_KEY,
                 paymentId,
                 orderName: "포인트 충전",
-                totalAmount: numAmount,
+                totalAmount: rawAmount,
                 currency: "CURRENCY_KRW",
                 payMethod: "CARD",
-                redirectUrl: `${window.location.origin}/pay`, // 👉 여기로 리다이렉트
-                // redirectUrl는 사실 필요 없음, 백엔드에서 바로 처리
+                redirectUrl: `${window.location.origin}/pay`, //여기로 리다이렉트
             });
 
             // 팝업이 닫히고 나면 서버에서 결제 상태 확인 & DB 업데이트
@@ -165,19 +180,24 @@ export default function AccountPage() {
     const handleWithdraw = async () => {
         if (!userId) return;
         if (!bankId || !accountNumber) return alert("계좌를 등록해주세요.");
-        const numAmount = Number(amount);
+        if (rawAmount < 100) return alert("출금 금액은 100원 이상이어야 합니다."); // rawAmount 사용 권장
 
-        if (numAmount < 100) return alert("출금 금액은 100원 이상이어야 합니다.");
         setLoading(true);
         try {
             if (!window.confirm("정말 출금하시겠습니까?")) {
                 setLoading(false);
                 return;
             }
-            await withdrawBalance(userId, numAmount, "잔액 출금");
+
+            await withdrawBalance(userId, rawAmount, "잔액 출금"); // rawAmount로 숫자만 전달
             refreshData(userId);
-        } catch {
-            alert("잔액이 부족합니다.");
+        } catch (err: any) {
+            if (err.response && err.response.data?.error) {
+                // 백엔드에서 내려주는 에러 메시지 활용
+                alert(err.response.data.error);
+            } else {
+                alert("출금 처리 중 오류가 발생했습니다.");
+            }
         } finally {
             setLoading(false);
         }
@@ -236,12 +256,14 @@ export default function AccountPage() {
                     ) : (
                         // "입금" "출금" 버튼과 input이 나타남
                         <div className="flex flex-col w-full space-y-3">
-                            <input type="number" placeholder="100원 이상 입력하세요"
+                            <input
+                                type="text"
+                                placeholder="100원 이상 입력하세요"
                                 value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
+                                onChange={handleAmountChange}
                                 className="w-full text-linkleGray
-                                    bg-gray-100/5 border border-gray-200 rounded-lg 
-                                    focus:outline-none focus:border-black/15 px-3 py-2.5"
+    bg-gray-100/5 border border-gray-200 rounded-lg 
+    focus:outline-none focus:border-black/15 px-3 py-2.5"
                             />
                             <div className="flex justify-around space-x-4">
                                 <button

@@ -22,12 +22,12 @@ services:
       SPRING_PROFILES_ACTIVE: prod
       DB_HOST: db
       REDIS_HOST: redis
-      # AI_HOST: python-ai
+      AI_HOST: python-ai
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
     depends_on:
       - db
       - redis
-      # - python-ai
+      - python-ai
     networks:
       - linkle-net
 
@@ -43,6 +43,7 @@ services:
       MYSQL_PASSWORD: 1234
     volumes:
       - db-data:/var/lib/mysql
+      - ./init-sql:/docker-entrypoint-initdb.d # 초기화 스크립트 위치
     networks:
       - linkle-net
 
@@ -55,11 +56,13 @@ services:
       - linkle-net
 
   # Python AI 모듈
-  # python-ai:
-  #   image: linkleteam/linkle-ai:v1.0.0 # 빌드 & 푸시한 Python AI API 서버 이미지
-  #   container_name: linkle-ai
-  #   networks:
-  #     - linkle-net
+  python-ai:
+    image: linkleteam/linkle-ai:v1.0.0
+    container_name: linkle-ai
+    ports:
+      - "8083:5000" # (옵션) 외부 테스트용, 내부에서는 5000 그대로
+    networks:
+      - linkle-net
 
   # MinIO (파일 저장용 오브젝트 스토리지)
   minio:
