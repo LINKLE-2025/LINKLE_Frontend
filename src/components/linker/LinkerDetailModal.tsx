@@ -263,10 +263,21 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
   // 참여 전에는 라이트/클래스 탭 컨텐츠 잠금
   const isLocked = !participating && !participationLoading;
 
+  // ✅ 기본 링커 여부 체크
+  const isDefaultLinker = useMemo(() => {
+    if (!localDetail?.createdDate) return false;
+    // createdDate가 2099-12-01이면 기본 링커
+    return dayjs(localDetail.createdDate).isSame(dayjs("2099-12-01T00:00:00"), "day");
+  }, [localDetail?.createdDate]);
 
 
   // 연장 버튼 클릭 시 잔액 체크
   const handleExtendClick = async () => {
+    // ✅ 기본 링커면 연장 막기
+    if (isDefaultLinker) {
+      alert("기본 링커는 연장할 수 없습니다.");
+      return;
+    }
     if (!localDetail?.linkerId) return;
     const userId = await getCurrentUserId();
     if (!userId) {
