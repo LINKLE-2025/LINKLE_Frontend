@@ -78,6 +78,7 @@ export default function PostDetailPage(): React.ReactElement {
 
   // 🔥 작성자 프로필 가져오기 (DB에서 이미지 포함)
   const profile = useUserProfile(post?.userId);
+  const from = location.state?.from;
 
   // 포스트 조회
   useEffect(() => {
@@ -120,7 +121,12 @@ export default function PostDetailPage(): React.ReactElement {
       setSubmitting(true);
       await deletePost(postId);
       alert("삭제 완료");
-      navigate("/map", { replace: true });
+
+      if (from === "/map") {
+        navigate("/map", { replace: true, state: { openLinkerId: post?.linker.linkerId } });
+      } else {
+        navigate(-1);
+      }
     } catch (err) {
       alert("삭제 중 오류가 발생했습니다.");
     } finally {
@@ -134,7 +140,7 @@ export default function PostDetailPage(): React.ReactElement {
 
   // 🔥 프로필 이미지 최종 경로 (DB 값 or 기본 이미지)
   const profileImageUrl = profile?.profileImageUrl ?? "/icons/profile/Man.png";
-  const from = location.state?.from;
+
 
 
   return (
