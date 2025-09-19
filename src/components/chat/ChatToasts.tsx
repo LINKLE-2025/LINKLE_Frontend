@@ -68,8 +68,8 @@ export default function ChatToasts() {
 
     const [toasts, setToasts] = useState<Toast[]>([]);
     const [leavingIds, setLeavingIds] = useState<Set<string>>(new Set());
-    const hideTimersRef = useRef<Map<string, number>>(new Map());   // auto-hide 타이머
-    const leaveTimersRef = useRef<Map<string, number>>(new Map());  // 퇴장 애니메이션 후 제거 타이머
+    const hideTimersRef = useRef<Map<string, number>>(new Map()); // auto-hide 타이머
+    const leaveTimersRef = useRef<Map<string, number>>(new Map()); // 퇴장 애니메이션 후 제거 타이머
     const seenRef = useRef<Set<string>>(new Set()); // 중복 방지
 
     // 음소거 목록 변경 시 리렌더 유도
@@ -84,7 +84,7 @@ export default function ChatToasts() {
     }, [rooms]);
 
     function buildToastFromEvent(evt: any): Toast | null {
-        // 이벤트에서 roomId/타입/텍스트 추출
+        // 이벤트에서 roomId 추출 및 음소거/본인메시지 스킵
         const rid =
             evt?.roomId ??
             evt?.room?.id ??
@@ -94,24 +94,22 @@ export default function ChatToasts() {
         if (rid == null) return null;
         if (isRoomMuted(Number(rid))) return null;
 
-        // 내가 보낸 건 토스트 스킵
         const sid = evt?.senderId ?? evt?.sender?.id ?? evt?.userId ?? evt?.message?.senderId;
         if (typeof currentUserId === "number" && typeof sid === "number" && sid === currentUserId) {
             return null;
         }
 
-        const type = String(evt?.type ?? evt?.eventType ?? "").toUpperCase();
-        const msgType = String(evt?.messageType ?? "").toUpperCase();
-        const looksNew =
-            type === "MESSAGE_CREATED" ||
-            type === "NEW_MESSAGE" ||
-            type === "ROOM_LAST_MESSAGE_UPDATED" ||
-            msgType === "TEXT" ||
-            msgType === "IMAGE";
+        // 타입은 TEXT | SYSTEM 두 가지로 고정됨 (DB 기준)
+        // 다양한 위치를 방어적으로 확인하되, 최종적으로 TEXT만 통과
+        const msgType = String(
+            evt?.messageType ??
+            evt?.type ??
+            evt?.message?.type ??
+            ""
+        ).toUpperCase();
+        if (msgType !== "TEXT") return null; // SYSTEM(등) 은 토스트 미노출
 
-        if (!looksNew) return null;
-
-        // 텍스트/미리보기
+        // 텍스트/미리보기 (TEXT일 때만)
         let preview: string | undefined =
             evt?.preview ??
             evt?.lastMessage ??
@@ -122,9 +120,6 @@ export default function ChatToasts() {
             evt?.message?.content ??
             undefined;
 
-        if (!preview && (msgType === "IMAGE" || type.includes("IMAGE"))) {
-            preview = "(사진)";
-        }
         if (!preview || String(preview).trim().length === 0) return null;
 
         // 채팅방 화면이 이미 열려 있고 그 방과 동일하면 스킵
@@ -233,7 +228,9 @@ export default function ChatToasts() {
             if (t) pushToast(t);
         });
         return () => {
-            try { off?.(); } catch { }
+            try {
+                off?.();
+            } catch { }
             // 언마운트 시 타이머 정리
             hideTimersRef.current.forEach((id) => window.clearTimeout(id));
             leaveTimersRef.current.forEach((id) => window.clearTimeout(id));
@@ -258,9 +255,15 @@ export default function ChatToasts() {
                         onClick={() => navigate(`/chat/room/${t.roomId}`)}
                         onMouseEnter={() => {
                             const t1 = hideTimersRef.current.get(t.id);
-                            if (t1) { window.clearTimeout(t1); hideTimersRef.current.delete(t.id); }
+                            if (t1) {
+                                window.clearTimeout(t1);
+                                hideTimersRef.current.delete(t.id);
+                            }
                             const t2 = leaveTimersRef.current.get(t.id);
-                            if (t2) { window.clearTimeout(t2); leaveTimersRef.current.delete(t.id); }
+                            if (t2) {
+                                window.clearTimeout(t2);
+                                leaveTimersRef.current.delete(t.id);
+                            }
                         }}
                         onMouseLeave={() => {
                             // 잠시 뒤 자동 퇴장
