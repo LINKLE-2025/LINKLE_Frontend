@@ -51,9 +51,8 @@ function TotalSearchPage() {
         [handleSearch, searchQuery]
     );
 
-
     if (isAuthLoading) {
-        return <div>로딩 중...</div>;
+        return <div></div>;
     }
 
     return (
