@@ -52,9 +52,6 @@ function TotalSearchPage() {
     );
 
 
-    if (isAuthLoading) {
-        return <div>로딩 중...</div>;
-    }
 
     return (
         <div className="h-screen flex flex-col bg-white">
