@@ -61,13 +61,52 @@ export function useChatRoom(roomId: number) {
   const lastAckedIdRef = useRef<number | null>(null);
   const readTimerRef = useRef<number | null>(null);
 
-  // 바닥 상태/변화 감지용 (모두 컴포넌트 내부!)
+  // 바닥 상태/변화 감지용
   const wasAtBottomRef = useRef(false);
   const prevFirstIdRef = useRef<number | undefined>(undefined);
   const prevLastIdRef = useRef<number | undefined>(undefined);
   const initialAutoScrollDoneRef = useRef(false);
 
-  // --- 먼저 선언: loadOlder (아래 useEffect에서 참조하므로 TDZ 방지) ---
+  // 공용 하단 스크롤
+  function scrollToBottom(mode: "instant" | "smooth" = "instant") {
+    const el = listContainerRef.current;
+    if (!el) return;
+
+    const perform = () => {
+      const prev = el.style.scrollBehavior;
+      el.style.scrollBehavior = mode === "smooth" ? "smooth" : "auto";
+      el.scrollTop = el.scrollHeight;
+      el.style.scrollBehavior = prev;
+      wasAtBottomRef.current = true;
+    };
+
+    // double rAF: DOM 업데이트와 레이아웃 확정 이후 실행
+    requestAnimationFrame(() => {
+      requestAnimationFrame(perform);
+    });
+  }
+
+  // ★ 컨테이너/레이아웃이 준비될 때까지 재시도하며 1회 하단으로
+  function ensureInitialScrollToBottom() {
+    if (initialAutoScrollDoneRef.current) return;
+    let tries = 0;
+    const MAX_TRIES = 16; // 충분한 여유
+
+    const tick = () => {
+      const el = listContainerRef.current;
+      if (el && el.scrollHeight > 0) {
+        scrollToBottom("instant");
+        initialAutoScrollDoneRef.current = true; // 성공했을 때만 true
+        return;
+      }
+      if (tries++ < MAX_TRIES) requestAnimationFrame(tick);
+    };
+
+    // 레이아웃 → 페인트 이후에 시도
+    requestAnimationFrame(() => requestAnimationFrame(tick));
+  }
+
+  // --- 먼저 선언: loadOlder ---
   const loadOlder = async () => {
     if (loadingOlder || !hasMore || msgs.length === 0) return;
     setLoadingOlder(true);
@@ -112,7 +151,6 @@ export function useChatRoom(roomId: number) {
       setLoadingOlder(false);
     }
   };
-  // --------------------------------------------------------------------
 
   // 초기 로드
   useEffect(() => {
@@ -143,7 +181,6 @@ export function useChatRoom(roomId: number) {
         const partner = (mem ?? []).find((u) => u.userId !== me) ?? null;
         const partnerId = partner?.userId ?? (r as any).friendUserId ?? null;
 
-        // 상대가 없으면 "탈퇴한 사용자"로 안전표시
         setPeer(
           partnerId != null
             ? {
@@ -151,11 +188,7 @@ export function useChatRoom(roomId: number) {
                 nick: (r as any).dmPartnerNickname ?? partner?.nickname ?? String(partnerId),
                 id: partnerId,
               }
-            : {
-                name: null,
-                nick: null,
-                id: null,
-              },
+            : { name: null, nick: null, id: null },
         );
       } else {
         setPeer({ name: r.roomName ?? "그룹 톡", nick: null, id: null });
@@ -171,17 +204,8 @@ export function useChatRoom(roomId: number) {
       setMsgs(initial);
       setHasMore((m ?? []).length === PAGE_SIZE);
 
-      // 초기 1회 자동 하강
-      requestAnimationFrame(() => {
-        const el = listContainerRef.current;
-        if (!el || initialAutoScrollDoneRef.current) return;
-        const prev = el.style.scrollBehavior;
-        el.style.scrollBehavior = "auto";
-        el.scrollTop = el.scrollHeight;
-        el.style.scrollBehavior = prev;
-        initialAutoScrollDoneRef.current = true;
-        wasAtBottomRef.current = true;
-      });
+      // ★ 초기 1회 확실한 하강 (컨테이너 준비될 때까지 재시도)
+      ensureInitialScrollToBottom();
 
       // 초기 바닥 상태 기록 + append/prepend 비교 초기화
       const el = listContainerRef.current;
@@ -190,6 +214,12 @@ export function useChatRoom(roomId: number) {
       prevLastIdRef.current = initial[initial.length - 1]?.messageId;
     })().catch(console.error);
   }, [roomId]);
+
+  // 혹시 렌더 순서 때문에 컨테이너가 늦게 잡히면 한 번 더 보증
+  useEffect(() => {
+    ensureInitialScrollToBottom();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listContainerRef.current]);
 
   // STOMP 상태
   useEffect(() => {
@@ -204,6 +234,8 @@ export function useChatRoom(roomId: number) {
   // 방별 구독
   useEffect(() => {
     if (!roomId) return;
+
+    const me = Number(DEV_UID) || null;
 
     const off = stompClient.subscribe(`/sub/room.${roomId}`, (raw: any) => {
       const type = raw?.type ?? raw?.eventType ?? null;
@@ -227,9 +259,16 @@ export function useChatRoom(roomId: number) {
         senderImage: resolveImageUrl(raw.senderImage ?? raw.sender?.image) ?? null,
       };
 
-      setMsgs((prev) =>
-        prev.some((x) => x.messageId === evt.messageId) ? prev : [...prev, evt].sort(byCreatedAsc),
-      );
+      setMsgs((prev) => {
+        if (prev.some((x) => x.messageId === evt.messageId)) return prev;
+        const next = [...prev, evt].sort(byCreatedAsc);
+
+        // 내가 보낸 메시지는 무조건 하강
+        if (evt.senderId != null && me != null && evt.senderId === me) {
+          scrollToBottom("smooth");
+        }
+        return next;
+      });
     });
 
     return () => {
@@ -253,7 +292,7 @@ export function useChatRoom(roomId: number) {
 
     el.addEventListener("scroll", onScroll, { passive: true });
     return () => el.removeEventListener("scroll", onScroll);
-  }, [hasMore, loadingOlder, loadOlder]); // loadOlder를 deps에 안전하게 포함
+  }, [hasMore, loadingOlder, loadOlder]);
 
   // append/prepend 판별
   function detectAppendPrepend(nextMsgs: MessageResponseDTO[]) {
@@ -281,10 +320,8 @@ export function useChatRoom(roomId: number) {
 
     const { isAppend, isPrepend } = detectAppendPrepend(msgs);
 
-    // 과거 로드 직후/중에는 절대 하강 금지 (loadOlder에서 delta 보정)
     if (loadingOlder || isPrepend) return;
 
-    // 새 메시지 append + 직전에 바닥이었을 때만 자동 하강
     if (isAppend && wasAtBottomRef.current) {
       el.scrollTop = el.scrollHeight;
       wasAtBottomRef.current = true;
@@ -312,6 +349,9 @@ export function useChatRoom(roomId: number) {
               : r,
           ),
     );
+
+    // 송신 직후에도 하강 (브로드캐스트 지연 대비)
+    scrollToBottom("smooth");
   };
 
   // 읽음 동기화
@@ -337,7 +377,6 @@ export function useChatRoom(roomId: number) {
   useEffect(() => {
     if (!roomId || !msgs.length) return;
     scheduleReadSync(getVisibleLastId());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId, msgs.length]);
   useEffect(() => {
     const el = listContainerRef.current;
