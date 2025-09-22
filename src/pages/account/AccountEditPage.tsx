@@ -65,6 +65,42 @@ export default function AccountEditPage() {
         }
     };
 
+    // 계좌번호 입력 핸들러 - 숫자만 입력 & 포맷 적용 + 삭제 가능
+    const handleAccountNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const input = e.target.value;
+        const onlyDigits = input.replace(/\D/g, ""); // 숫자만 추출
+
+        const format = banks.find(bank => bank.name === selectedBank)?.placeholder;
+        if (!format) {
+            setAccountNumber(onlyDigits);
+            return;
+        }
+
+        const maxDigits = (format.match(/0/g) || []).length;
+        const digits = onlyDigits.slice(0, maxDigits);
+
+        let formatted = "";
+        let digitIndex = 0;
+
+        for (const char of format) {
+            if (char === "0") {
+                if (digitIndex < digits.length) {
+                    formatted += digits[digitIndex++];
+                } else {
+                    break;
+                }
+            } else {
+                // 하이픈은 숫자가 있을 때만 추가
+                if (digitIndex > 0 && digitIndex < digits.length) {
+                    formatted += char;
+                }
+            }
+        }
+
+        setAccountNumber(formatted);
+    };
+
+
     // 은행사 리스트
     const banks = [
         {
@@ -155,12 +191,18 @@ export default function AccountEditPage() {
                     {/* 계좌번호 입력 */}
                     <div className="w-full marker:items-start justify-start text-left">
                         <p className="text-sm text-linkleGray font-bold pl-1 mb-1">계좌번호</p>
-                        <input type="text" placeholder={`${selectedBank ? banks.find(bank => bank.name === selectedBank)?.placeholder : "계좌번호를 입력해주세요"}`}
+                        <input
+                            type="text"
+                            placeholder={
+                                selectedBank
+                                    ? banks.find(bank => bank.name === selectedBank)?.placeholder
+                                    : "계좌번호를 입력해주세요"
+                            }
                             value={accountNumber}
-                            onChange={e => setAccountNumber(e.target.value)}
+                            onChange={handleAccountNumberChange} // ✅ 변경
                             className="w-full text-linkleGray border border-gray-200 rounded-lg
-                        bg-gray-100/40
-                        focus:outline-none focus:border-black/15 px-3 py-2.5"
+        bg-gray-100/40
+        focus:outline-none focus:border-black/15 px-3 py-2.5"
                         />
                     </div>
                 </div>
@@ -190,6 +232,7 @@ export default function AccountEditPage() {
                             onClick={() => {
                                 setSelectedBank(bank.name); // UI 표시용
                                 setBankId(banks.indexOf(bank) + 1); // 숫자 ID 설정 (1~9)
+                                setAccountNumber(""); // ✅ 계좌번호 초기화
                                 console.log("선택된 은행사:", bank.name, "ID:", banks.indexOf(bank) + 1);
                             }}
                         />
