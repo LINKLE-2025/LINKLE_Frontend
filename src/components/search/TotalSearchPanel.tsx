@@ -90,22 +90,13 @@ export default function TotalSearchPanel({
 
 
     const scrollRef = useRef<HTMLDivElement>(null);
+    const headerRef = useRef<HTMLDivElement>(null);
+    const navRef = useRef<HTMLElement>(null);
+    // header 높이 계산
     useEffect(() => {
-        const el = scrollRef.current;
-        if (!el) return;
-
-        const handleScroll = () => {
-            const { scrollTop, scrollHeight, clientHeight } = el;
-
-            const bottomThreshold = scrollHeight - clientHeight * 1.1; // 90% 이하 도달
-            if (scrollTop > bottomThreshold && !loading && page + 1 < totalPages) {
-                handleSearch(page + 1);
-            }
-        };
-
-        el.addEventListener("scroll", handleScroll);
-        return () => el.removeEventListener("scroll", handleScroll);
-    }, [loading, page, totalPages, searchQuery]);
+        if (headerRef.current) setHeaderHeight(headerRef.current.clientHeight);
+        if (navRef.current) setTabHeight(navRef.current.clientHeight);
+    }, []);
 
     useEffect(() => {
         const nav = document.querySelector("nav");
@@ -146,19 +137,17 @@ export default function TotalSearchPanel({
 
 
     const fetchLinkers = async (query: string, pageToFetch = 0) => {
+        setIsSearchingLinker(true);
         try {
             const data = await searchLinkers(query, pageToFetch, 10);
 
-            if (pageToFetch === 0) {
-                setLinkerResults(data.content);
-            } else {
-                setLinkerResults(prev => [...prev, ...data.content]);
-            }
-
+            setLinkerResults(prev => pageToFetch === 0 ? data.content : [...prev, ...data.content]);
             setLinkerPage(data.number);
             setLinkerTotalPages(data.totalPages);
         } catch (err) {
             console.error("링커 검색 실패:", err);
+        } finally {
+            setIsSearchingLinker(false);
         }
     };
 
@@ -334,6 +323,7 @@ export default function TotalSearchPanel({
                                         <div
                                             key={user.friendUserid}
                                             className="flex justify-between items-center py-2 border-b border-gray-200 px-2 gap-x-4"
+                                            onClick={(e) => e.stopPropagation()} // 부모 검색 호출 방지
                                         >
                                             <div className="flex items-center gap-3 flex-1">
                                                 <Link
@@ -404,43 +394,43 @@ export default function TotalSearchPanel({
                     </>
                 ) : (
                     <>
-                        {isSearchingLinker ? (
-                            <div className="flex flex-1 items-center justify-center text-gray-400">
+                        {/* 검색 결과 영역 (링커) */}
+                        <div className="flex-1 min-h-0 overflow-y-auto p-2 flex flex-col">
+                            {isSearchingLinker ? (
+                                <div className="flex flex-1 items-center justify-center text-gray-400">
+                                    검색 중…
+                                </div>
+                            ) : linkerResults.length > 0 ? (
+                                <>
+                                    {linkerResults.map((linker) => (
+                                        <LinkerCardItem
+                                            key={linker.linkerId}
+                                            linker={linker}
+                                            onClick={() =>
+                                                navigate("/map", { state: { openLinkerId: linker.linkerId } })
+                                            }
+                                        />
+                                    ))}
 
-                            </div>
-                        ) : linkerResults.length > 0 ? (
-                            <>
-                                {linkerResults.map((linker) => (
-                                    <div
-                                        key={linker.linkerId}
-                                        onClick={() =>
-                                            navigate("/map", { state: { openLinkerId: linker.linkerId } })
-                                        }
-                                    >
-                                        <LinkerCardItem linker={{ ...linker }} />
-                                    </div>
-                                ))}
-
-                                {/* 더보기 버튼 */}
-                                {linkerPage + 1 < linkerTotalPages && (
-                                    <div className="flex justify-center mt-3">
-                                        <button
-                                            onClick={() => fetchLinkers(searchQuery, linkerPage + 1)}
-                                            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-                                        >
-                                            더보기
-                                        </button>
-                                    </div>
-                                )}
-                            </>
-                        ) : (
-                            <div className="flex flex-1 items-center justify-center">
-                                {searchQuery.trim() === ""
-                                    ? renderEmptyState("검색어를 입력하세요")
-                                    : renderEmptyState("링커 검색 결과가 없습니다")}
-                            </div>
-                        )}
-
+                                    {linkerPage + 1 < linkerTotalPages && (
+                                        <div className="flex justify-center mt-3">
+                                            <button
+                                                onClick={() => fetchLinkers(searchQuery, linkerPage + 1)}
+                                                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                                            >
+                                                더보기
+                                            </button>
+                                        </div>
+                                    )}
+                                </>
+                            ) : (
+                                <div className="flex flex-1 items-center justify-center">
+                                    {searchQuery.trim() === ""
+                                        ? renderEmptyState("검색어를 입력하세요")
+                                        : renderEmptyState("링커 검색 결과가 없습니다")}
+                                </div>
+                            )}
+                        </div>
                     </>
                 )}
             </div>
