@@ -19,7 +19,7 @@ import {
   type LinkerListItem,
   type LinkerDetail,
 } from "@/api/mapApi";
-import { useLocation, useOutletContext } from "react-router-dom";
+import { useLocation, useOutletContext, useNavigate } from "react-router-dom";
 import ClusterMarkerList from "@/components/linker/ClustermarkerItem";
 import AddressDisplay from "@/components/map/AddressDisplay";
 import BackTitleHeader from "@/components/header/BackTitleHeader";
@@ -900,6 +900,73 @@ export default function MapPage(): React.ReactElement {
       setDetailOpen(false);
     }
   }, [location.key]); // location이 바뀔 때마다 체크
+  const navigate = useNavigate();
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      // 모달/시트/오버레이가 열려 있으면 닫고 실제 페이지 이동 막기
+      if (
+        detailOpen ||
+        linkerOpen ||
+        searchOpen ||
+        showClusterList ||
+        listModalOpen ||
+        showAddress
+      ) {
+        e.preventDefault();
+
+        if (detailOpen) {
+          setDetailOpen(false);
+        } else if (linkerOpen) {
+          setLinkerOpen(false);
+        } else if (searchOpen) {
+          setSearchOpen(false);
+          setSearchQuery("");
+          setSearchResults([]);
+          searchMarkers.current.forEach((m) => m.setMap(null));
+          searchMarkers.current = [];
+          overlaysRef.current.forEach((ov) => ov.setMap(null));
+          overlaysRef.current = [];
+        } else if (showClusterList) {
+          setShowClusterList(false);
+        } else if (listModalOpen) {
+          setListModalOpen(false);
+        } else if (showAddress) {
+          setShowAddress(false);
+        }
+
+        // 뒤로가기 누를 때 페이지 이동 막기 위해 pushState
+        window.history.pushState(null, "", window.location.href);
+      } else {
+        // 모달/시트가 전혀 열려 있지 않으면 실제 뒤로가기
+        navigate(-1);
+      }
+    };
+
+    // 모달/시트/오버레이가 열릴 때 history stack에 가짜 상태 추가
+    if (
+      detailOpen ||
+      linkerOpen ||
+      searchOpen ||
+      showClusterList ||
+      listModalOpen ||
+      showAddress
+    ) {
+      window.history.pushState(null, "", window.location.href);
+    }
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [
+    detailOpen,
+    linkerOpen,
+    searchOpen,
+    showClusterList,
+    listModalOpen,
+    showAddress,
+  ]);
+
 
   return (
 
