@@ -64,6 +64,14 @@ const STORAGE_KEY = "linkle_spots_v2";
 export default function MapPage(): React.ReactElement {
   usePreventTouchScroll(true); // 터치 스크롤 방지 훅 사용
 
+
+  // 🔥 홈 버튼 눌렀을 때 overlay 제거 함수
+  const resetOverlays = () => {
+    overlaysRef.current.forEach((ov) => ov.setMap(null));
+    overlaysRef.current = [];
+  };
+
+
   // ===== 1. 🔥 카테고리 필터링 - 커스텀 훅으로 대체 =====
   const {
     categoryFilterOpen,
@@ -545,6 +553,7 @@ export default function MapPage(): React.ReactElement {
               position: fallbackPosition,
               image: myLocationImage,
               map: kakaoMapRef.current!,
+              zIndex: -1,
             });
 
             const userCircle = new window.kakao.maps.Circle({
@@ -666,8 +675,7 @@ export default function MapPage(): React.ReactElement {
             searchMarkers.current = [];
 
             // 기존 오버레이 닫기
-            overlaysRef.current.forEach((ov) => ov.setMap(null));
-            overlaysRef.current = [];
+            resetOverlays();
           }
 
           const newMarkers = data.map((d) => {
@@ -886,6 +894,13 @@ export default function MapPage(): React.ReactElement {
     })();
   }, []);
 
+  useEffect(() => {
+    // 뒤로가기로 돌아왔는데 detailData가 비어있으면 모달 닫기
+    if (!detailData && detailOpen) {
+      setDetailOpen(false);
+    }
+  }, [location.key]); // location이 바뀔 때마다 체크
+
   return (
 
     <MapWrapper>
@@ -903,8 +918,8 @@ export default function MapPage(): React.ReactElement {
             searchMarkers.current.forEach((m) => m.setMap(null));
             searchMarkers.current = [];
 
-            overlaysRef.current.forEach((ov) => ov.setMap(null));
-            overlaysRef.current = [];
+            // 기존 오버레이 닫기
+            resetOverlays();
           }}
         />
       )}
