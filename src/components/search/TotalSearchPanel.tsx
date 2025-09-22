@@ -119,17 +119,13 @@ export default function TotalSearchPanel({
     const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
     const debouncedFetchLinkers = useCallback((query: string, page = 0) => {
-        if (debounceRef.current) {
-            clearTimeout(debounceRef.current);
-        }
+        if (debounceRef.current) clearTimeout(debounceRef.current);
 
         setIsSearchingLinker(true);
 
         debounceRef.current = setTimeout(() => {
-            fetchLinkers(page).finally(() => {
-                setIsSearchingLinker(false);
-            });
-        }, 300); // 0.5초 지연
+            fetchLinkers(query, page).finally(() => setIsSearchingLinker(false));
+        }, 300);
     }, []);
 
 
@@ -149,15 +145,13 @@ export default function TotalSearchPanel({
 
 
 
-    const fetchLinkers = async (pageToFetch = 0) => {
+    const fetchLinkers = async (query: string, pageToFetch = 0) => {
         try {
-            const data = await searchLinkers(searchQuery, pageToFetch, 10);
+            const data = await searchLinkers(query, pageToFetch, 10);
 
             if (pageToFetch === 0) {
-                // 첫 페이지는 초기화
                 setLinkerResults(data.content);
             } else {
-                // 그 외는 이어붙이기
                 setLinkerResults(prev => [...prev, ...data.content]);
             }
 
@@ -165,13 +159,6 @@ export default function TotalSearchPanel({
             setLinkerTotalPages(data.totalPages);
         } catch (err) {
             console.error("링커 검색 실패:", err);
-        }
-    };
-    const handleTabSearch = () => {
-        if (activeTab === "friend") {
-            handleSearch(1);
-        } else {
-            fetchLinkers();
         }
     };
 
@@ -283,7 +270,7 @@ export default function TotalSearchPanel({
         if (tab === "linker" && searchQuery.trim() !== "") {
             // 탭 전환할 때는 바로 불러오기
             setIsSearchingLinker(true);
-            fetchLinkers(0).finally(() => setIsSearchingLinker(false));
+            fetchLinkers(searchQuery, 0).finally(() => setIsSearchingLinker(false));
         }
     };
     return (
@@ -293,7 +280,11 @@ export default function TotalSearchPanel({
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
                 onSearch={() => {
-                    handleTabSearch();
+                    if (activeTab === "friend") {
+                        handleSearch(1); // 친구 검색 첫 페이지
+                    } else {
+                        fetchLinkers(searchQuery, 0); // 링커 검색 첫 페이지
+                    }
                     inputRef?.current?.blur();
                 }}
                 placeholder="친구 또는 링커 검색"
@@ -434,7 +425,7 @@ export default function TotalSearchPanel({
                                 {linkerPage + 1 < linkerTotalPages && (
                                     <div className="flex justify-center mt-3">
                                         <button
-                                            onClick={() => fetchLinkers(linkerPage + 1)}
+                                            onClick={() => fetchLinkers(searchQuery, linkerPage + 1)}
                                             className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
                                         >
                                             더보기
