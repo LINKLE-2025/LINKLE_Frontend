@@ -439,8 +439,8 @@ export default function MapPage(): React.ReactElement {
     script.onload = () => {
       window.kakao.maps.load(() => {
         const container = mapRef.current!;
-        let lat = 37.5665;
-        let lng = 126.978;
+        let lat = 37.5593459381013;
+        let lng = 126.922630667157;
 
         const initMap = (latitude: number, longitude: number, level: number) => {
           const options = {
