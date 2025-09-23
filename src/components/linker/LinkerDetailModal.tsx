@@ -303,20 +303,30 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
   // 모달 확인 버튼
   const handleModalConfirm = async () => {
     const userId = await getCurrentUserId();
-    if (!userId) return;
+    if (!userId || !localDetail) return;
 
     if (insufficientBalance) {
       // 잔액 부족 → 충전 페이지 이동
       navigate("/profile/account");
       setShowExtendModal(false);
     } else {
-      // 잔액 충분 → 기존 연장 로직
       try {
-        await withdrawBalance(userId, -5000, "링커 수명 연장"); // 5000원 차감
-        await extendLinkerCreatedDate(localDetail!.linkerId);
+        // 5000원 차감
+        await withdrawBalance(userId, -5000, `${localDetail?.name} 링커 수명 연장`);
+
+        // 기존 createdDate 기준 1개월 연장
+        await extendLinkerCreatedDate(localDetail.linkerId, localDetail.createdDate!);
+
+        // 프론트 상태도 업데이트
         setLocalDetail(prev =>
-          prev ? { ...prev, createdDate: new Date().toISOString() } : prev,
+          prev
+            ? {
+              ...prev,
+              createdDate: dayjs(prev.createdDate).add(1, "month").toISOString(),
+            }
+            : prev,
         );
+
         alert("링커가 연장되었습니다!");
         setShowExtendModal(false);
       } catch (err: any) {

@@ -33,7 +33,7 @@ const CATEGORY_NAMES: Record<number, string> = {
   7: "음주",
   8: "학습",
   9: "쇼핑",
-  10: "병원",
+  10: "봉사",
   11: "게임",
   12: "여행",
 };

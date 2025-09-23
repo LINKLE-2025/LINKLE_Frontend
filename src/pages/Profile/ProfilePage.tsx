@@ -31,7 +31,7 @@ import { CATEGORY_DATA } from "@/constants/categoryData"
 // 카테고리 이름 + 아이콘 매핑
 const ACTIVITIES = [
   "식사", "카페", "음악", "영화", "독서", "운동",
-  "음주", "학습", "쇼핑", "병원", "게임", "여행",
+  "음주", "학습", "쇼핑", "봉사", "게임", "여행",
 ];
 
 const CATEGORY_ICONS = [
@@ -44,7 +44,7 @@ const CATEGORY_ICONS = [
   "/icons/profile/drinking.png",   // 7
   "/icons/profile/learning.png",   // 8
   "/icons/profile/shopping.png",   // 9
-  "/icons/profile/hospital.png",   // 10
+  "/icons/profile/volunteer.png",   // 10
   "/icons/profile/game.png",       // 11
   "/icons/profile/travel.png",     // 12
   "/icons/profile/shinhan.png",     // 13

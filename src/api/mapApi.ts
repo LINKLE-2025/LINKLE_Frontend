@@ -1,5 +1,6 @@
 // src/services/linkerService.ts
 import apiClient from "./apiClient";
+import dayjs from "dayjs";
 
 export interface LinkerPayload {
   name: string;
@@ -130,12 +131,16 @@ export const deductUserBalance = async (userId: number, amount: number) => {
 };
 
 // 🔹 링커 created_date 연장 (연장하기)
-export const extendLinkerCreatedDate = async (linkerId: number) => {
+export const extendLinkerCreatedDate = async (linkerId: number, currentCreatedDate: string) => {
   if (!linkerId) throw new Error("링커 ID가 필요합니다.");
+  if (!currentCreatedDate) throw new Error("현재 createdDate가 필요합니다.");
+
+  // 기존 createdDate에 1개월 추가
+  const newDate = dayjs(currentCreatedDate).add(1, "month").toISOString();
 
   try {
     const res = await apiClient.post(`/linker/${linkerId}/extend`, {
-      createdAt: new Date().toISOString(), // 현재 시각으로 연장
+      createdAt: newDate,
     });
     return res.data;
   } catch (err: any) {

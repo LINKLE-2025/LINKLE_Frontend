@@ -19,7 +19,7 @@ import {
   type LinkerListItem,
   type LinkerDetail,
 } from "@/api/mapApi";
-import { useLocation, useOutletContext } from "react-router-dom";
+import { useLocation, useOutletContext, useNavigate } from "react-router-dom";
 import ClusterMarkerList from "@/components/linker/ClustermarkerItem";
 import AddressDisplay from "@/components/map/AddressDisplay";
 import BackTitleHeader from "@/components/header/BackTitleHeader";
@@ -63,6 +63,14 @@ const STORAGE_KEY = "linkle_spots_v2";
 
 export default function MapPage(): React.ReactElement {
   usePreventTouchScroll(true); // 터치 스크롤 방지 훅 사용
+
+
+  // 🔥 홈 버튼 눌렀을 때 overlay 제거 함수
+  const resetOverlays = () => {
+    overlaysRef.current.forEach((ov) => ov.setMap(null));
+    overlaysRef.current = [];
+  };
+
 
   // ===== 1. 🔥 카테고리 필터링 - 커스텀 훅으로 대체 =====
   const {
@@ -200,7 +208,7 @@ export default function MapPage(): React.ReactElement {
     7: "/icons/category/drinking.png",
     8: "/icons/category/learning.png",
     9: "/icons/category/shopping.png",
-    10: "/icons/category/hospital.png",
+    10: "/icons/category/volunteer.png",
     11: "/icons/category/game.png",
     12: "/icons/category/travel.png",
     13: "/icons/category/shinhan.png",
@@ -431,8 +439,8 @@ export default function MapPage(): React.ReactElement {
     script.onload = () => {
       window.kakao.maps.load(() => {
         const container = mapRef.current!;
-        let lat = 37.5665;
-        let lng = 126.978;
+        let lat = 37.5593459381013;
+        let lng = 126.922630667157;
 
         const initMap = (latitude: number, longitude: number, level: number) => {
           const options = {
@@ -545,6 +553,7 @@ export default function MapPage(): React.ReactElement {
               position: fallbackPosition,
               image: myLocationImage,
               map: kakaoMapRef.current!,
+              zIndex: -1,
             });
 
             const userCircle = new window.kakao.maps.Circle({
@@ -634,7 +643,7 @@ export default function MapPage(): React.ReactElement {
 
     const ps = new window.kakao.maps.services.Places();
     const center = kakaoMapRef.current.getCenter();
-    const options = { location: center, radius: 5000, page };  // 반경 5km
+    const options = { location: center, radius: 20000, page };  // 반경 20km
 
     ps.keywordSearch(
       searchQuery,
@@ -666,8 +675,7 @@ export default function MapPage(): React.ReactElement {
             searchMarkers.current = [];
 
             // 기존 오버레이 닫기
-            overlaysRef.current.forEach((ov) => ov.setMap(null));
-            overlaysRef.current = [];
+            resetOverlays();
           }
 
           const newMarkers = data.map((d) => {
@@ -886,6 +894,80 @@ export default function MapPage(): React.ReactElement {
     })();
   }, []);
 
+  useEffect(() => {
+    // 뒤로가기로 돌아왔는데 detailData가 비어있으면 모달 닫기
+    if (!detailData && detailOpen) {
+      setDetailOpen(false);
+    }
+  }, [location.key]); // location이 바뀔 때마다 체크
+  const navigate = useNavigate();
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      // 모달/시트/오버레이가 열려 있으면 닫고 실제 페이지 이동 막기
+      if (
+        detailOpen ||
+        linkerOpen ||
+        searchOpen ||
+        showClusterList ||
+        listModalOpen ||
+        showAddress
+      ) {
+        e.preventDefault();
+
+        if (detailOpen) {
+          setDetailOpen(false);
+        } else if (linkerOpen) {
+          setLinkerOpen(false);
+        } else if (searchOpen) {
+          setSearchOpen(false);
+          setSearchQuery("");
+          setSearchResults([]);
+          searchMarkers.current.forEach((m) => m.setMap(null));
+          searchMarkers.current = [];
+          overlaysRef.current.forEach((ov) => ov.setMap(null));
+          overlaysRef.current = [];
+        } else if (showClusterList) {
+          setShowClusterList(false);
+        } else if (listModalOpen) {
+          setListModalOpen(false);
+        } else if (showAddress) {
+          setShowAddress(false);
+        }
+
+        // 뒤로가기 누를 때 페이지 이동 막기 위해 pushState
+        window.history.pushState(null, "", window.location.href);
+      } else {
+        // 모달/시트가 전혀 열려 있지 않으면 실제 뒤로가기
+        navigate(-1);
+      }
+    };
+
+    // 모달/시트/오버레이가 열릴 때 history stack에 가짜 상태 추가
+    if (
+      detailOpen ||
+      linkerOpen ||
+      searchOpen ||
+      showClusterList ||
+      listModalOpen ||
+      showAddress
+    ) {
+      window.history.pushState(null, "", window.location.href);
+    }
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [
+    detailOpen,
+    linkerOpen,
+    searchOpen,
+    showClusterList,
+    listModalOpen,
+    showAddress,
+  ]);
+
+
   return (
 
     <MapWrapper>
@@ -903,8 +985,8 @@ export default function MapPage(): React.ReactElement {
             searchMarkers.current.forEach((m) => m.setMap(null));
             searchMarkers.current = [];
 
-            overlaysRef.current.forEach((ov) => ov.setMap(null));
-            overlaysRef.current = [];
+            // 기존 오버레이 닫기
+            resetOverlays();
           }}
         />
       )}

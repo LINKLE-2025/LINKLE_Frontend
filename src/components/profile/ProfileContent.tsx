@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import ProfileBarContent from '../../components/profile/ProfileBarContent';
 import { FriendSummaryWithProfileType, ProfileType } from "@/types/friend";
 import { getProfileImageSrc } from '@/utils/profileUtils';
-import { sendFriendRequest } from '@/api/friendApi';
+import { sendFriendRequest, getFriendRelationship } from '@/api/friendApi';
 import { getCurrentUserId } from '@/api/authApi';
 import { openDm } from "@/services/chat";
 
@@ -150,6 +150,36 @@ function ProfileContent({
   const profileBackgroundSrc = isDefaultBackground
     ? "/icons/profile/Background.png"
     : `/api/user/view/background/${userId}?v=${Date.now()}`;
+
+  // 친구 상태 조회
+  useEffect(() => {
+    const fetchFriendStatus = async () => {
+      if (userId === DEV_UID) {
+        setCurrentType('self');
+        return;
+      }
+
+      try {
+        const res = await getFriendRelationship(DEV_UID, userId);
+        if (res.state === 'ACCEPTED') {
+          setCurrentType('friend');
+        } else if (res.state === 'REQUESTED') {
+          if (res.userId1 === DEV_UID) {
+            setCurrentType('wait'); // 내가 요청
+          } else {
+            setCurrentType('wait'); // 상대가 보낸 요청
+          }
+        } else {
+          setCurrentType('stranger');
+        }
+      } catch (err) {
+        console.error('친구 상태 조회 실패', err);
+        setCurrentType('stranger');
+      }
+    };
+
+    fetchFriendStatus();
+  }, [userId]);
 
   const renderButton = () => {
     switch (currentType) {

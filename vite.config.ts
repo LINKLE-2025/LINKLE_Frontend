@@ -40,7 +40,7 @@ export default defineConfig(({ mode }) => {
             },
             {
               urlPattern: ({ url }) => url.pathname.startsWith("/icons/category/"),
-              handler: "CacheFirst",
+              handler: "StaleWhileRevalidate",
               options: {
                 cacheName: "category-icons",
                 expiration: {

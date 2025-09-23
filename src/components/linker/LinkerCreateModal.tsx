@@ -33,7 +33,7 @@ const ACTIVITIES = [
   "음주",
   "학습",
   "쇼핑",
-  "병원",
+  "봉사",
   "게임",
   "여행",
 ];
@@ -78,7 +78,7 @@ export default function LinkerCreateModal({
     7: "/icons/category/drinkingicon.png",
     8: "/icons/category/learningicon.png",
     9: "/icons/category/shoppingicon.png",
-    10: "/icons/category/hospitalicon.png",
+    10: "/icons/category/volunteericon.png",
     11: "/icons/category/gameicon.png",
     12: "/icons/category/travelicon.png",
     13: "/icons/category/shinhanicon.png",
