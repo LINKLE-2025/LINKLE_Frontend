@@ -11,7 +11,7 @@ type Props = {
 
 export default function NicknameStep({ value, onChange, onNext }: Props) {
   const [error, setError] = useState("");
-  const nicknameRegex = /^[0-9a-z_]{4,20}$/; // 예: 4~20자의 숫자, 영문 소문자 및 언더스코어
+  const nicknameRegex = /^[0-9a-zA-Z_]{4,20}$/; // 예: 4~20자의 숫자, 영문 대소문자 및 언더스코어
 
   const handleNext = async () => {
     // 닉네임 유효성 검사

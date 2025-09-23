@@ -337,10 +337,10 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
               <div className="p-6 text-center text-red-500 text-sm">{postError}</div>
             ) : posts.length === 0 ? (
               <div className="mt-4 flex justify-center opacity-50">
-                <div className="max-w-[90%] rounded-2xl border border-gray-300 bg-white px-5 py-4 text-center text-[15px] md:text-base font-medium text-black shadow-md">
-                  아직 포스트가 없어요!
+                <div className="max-w-[90%] rounded-2xl border border-gray-300 bg-white px-5 py-4 text-center text-[15px] text-sm xxs:text-base font-medium text-black shadow-md">
+                  아직 포스트가 존재하지 않습니다.
                   <br />
-                  이 장소의 사진을 공유해 보세요.
+                  사진과 함께 추억을 공유해 보세요.
                 </div>
               </div>
             ) : (
@@ -390,10 +390,10 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
             ) : (
               !isLocked && (
                 <div className="mt-4 flex justify-center opacity-50">
-                  <div className="max-w-[90%] rounded-2xl border border-gray-300 bg-white px-5 py-4 text-center text-[15px] md:text-base font-medium text-black shadow-md">
-                    그룹톡을 생성해보세요!
+                  <div className="max-w-[90%] rounded-2xl border border-gray-300 bg-white px-5 py-4 text-center text-[15px] text-sm xxs:text-base font-medium text-black shadow-md">
+                    아직 그룹 톡이 존재하지 않습니다.
                     <br />
-                    이 장소에 대한 의견을 나눠보세요.
+                    사람들을 만나 다양한 의견을 나눠보세요.
                   </div>
                 </div>
               )
@@ -401,7 +401,7 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
 
             {isLocked && (
               <div className="mt-4 flex justify-center">
-                <div className="max-w-[90%] rounded-2xl border border-gray-300 bg-white px-5 py-4 text-center text-[15px] md:text-base font-medium text-black shadow-md">
+                <div className="max-w-[90%] rounded-2xl border border-gray-300 bg-white px-5 py-4 text-center text-[15px] text-sm xxs:text-base font-medium text-black shadow-md">
                   링커에 참여해 보세요!
                   <br />
                   참여 후 채팅방 입장/생성이 가능합니다.
@@ -432,17 +432,17 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
             ) : (
               !isLocked && (
                 <div className="mt-4 flex justify-center opacity-50">
-                  <div className="max-w-[90%] rounded-2xl border border-gray-300 bg-white px-5 py-4 text-center text-[15px] md:text-base font-medium text-black shadow-md">
-                    링클톡을 생성해보세요!
+                  <div className="max-w-[90%] rounded-2xl border border-gray-300 bg-white px-5 py-4 text-center text-[15px] text-sm xxs:text-base font-medium text-black shadow-md">
+                    아직 링클 톡이 존재하지 않습니다.
                     <br />
-                    참가비를 받고 소규모 모임을 운영해보세요.
+                    참가비를 받고 다양한 모임을 운영해보세요.
                   </div>
                 </div>
               )
             )}
             {isLocked && (
               <div className="mt-4 flex justify-center">
-                <div className="max-w-[90%] rounded-2xl border border-gray-300 bg-white px-5 py-4 text-center text-[15px] md:text-base font-medium text-black shadow-md">
+                <div className="max-w-[90%] rounded-2xl border border-gray-300 bg-white px-5 py-4 text-center text-[15px] text-sm xxs:text-base font-medium text-black shadow-md">
                   링커에 참여해 보세요!
                   <br />
                   참여 후 채팅방 입장/생성이 가능합니다.
@@ -515,10 +515,12 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
                   </div>
 
                   <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+                    {/* 링커 통계 정보 */}
                     <div className="flex gap-4">
                       <span>{rooms.length} 채팅방</span>
                       <span>{posts.length} 포스트</span>
                     </div>
+                    {/* 링커 만료일 */}
                     <span
                       className="cursor-pointer text-blue-500"
                       onClick={handleExtendClick} // 기존 setShowExtendModal(true) → 잔액 체크

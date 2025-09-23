@@ -295,18 +295,18 @@ function ProfileContent({
         {/* 친구 수, 활동 일수, 가입일 */}
         <div className="space-y-1 text-xs text-gray-500">
           <div className="flex items-center space-x-2">
-            <span>👥</span>
-            {/* <Users className="w-3.5 h-3.5" strokeWidth={2} /> */}
+            {/* <span>👥</span> */}
+            <Users className="w-4 h-4 text-indigo-700 fill-indigo-100" strokeWidth={2} />
             <span>{friendCount}명의 친구</span>
           </div>
           <div className="flex items-center space-x-2">
-            <span>🗺️</span>
-            {/* <MapPinned className="w-3.5 h-3.5" strokeWidth={2} /> */}
+            {/* <span>🗺️</span> */}
+            <MapPinned className="w-4 h-4 text-red-700 " strokeWidth={2} />
             <span>{daysSinceJoin}일 동안 활동 중</span>
           </div>
           <div className="flex items-center space-x-2">
-            <span>📅</span>
-            {/* <CalendarDays className="w-3.5 h-3.5" strokeWidth={2} /> */}
+            {/* <span>📅</span> */}
+            <CalendarDays className="w-4 h-4 text-green-700 fill-green-100/30" strokeWidth={2} />
             <span>{createDate} 가입</span>
           </div>
         </div>
