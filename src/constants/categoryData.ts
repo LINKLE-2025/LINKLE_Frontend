@@ -16,7 +16,7 @@ export const CATEGORY_DATA = [
   {
     name: "봉사",
     icon: "/icons/profile/volunteer.png",
-    color: "#7AECF9",
+    color: "#FF92A1",
     title: "따듯한 마음 소유자",
   },
   { name: "게임", icon: "/icons/profile/game.png", color: "#A07AF9", title: "만렙 유저" },
