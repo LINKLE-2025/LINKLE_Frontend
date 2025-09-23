@@ -55,7 +55,7 @@ type Toast = {
     createdAtISO?: string;
 };
 
-const MAX_TOASTS = 2;
+const MAX_TOASTS = 1;
 const AUTO_HIDE_MS = 1500; // 자동 사라짐 시간
 const LEAVE_ANIM_MS = 180; // 퇴장 애니메이션 시간
 
