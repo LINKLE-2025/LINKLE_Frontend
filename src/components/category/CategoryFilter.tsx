@@ -67,8 +67,8 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
   return (
     <div className='absolute top-0 left-0 w-full bg-white shadow-lg z-20 p-4 border-b border-gray-200'>
       {/* 패널 헤더 */}
-      <div className='flex justify-between items-center mb-2'>
-        <h3 className='font-semibold text-gray-800 text-lg'>링커 카테고리 선택</h3>
+      <div className='flex justify-between items-center mb-3'>
+        <h3 className='font-semibold text-gray-800 text-lg xxs:text-xl'>링커 카테고리 선택</h3>
 
         {/* 헤더 버튼들 */}
         <div className='flex gap-2'>
@@ -114,13 +114,13 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
                 console.log(`카테고리 버튼 클릭: ${name} (ID: ${categoryId})`);
                 onCategoryToggle(categoryId);
               }}
-              className={`flex flex-row items-center w-full h-14 px-3 rounded-xl border transition-all duration-200 ${isSelected
+              className={`flex flex-row items-center justify-evenly sm:justify-start sm:gap-1 w-full h-11 xxs:h-12 px-2 xxs:px-3 rounded-xl border transition-all duration-200 ${isSelected
                 ? "border-blue-500 bg-blue-50 shadow-md"
                 : "border-gray-200 bg-white hover:bg-gray-50"
                 }`}
             >
               {/* 카테고리 아이콘 */}
-              <div className='w-8 h-8 mr-1 flex items-center justify-center'>
+              <div className='w-6 h-6 mr-1 flex items-center justify-center'>
                 <img
                   src={CATEGORY_ICONS[categoryId]}
                   alt={name}
@@ -134,7 +134,7 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
 
               {/* 카테고리 이름 */}
               <span
-                className={`text-sm font-medium ${isSelected ? "text-blue-700" : "text-gray-700"}`}
+                className={`text-xs xxs:text-sm font-bold ${isSelected ? "text-blue-600" : "text-linkleGray/75"}`}
               >
                 {name}
               </span>
