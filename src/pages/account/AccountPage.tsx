@@ -129,7 +129,7 @@ export default function AccountPage() {
     const handleCharge = async () => {
         if (!userId) return alert("로그인이 필요합니다.");
         if (!bankId || !accountNumber) return alert("계좌를 등록해주세요.");
-        const numAmount = Number(amount);
+        const numAmount = Number(rawAmount);
         if (!numAmount || numAmount < 100) return alert("입금 금액은 100원 이상이어야 합니다.");
 
         setLoading(true);
@@ -149,7 +149,7 @@ export default function AccountPage() {
             });
 
             // 팝업이 닫히고 나면 서버에서 결제 상태 확인 & DB 업데이트
-            const res = await apiClient.post("/balance/charge", { paymentId, userId, amount });
+            const res = await apiClient.post("/balance/charge", { paymentId, userId, rawAmount });
             if (res.data.msg === "충전 성공") {
                 alert("충전 완료!");
                 setBalance((prev) => (prev ?? 0) + numAmount);

@@ -137,17 +137,28 @@ export default function TotalSearchPanel({
 
 
     const fetchLinkers = async (query: string, pageToFetch = 0) => {
+        const container = scrollRef.current;
+        const prevScrollTop = container?.scrollTop ?? 0;
+        const prevScrollHeight = container?.scrollHeight ?? 0;
+
         setIsSearchingLinker(true);
         try {
             const data = await searchLinkers(query, pageToFetch, 10);
-
-            setLinkerResults(prev => pageToFetch === 0 ? data.content : [...prev, ...data.content]);
+            setLinkerResults(prev =>
+                pageToFetch === 0 ? data.content : [...prev, ...data.content]
+            );
             setLinkerPage(data.number);
             setLinkerTotalPages(data.totalPages);
-        } catch (err) {
-            console.error("링커 검색 실패:", err);
         } finally {
             setIsSearchingLinker(false);
+
+            // ❗ DOM 업데이트 이후 실행되도록 setTimeout
+            if (container) {
+                setTimeout(() => {
+                    const newScrollHeight = container.scrollHeight;
+                    container.scrollTop = prevScrollTop + (newScrollHeight - prevScrollHeight);
+                }, 0);
+            }
         }
     };
 
@@ -305,7 +316,8 @@ export default function TotalSearchPanel({
 
             {/* 검색 결과 */}
             <div className="flex-1 min-h-0 overflow-y-auto p-2 flex flex-col"
-                style={{ marginTop: headerHeight + tabHeight }}
+                style={{ paddingTop: headerHeight + tabHeight, paddingBottom: footerHeight }} ref={scrollRef}
+
             >
                 {activeTab === "friend" ? (
                     <>
@@ -415,7 +427,11 @@ export default function TotalSearchPanel({
                                     {linkerPage + 1 < linkerTotalPages && (
                                         <div className="flex justify-center mt-3">
                                             <button
-                                                onClick={() => fetchLinkers(searchQuery, linkerPage + 1)}
+                                                onClick={() => {
+                                                    const nextPage = linkerPage + 1;
+                                                    setLinkerPage(nextPage); // 페이지 상태 먼저 업데이트
+                                                    fetchLinkers(searchQuery, nextPage); // 그 값을 사용해 API 호출
+                                                }}
                                                 className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
                                             >
                                                 더보기
