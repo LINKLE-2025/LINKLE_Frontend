@@ -1,4 +1,4 @@
-import { JSX, useState, useRef } from "react";
+import { JSX, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import MainHeader from "@/components/header/MainHeader";
 import MainFooter from "@/components/footer/MainFooter";
@@ -25,13 +25,7 @@ export default function AppLayout() {
   const [showAddress, setShowAddress] = useState(false);
   const [showClusterList, setShowClusterList] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
-  const overlaysRef = useRef<OverlayType[]>([]); // 지도 오버레이 저장
 
-  // 🔥 홈 버튼 또는 초기화 시 호출
-  const resetOverlays = () => {
-    overlaysRef.current.forEach((ov) => ov.setMap(null));
-    overlaysRef.current = [];
-  };
 
   // Header, Footer 컴포넌트 동적 설정
   let header: JSX.Element | null = null;
@@ -55,7 +49,6 @@ export default function AppLayout() {
           setShowAddress(false);
           setShowClusterList(false);
           setDetailOpen(false);
-          resetOverlays();
         }} />
       paddingBottom = "pb-[calc(4.8rem+env(safe-area-inset-bottom))]";
       break;

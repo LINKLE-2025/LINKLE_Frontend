@@ -208,7 +208,7 @@ export default function MapPage(): React.ReactElement {
     7: "/icons/category/drinking.png",
     8: "/icons/category/learning.png",
     9: "/icons/category/shopping.png",
-    10: "/icons/category/hospital.png",
+    10: "/icons/category/volunteer.png",
     11: "/icons/category/game.png",
     12: "/icons/category/travel.png",
     13: "/icons/category/shinhan.png",
