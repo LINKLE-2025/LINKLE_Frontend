@@ -1,6 +1,5 @@
-// src/components/profile/StateTab.tsx
-import React from "react";
 import { CATEGORY_DATA } from "@/constants/categoryData"; // 혹시 몰라 import 추가
+import { Star, Trophy } from "lucide-react";
 
 interface StateTabProps {
   linkerStats: {
@@ -81,12 +80,14 @@ function StateTab({ linkerStats, categories }: StateTabProps) {
           <div
             key={state.categoryId}
             className="flex items-center justify-between p-4 rounded-xl"
-            style={{ backgroundColor: `${color}15` }}
+            style={{ backgroundColor: `${color}10` }}
           >
             {/* 왼쪽: 순위 + 카테고리 정보 */}
             <div className="flex items-center">
               <div className="w-8 h-8 flex items-center justify-center text-lg font-bold text-gray-700 mr-4">
-                {state.rank === 0 ? "특별" : state.rank}
+                {state.rank === 0 ?
+                  <Star className="w-6 h-6 text-blue-600 fill-blue-600" />
+                  : state.rank}
               </div>
 
               <div>
@@ -99,7 +100,7 @@ function StateTab({ linkerStats, categories }: StateTabProps) {
                   {state.rank === 3 && <span className="ml-2">🥉</span>}
                 </div>
                 <p className="text-sm text-gray-500">
-                  {state.postCount} 포스트  {state.chatCount} 채팅방  참여
+                  {state.postCount} 포스트  {state.chatCount} 채팅방 참여
                 </p>
               </div>
             </div>
@@ -108,7 +109,7 @@ function StateTab({ linkerStats, categories }: StateTabProps) {
             <div className="flex items-center">
               <div
                 className="w-24 h-12 flex items-center justify-center rounded-sm"
-                style={{ backgroundColor: `${color}15` }}
+                style={{ backgroundColor: `${color}20` }}
               >
                 <span className="text-lg font-bold text-gray-700 mr-3">
                   {state.linkerCount}회

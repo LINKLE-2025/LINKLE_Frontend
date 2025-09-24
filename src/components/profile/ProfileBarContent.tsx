@@ -129,13 +129,14 @@ function ProfileBarContent({
   };
 
   return (
-    <div className="flex justify-between items-center w-full px-4 mt-2 z-20">
+    <div className="flex justify-between items-center w-full px-3 xxs:px-4 mt-3 z-20">
       {/* 왼쪽 ← 버튼 또는 빈 공간 */}
-      <div className="w-6">
+      <div className="w-8 h-8 xxs:w-9 xxs:h-9 flex items-center justify-center
+      hover:bg-gray-200/20 transition-colors rounded-xl">
         {profileType === 'friend' || profileType === 'wait' ? (
           <ChevronLeft
             onClick={handleBack}
-            className="w-6 h-6 text-gray-900 cursor-pointer hover:opacity-80"
+            className="w-6 h-6 text-gray-900 cursor-pointer"
           />
         ) : null}
       </div>
@@ -145,7 +146,8 @@ function ProfileBarContent({
         {(profileType === 'self' || profileType === 'friend') && (
           <button
             onClick={profileType === 'self' ? onEditProfile : onFriendMenu}
-            className="w-8 h-8 flex items-center justify-center text-xl"
+            className="w-8 h-8 xxs:w-9 xxs:h-9 flex items-center justify-center
+            hover:bg-gray-200/20 transition-colors rounded-xl text-xl"
           >
             <Ellipsis className="w-5 h-5 text-gray-700" />
           </button>
