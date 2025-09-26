@@ -6,7 +6,7 @@ import { setUncaughtExceptionCaptureCallback } from "process";
 export const getUserProfile = async (userId: number) => {
   const res = await apiClient.get(`/user/${userId}`);
   return res.data;
-}
+};
 
 // 포스트 목록 불러오기
 export const getUserPosts = async (userId: number) => {
@@ -26,18 +26,16 @@ export const patchUserProfile = async (
     email?: string;
     accountNumber?: string;
   },
-  files: { profile?: File | null; background?: File | null }
+  files: { profile?: File | null; background?: File | null },
 ) => {
   const formData = new FormData();
 
   // dto만 JSON Blob으로 추가
-  formData.append(
-    "dto",
-    new Blob([JSON.stringify(profileData)], { type: "application/json" })
-  );
+  formData.append("dto", new Blob([JSON.stringify(profileData)], { type: "application/json" }));
 
-  if (files.profile) formData.append("profile", files.profile);
-  if (files.background) formData.append("background", files.background);
+  if (files.profile !== undefined) formData.append("profile", files.profile || new Blob([]));
+  if (files.background !== undefined)
+    formData.append("background", files.background || new Blob([]));
 
   const res = await apiClient.patch(`/user/${userId}`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
@@ -77,4 +75,4 @@ export const getBackgroundImage = (userId: number, v?: number) => {
 export const deleteUser = async (userId: number) => {
   const res = await apiClient.delete(`/user/${userId}`);
   return res.data;
-}
+};
