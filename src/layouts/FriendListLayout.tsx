@@ -38,7 +38,7 @@ export default function FriendListLayout() {
     <div className="flex flex-col min-h-screen text-black">
       <main
         className="flex-1"
-        style={{ paddingTop: headerHeight, paddingBottom: footerHeight }}
+        style={{ paddingTop: headerHeight }}
       >
         <Outlet context={{ headerHeight, footerHeight }} />
       </main>
