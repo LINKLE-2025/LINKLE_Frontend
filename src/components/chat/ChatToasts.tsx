@@ -84,7 +84,6 @@ export default function ChatToasts() {
     }, [rooms]);
 
     function buildToastFromEvent(evt: any): Toast | null {
-        // 이벤트에서 roomId 추출 및 음소거/본인메시지 스킵
         const rid =
             evt?.roomId ??
             evt?.room?.id ??
@@ -94,22 +93,21 @@ export default function ChatToasts() {
         if (rid == null) return null;
         if (isRoomMuted(Number(rid))) return null;
 
-        const sid = evt?.senderId ?? evt?.sender?.id ?? evt?.userId ?? evt?.message?.senderId;
-        if (typeof currentUserId === "number" && typeof sid === "number" && sid === currentUserId) {
+        const sid =
+            evt?.senderId ?? evt?.sender?.id ?? evt?.userId ?? evt?.message?.senderId;
+        if (
+            typeof currentUserId === "number" &&
+            typeof sid === "number" &&
+            sid === currentUserId
+        ) {
             return null;
         }
 
-        // 타입은 TEXT | SYSTEM 두 가지로 고정됨 (DB 기준)
-        // 다양한 위치를 방어적으로 확인하되, 최종적으로 TEXT만 통과
         const msgType = String(
-            evt?.messageType ??
-            evt?.type ??
-            evt?.message?.type ??
-            ""
+            evt?.messageType ?? evt?.type ?? evt?.message?.type ?? ""
         ).toUpperCase();
-        if (msgType !== "TEXT") return null; // SYSTEM(등) 은 토스트 미노출
+        if (msgType !== "TEXT") return null;
 
-        // 텍스트/미리보기 (TEXT일 때만)
         let preview: string | undefined =
             evt?.preview ??
             evt?.lastMessage ??
@@ -122,14 +120,12 @@ export default function ChatToasts() {
 
         if (!preview || String(preview).trim().length === 0) return null;
 
-        // 채팅방 화면이 이미 열려 있고 그 방과 동일하면 스킵
         const path = location.pathname;
         if (path.startsWith("/chat/room/")) {
             const openedId = Number(path.split("/").pop());
             if (Number(openedId) === Number(rid)) return null;
         }
 
-        // 방 메타 가져오기 (제목/이미지)
         const r: any = roomIndex.get(String(rid));
         const roomType = String(r?.roomType ?? "").toUpperCase();
         const isDM = roomType === "DM";
@@ -140,7 +136,6 @@ export default function ChatToasts() {
             r?.roomName ??
             "새 메시지";
 
-        // 이미지 후보
         let imageSrc: string | undefined;
         if (isDM) {
             const pid = extractPartnerId(r, currentUserId);
@@ -148,22 +143,32 @@ export default function ChatToasts() {
                 imageSrc = `/api/user/view/profile/${pid}`;
             } else {
                 const gender =
-                    r?.dmPartnerGender ?? r?.dmPartner?.gender ?? r?.partnerGender ?? r?.gender ?? undefined;
+                    r?.dmPartnerGender ??
+                    r?.dmPartner?.gender ??
+                    r?.partnerGender ??
+                    r?.gender ??
+                    undefined;
                 imageSrc = genderFallbackSrc(gender);
             }
         } else if (r?.roomId != null) {
             const bg = `/api/chat/view/background/${r.roomId}`;
             imageSrc = bg;
             if (!imageSrc && typeof r?.themeColor !== "undefined") {
-                const cid = typeof r.themeColor === "string" ? Number(r.themeColor) : r.themeColor;
+                const cid =
+                    typeof r.themeColor === "string"
+                        ? Number(r.themeColor)
+                        : r.themeColor;
                 const cn = COLOR_ICON_NAME[cid as number];
                 if (cn) imageSrc = asset(`icons/color/${cn}`);
             }
         }
 
         const id =
-            (typeof evt?.messageId === "number" ? `mid:${evt.messageId}` : null) ??
-            `rid:${rid}|t:${String(preview).slice(0, 40)}|at:${evt?.createdDate ?? evt?.sentAt ?? Date.now()}`;
+            (typeof evt?.messageId === "number"
+                ? `mid:${evt.messageId}`
+                : null) ??
+            `rid:${rid}|t:${String(preview).slice(0, 40)}|at:${evt?.createdDate ?? evt?.sentAt ?? Date.now()
+            }`;
 
         return {
             id,
@@ -171,7 +176,8 @@ export default function ChatToasts() {
             title: String(title),
             preview: String(preview),
             imageSrc,
-            createdAtISO: evt?.createdDate ?? evt?.sentAt ?? new Date().toISOString(),
+            createdAtISO:
+                evt?.createdDate ?? evt?.sentAt ?? new Date().toISOString(),
         };
     }
 
@@ -196,7 +202,6 @@ export default function ChatToasts() {
     }
 
     function startLeave(id: string, delay = 0) {
-        // 이미 leaving이면 무시
         setLeavingIds((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
         const run = () => {
             const t = window.setTimeout(() => actuallyRemoveToast(id), LEAVE_ANIM_MS);
@@ -214,12 +219,10 @@ export default function ChatToasts() {
         if (seenRef.current.has(t.id)) return;
         seenRef.current.add(t.id);
         setToasts((prev) => [t, ...prev].slice(0, MAX_TOASTS));
-        // 자동 숨김 → 퇴장 애니메이션 거쳐 제거
         const timer = window.setTimeout(() => startLeave(t.id), AUTO_HIDE_MS);
         hideTimersRef.current.set(t.id, timer as unknown as number);
     }
 
-    // 유저 단일 토픽 구독 (새 메시지 수신 → 토스트 생성)
     useEffect(() => {
         if (!currentUserId) return;
         const topic = `/sub/users.${currentUserId}.room-updates`;
@@ -231,7 +234,6 @@ export default function ChatToasts() {
             try {
                 off?.();
             } catch { }
-            // 언마운트 시 타이머 정리
             hideTimersRef.current.forEach((id) => window.clearTimeout(id));
             leaveTimersRef.current.forEach((id) => window.clearTimeout(id));
             hideTimersRef.current.clear();
@@ -239,7 +241,6 @@ export default function ChatToasts() {
         };
     }, [currentUserId, location.pathname, _mutedIds]);
 
-    // 렌더 컨테이너(Portal)
     const container = (
         <div
             className="fixed left-1/2 -translate-x-1/2 z-[9999]
@@ -250,9 +251,17 @@ export default function ChatToasts() {
             {toasts.map((t) => {
                 const leaving = leavingIds.has(t.id);
                 return (
-                    <button
+                    <div
                         key={t.id}
+                        role="button"
+                        tabIndex={0}
                         onClick={() => navigate(`/chat/room/${t.roomId}`)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                navigate(`/chat/room/${t.roomId}`);
+                            }
+                        }}
                         onMouseEnter={() => {
                             const t1 = hideTimersRef.current.get(t.id);
                             if (t1) {
@@ -266,14 +275,16 @@ export default function ChatToasts() {
                             }
                         }}
                         onMouseLeave={() => {
-                            // 잠시 뒤 자동 퇴장
                             startLeave(t.id, 1600);
                         }}
                         className={`pointer-events-auto w-full text-left
                         bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80
                         border border-gray-200 rounded-2xl shadow-lg
                         hover:shadow-xl transition-all duration-200
-                        ${leaving ? "animate-toast-leave pointer-events-none" : "animate-toast-enter"}`}
+                        ${leaving
+                                ? "animate-toast-leave pointer-events-none"
+                                : "animate-toast-enter"
+                            }`}
                     >
                         <div className="p-3 flex gap-3 items-start">
                             <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden shrink-0">
@@ -285,7 +296,8 @@ export default function ChatToasts() {
                                         decoding="async"
                                         draggable={false}
                                         onError={(e) => {
-                                            (e.currentTarget as HTMLImageElement).src = asset("icons/user-default.png");
+                                            (e.currentTarget as HTMLImageElement).src =
+                                                asset("icons/user-default.png");
                                         }}
                                     />
                                 ) : (
@@ -299,7 +311,9 @@ export default function ChatToasts() {
 
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-2">
-                                    <span className="font-semibold text-gray-900 truncate">{t.title}</span>
+                                    <span className="font-semibold text-gray-900 truncate">
+                                        {t.title}
+                                    </span>
                                     <span className="text-[11px] text-gray-400 shrink-0">지금</span>
                                 </div>
                                 <p className="mt-0.5 text-[13px] leading-5 text-gray-600 line-clamp-2 break-all">
@@ -312,18 +326,17 @@ export default function ChatToasts() {
                                 aria-label="닫기"
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    startLeave(t.id); // 즉시 퇴장 애니메이션
+                                    startLeave(t.id);
                                 }}
                                 className="ml-1 text-gray-400 hover:text-gray-600 transition"
                             >
                                 ✕
                             </button>
                         </div>
-                    </button>
+                    </div>
                 );
             })}
 
-            {/* keyframes (inline) */}
             <style>
                 {`
         @keyframes toast-enter {

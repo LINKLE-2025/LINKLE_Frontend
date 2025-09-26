@@ -157,19 +157,19 @@ export default function MessageItem({
 
           {isMine ? (
             <div className="flex items-end gap-1.5">
-              {/* 내 메시지: [안읽은수] [시간] 왼쪽 정렬 */}
-              {showTime && (
-                <div className="flex flex-col items-end mb-0.5 text-[9px] xxs:text-[11px] whitespace-nowrap">
-                  {unread > 0 && (
-                    <span className="text-[9px] xxs:text-[11px] text-gray-600 mr-0.5 mb-0.5">
-                      {unread}
-                    </span>
-                  )}
+              {/* 내 메시지: [안읽은수] 항상, [시간]은 showTime일 때만 */}
+              <div className="flex flex-col items-end mb-0.5 text-[9px] xxs:text-[11px] whitespace-nowrap">
+                {unread > 0 && (
+                  <span className="text-[9px] xxs:text-[11px] text-gray-600 mb-0.5">
+                    {unread}
+                  </span>
+                )}
+                {showTime && (
                   <span className="text-[9px] xxs:text-[11px] text-gray-500">
                     {formatTimeAmPmKR(m.createdDate)}
                   </span>
-                </div>
-              )}
+                )}
+              </div>
               <div className="inline-block px-[11px] py-1.5 xxs:px-3 xxs:py-2 text-sm xxs:text-base rounded-xl xxs:rounded-2xl bg-[#f5f5f5] border border-gray-300 shadow-sm whitespace-pre-wrap break-words">
                 {m.content}
               </div>
@@ -179,20 +179,19 @@ export default function MessageItem({
               <div className="inline-block px-[11px] py-1.5 xxs:px-3 xxs:py-2 text-sm xxs:text-base rounded-xl xxs:rounded-2xl bg-white border border-gray-300 shadow-sm whitespace-pre-wrap break-words">
                 {m.content}
               </div>
-              {/* 상대 메시지: [안읽은수] 위, [시간] 아래 */}
-              {showTime && (
-                <div className="flex flex-col items-start mb-0.5 text-[9px] xxs:text-[11px] whitespace-nowrap">
-                  {unread > 0 && (
-                    <span className="text-[9px] xxs:text-[11px] text-gray-600 ml-0.5 mb-0.5">
-                      {unread}
-                    </span>
-                  )}
+              {/* 상대 메시지: [안읽은수] 항상, [시간]은 showTime일 때만 */}
+              <div className="flex flex-col items-start mb-0.5 text-[9px] xxs:text-[11px] whitespace-nowrap">
+                {unread > 0 && (
+                  <span className="text-[9px] xxs:text-[11px] text-gray-600 ml-0.5 mb-0.5">
+                    {unread}
+                  </span>
+                )}
+                {showTime && (
                   <span className="text-[9px] xxs:text-[11px] text-gray-500">
                     {formatTimeAmPmKR(m.createdDate)}
                   </span>
-                </div>
-              )}
-
+                )}
+              </div>
             </div>
           )}
         </div>
