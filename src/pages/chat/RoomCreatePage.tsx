@@ -24,8 +24,10 @@ export default function RoomCreatePage() {
   const navigate = useNavigate();
   const linker: LinkerDetail | null = (useLocation().state as any)?.linker ?? null;
 
-  // themeColor는 숫자 id(1~6)
-  const [themeColor, setThemeColor] = useState<number>(1);
+  // themeColor는 숫자 id(1~6) 또는 null(이미지 사용으로 색상 해제)
+  const [themeColor, setThemeColor] = useState<number | null>(1);
+  const lastColorRef = useRef<number>(1); // 마지막 선택 색 기억
+
   const [roomType, setRoomType] = useState<RoomType>("LIGHT");
   const [roomName, setRoomName] = useState("");
   const [memo, setMemo] = useState("");
@@ -82,7 +84,8 @@ export default function RoomCreatePage() {
         roomName: roomName.trim(),
         description: description.trim(),
         memo: memo.trim(),
-        themeColor, // 숫자(1~6) 그대로 전송
+        // 백엔드가 숫자를 기대한다면 null 시 마지막 색 또는 1로 안전 보정
+        themeColor: themeColor ?? lastColorRef.current ?? 1,
         linkerId: linker?.linkerId,
       };
       if (isClass) {
@@ -117,7 +120,7 @@ export default function RoomCreatePage() {
   const textareaBase =
     "w-full px-4 py-3 rounded-2xl bg-gray-100 text-gray-900 text-base placeholder:text-gray-400 shadow-inner border-0 focus:outline-none focus:ring-2 focus:ring-gray-300 min-h-32 resize-none";
 
-  const activeColor = COLORS.find((c) => c.id === themeColor);
+  const activeColor = themeColor != null ? COLORS.find((c) => c.id === themeColor) : null;
 
   return (
     // 부모가 overflow-hidden/h-screen이어도 독립 스크롤을 갖도록 고정 뷰포트 컨테이너로 래핑
@@ -150,7 +153,10 @@ export default function RoomCreatePage() {
               />
               <button
                 type="button"
-                onClick={() => setBgFile(null)}
+                onClick={() => {
+                  setBgFile(null);
+                  setThemeColor(lastColorRef.current); // 이미지 제거 시 이전 색 복귀
+                }}
                 className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1"
                 aria-label="배경 제거"
               >
@@ -164,7 +170,10 @@ export default function RoomCreatePage() {
               className="w-full h-full object-cover"
               draggable={false}
             />
-          ) : null}
+          ) : (
+            // 색도 이미지도 없을 때 기본 빈 프레임
+            <div className="w-full h-full bg-gray-100" />
+          )}
         </div>
 
         {/* 팔레트 + 카메라 */}
@@ -176,7 +185,10 @@ export default function RoomCreatePage() {
               return (
                 <button
                   key={c.id}
-                  onClick={() => setThemeColor(c.id)}
+                  onClick={() => {
+                    lastColorRef.current = c.id; // 마지막 색 갱신
+                    setThemeColor(c.id);
+                  }}
                   aria-label={c.label}
                   className="group relative w-8 h-8 rounded-full border-2 bg-white transition"
                   style={
@@ -189,8 +201,8 @@ export default function RoomCreatePage() {
                 >
                   <span
                     className={`absolute inset-[1.5px] rounded-full transition-colors duration-150 ${isActive
-                      ? "bg-[var(--fill)]"
-                      : "bg-transparent [@media(hover:hover)]:group-hover:bg-[var(--hover)]"
+                        ? "bg-[var(--fill)]"
+                        : "bg-transparent [@media(hover:hover)]:group-hover:bg-[var(--hover)]"
                       }`}
                   />
                 </button>
@@ -204,6 +216,7 @@ export default function RoomCreatePage() {
               className="flex items-center justify-center w-9 h-9 rounded-full border-2 bg-white text-gray-700 hover:bg-gray-50 transition-colors duration-150"
               style={{ WebkitTapHighlightColor: "transparent", touchAction: "manipulation" }}
               aria-label="배경 이미지 업로드"
+              title="배경 이미지 업로드"
             >
               <Camera className="w-5 h-5 text-linkleGray" />
             </button>
@@ -214,7 +227,10 @@ export default function RoomCreatePage() {
               className="hidden"
               onChange={(e) => {
                 const f = e.target.files?.[0] ?? null;
-                if (f) setBgFile(f);
+                if (f) {
+                  setBgFile(f);
+                  setThemeColor(null); // ✅ 실제로 이미지가 선택되면 색상 선택 해제
+                }
               }}
             />
           </div>
@@ -294,7 +310,6 @@ export default function RoomCreatePage() {
           <div className="mt-5">
             <div className="text-xs text-gray-600 text-left mb-2">추가 옵션을 입력해 주세요</div>
             <div className="grid grid-cols-1 gap-3">
-
               {/* 참가비 */}
               <div className="w-full rounded-2xl border bg-white px-3 h-12 flex items-center gap-2 shadow-sm border-gray-300 flex-nowrap">
                 <span className="inline-flex items-center h-8 rounded-xl bg-gray-100 px-3 font-semibold shrink-0 whitespace-nowrap">
@@ -313,7 +328,7 @@ export default function RoomCreatePage() {
                     const formatted = Number(digits).toLocaleString("ko-KR");
                     setEntryFee(formatted);
                   }}
-                  className="bg-transparent outline-none border-0 focus:ring-0 text-base flex-1 min-w-0" // ★ 핵심
+                  className="bg-transparent outline-none border-0 focus:ring-0 text-base flex-1 min-w-0"
                 />
                 <span className="text-gray-700 pr-1 shrink-0 whitespace-nowrap">원</span>
               </div>
@@ -327,16 +342,14 @@ export default function RoomCreatePage() {
                   type="datetime-local"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="bg-transparent outline-none border-0 focus:ring-0 text-base flex-1 min-w-0" // 일관성 유지
+                  className="bg-transparent outline-none border-0 focus:ring-0 text-base flex-1 min-w-0"
                   min={new Date().toISOString().slice(0, 16)}
                   max={new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16)}
                 />
               </label>
-
             </div>
           </div>
         )}
-
 
         {/* 액션 버튼 */}
         <section className="mt-6 mb-4">
@@ -348,7 +361,10 @@ export default function RoomCreatePage() {
             >
               생성하기
             </button>
-            <button className="py-3 rounded-2xl bg-gray-100" onClick={() => navigate("/map", { state: { openLinkerId: linker?.linkerId } })}>
+            <button
+              className="py-3 rounded-2xl bg-gray-100"
+              onClick={() => navigate("/map", { state: { openLinkerId: linker?.linkerId } })}
+            >
               취소하기
             </button>
           </div>
