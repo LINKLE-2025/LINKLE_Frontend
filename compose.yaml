@@ -37,7 +37,7 @@ services:
 
   # Database (MariaDB)
   db:
-    image: mariadb:10.11
+    image: mariadb:11.8
     container_name: linkle-mariadb
     restart: always
     environment:
@@ -46,7 +46,7 @@ services:
       MYSQL_USER: linkle
       MYSQL_PASSWORD: 1234
     volumes:
-      - db-data:/var/lib/mysql
+      - db-data-v11:/var/lib/mysql
       - ./init-sql:/docker-entrypoint-initdb.d # 초기화 스크립트 위치
     networks:
       - linkle-net
@@ -93,7 +93,7 @@ services:
       - linkle-net
 
 volumes:
-  db-data:
+  db-data-v11:
   minio-data:
 
 networks:

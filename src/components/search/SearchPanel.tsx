@@ -1,4 +1,5 @@
 // src/components/search/SearchPanel.tsx
+import { Search } from "lucide-react";
 import type { RefObject, KeyboardEvent } from "react";
 
 export interface SearchResult {
@@ -36,7 +37,7 @@ export default function SearchPanel({
   return (
     <div className='flex flex-col h-full bg-white'>
       <div className='flex items-center p-2 border-b border-gray-200 gap-x-2'>
-        <input
+        {/* <input
           id='search-input'
           ref={inputRef}
           type='text'
@@ -62,7 +63,31 @@ export default function SearchPanel({
             alt='검색'
             className='w-7 h-7'
           />
-        </button>
+        </button> */}
+        <div className="relative flex-1 mx-1">
+          <input
+            ref={inputRef}
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="장소 검색"
+            onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
+              if (e.key === "Enter") {
+                handleSearch(1);
+                e.currentTarget.blur();
+              }
+            }}
+            aria-label='장소 검색'
+            className="w-full pl-4 pr-10 py-1.5 bg-gray-100 rounded-xl text-base focus:outline-none"
+          />
+          <button
+            type="button"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-black"
+            onClick={() => handleSearch(1)}
+          >
+            <Search className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       <div className='flex-1 min-h-0 overflow-y-auto p-2'>
