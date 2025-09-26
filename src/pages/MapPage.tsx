@@ -33,6 +33,8 @@ import { usePreventTouchScroll } from "@/hooks/usePreventTouchScroll";
 import ActionCircleButton from "@/components/common/ActionCircleButton";
 import { RotateCw, Search } from "lucide-react";
 import { searchLinkers } from "@/api/searchApi";
+import RecommendButton from "@/components/recommend_final/RecommendButton";
+import RecommendedLinkerModal from "@/components/recommend_final/RecommendedLinkerModal";
 
 interface LayoutContext {
   linkerCreateMode: boolean;
@@ -967,6 +969,32 @@ export default function MapPage(): React.ReactElement {
     showAddress,
   ]);
 
+  // AI 추천 로직 채승
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [recommendModalOpen, setRecommendModalOpen] = useState(false);
+
+  const handleRecommend = async () => {
+    try {
+      if (!kakaoMapRef.current) return;
+
+      // 현재 내가 보고있는 위치 값으로 넘기기
+      const center = kakaoMapRef.current.getCenter();
+      const lat = center.getLat();
+      const lng = center.getLng();
+
+      const url = `https://192.168.0.129:7777/api/linkers/recommend/recommend?lat=${lat}&lng=${lng}&userId=${loggedInUserId}&radiusKm=3&topK=5`;
+
+      console.log("AI 추천 요청 URL:", url);
+
+      const res = await fetch(url, { headers: { "Content-Type": "application/json" } });
+      const data = await res.json();
+      setRecommendations(data);
+      setRecommendModalOpen(true);
+    } catch (err) {
+      console.error("추천 요청 에러:", err);
+    }
+  };
+
 
   return (
 
@@ -1080,10 +1108,11 @@ export default function MapPage(): React.ReactElement {
                   icon={<Search className='w-6 h-6' strokeWidth={2.5} />}
                   onClick={() => setSearchOpen(true)}
                 />
+                {/* AI추천로직 버튼 */}
                 <ActionCircleButton
-                  className='text-linkleGray'
-                  icon={<img src='/icons/mapicon/recommendAi.svg' className='w-6 h-6' />}
-                  onClick={() => setShowAddress((prev) => !prev)}
+                  className="text-linkleGray"
+                  icon={<img src="/icons/mapicon/findLocation.svg" className="w-6 h-6" />}
+                  onClick={handleRecommend}
                 />
                 <ActionCircleButton
                   className='text-linkleGray'
@@ -1204,6 +1233,11 @@ export default function MapPage(): React.ReactElement {
             onOpenDetailById(linkerId);
           }, 250);
         }}
+      />
+      <RecommendedLinkerModal
+        open={recommendModalOpen}
+        onClose={() => setRecommendModalOpen(false)}
+        recommendations={recommendations}
       />
     </MapWrapper>
   );
