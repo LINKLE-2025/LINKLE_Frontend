@@ -981,15 +981,16 @@ export default function MapPage(): React.ReactElement {
       const center = kakaoMapRef.current.getCenter();
       const lat = center.getLat();
       const lng = center.getLng();
-
-      const url = `https://192.168.0.129:7777/api/linkers/recommend/recommend?lat=${lat}&lng=${lng}&userId=${loggedInUserId}&radiusKm=3&topK=5`;
+      const url = `https://localhost:7777/api/linkers/recommend?lat=${lat}&lng=${lng}&userId=${loggedInUserId}&radiusKm=&topK=5`;
 
       console.log("AI 추천 요청 URL:", url);
 
       const res = await fetch(url, { headers: { "Content-Type": "application/json" } });
       const data = await res.json();
-      setRecommendations(data);
-      setRecommendModalOpen(true);
+      setRecommendations(data);   // API 응답을 상태에 저장
+      setShowAddress(true);       // AddressDisplay 열기
+
+      console.log("AI 추천 응답 데이터:", data);
     } catch (err) {
       console.error("추천 요청 에러:", err);
     }
@@ -1112,7 +1113,7 @@ export default function MapPage(): React.ReactElement {
                 <ActionCircleButton
                   className="text-linkleGray"
                   icon={<img src="/icons/mapicon/recommendAi.svg" className="w-6 h-6" />}
-                  onClick={() => setShowAddress((prev) => !prev)}
+                  onClick={handleRecommend}
                 />
                 <ActionCircleButton
                   className='text-linkleGray'
@@ -1136,6 +1137,7 @@ export default function MapPage(): React.ReactElement {
         activeLinkers={activeLinkers}
         loggedInUserId={loggedInUserId}
         onOpenDetailById={onOpenDetailById}
+        linkerResults={recommendations}
       />
       {/* 나머지 모달들 (기존과 동일) */}
       <Sheet

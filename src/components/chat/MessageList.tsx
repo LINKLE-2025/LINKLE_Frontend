@@ -18,6 +18,7 @@ export default function MessageList({
   hasMore,
   loadingOlder,
   loadOlder,
+  memberCount = 0,
 }: {
   msgs: MessageResponseDTO[];
   peerName?: string | null;
@@ -31,6 +32,7 @@ export default function MessageList({
   hasMore: boolean;
   loadingOlder: boolean;
   loadOlder: () => Promise<void> | void;
+  memberCount?: number;
 }) {
   const [meId, setMeId] = useState<number | undefined>(undefined);
   useEffect(() => {
@@ -237,6 +239,7 @@ export default function MessageList({
               compactAfterSystem={afterSystem}
               /* 추가: 같은 분 묶음의 마지막 메시지에만 시간 표기 */
               showTime={showTime}
+              memberCount={memberCount}
             />
           );
         })}
