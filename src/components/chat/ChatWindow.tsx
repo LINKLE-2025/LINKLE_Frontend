@@ -22,12 +22,35 @@ export default function ChatWindow({ roomId }: { roomId: number }) {
     isDM, hasMore, loadingOlder, loadOlder,
   } = useChatRoom(roomId);
 
-  const [inputHeight, setInputHeight] = useState(56);
+  // 방 인원수 산정 (room.memberCount 우선 → membersById 개수 폴백)
+  const memberCount = useMemo(() => {
+    if (!room) return 0;
+
+    // DM이면 항상 2명(나 + 상대)
+    if (isDM) return 2;
+
+    // 그룹: 탈퇴/비활성 제외하고 카운트
+    const active = Object.values(membersById ?? {}).filter((m: any) => {
+      const s = String(m?.state ?? "").toUpperCase();
+      return s !== "LEFT" && s !== "INACTIVE" && s !== "WITHDRAWN";
+    });
+
+    // membersById가 비어있으면 room.memberCount를 폴백으로 사용
+    const fromMap = active.length;
+    const fromRoom = Number(room?.memberCount ?? 0);
+    return fromMap > 0 ? fromMap : fromRoom;
+  }, [isDM, room, membersById]);
+
+  // ChatInput이 넘겨주는 값은 "입력바 높이 + 키보드/푸터" = 하단 점유 높이
+  const [inputOccupiedPx, setInputOccupiedPx] = useState(56);
+
   const [sheetOpen, setSheetOpen] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number | undefined>(undefined);
 
   const peerName = useMemo(() => peer?.name ?? null, [peer]);
   const members = useMemo(() => Object.values(membersById ?? {}), [membersById]);
+
+
 
   // DM에서 상대가 탈퇴했는지 판단
   const dmBlocked = useMemo(() => {
@@ -84,6 +107,15 @@ export default function ChatWindow({ roomId }: { roomId: number }) {
     return () => setRoomHeader(null);
   }, [room, peer, setRoomHeader, sheetOpen]);
 
+  // 하단 점유 높이가 바뀌면 리스트가 가려지지 않도록 하단으로 스크롤
+  useEffect(() => {
+    // 키보드가 올라오거나 내려갈 때 / 입력바 높이 변동 시
+    // bottomRef(리스트 맨 아래 sentinel)를 뷰에 맞춰줌
+    try {
+      bottomRef?.current?.scrollIntoView({ block: "end" });
+    } catch { }
+  }, [inputOccupiedPx, bottomRef]);
+
   // 채팅방 나가기
   const handleLeave = async () => {
     try {
@@ -109,17 +141,18 @@ export default function ChatWindow({ roomId }: { roomId: number }) {
         isDM={isDM}
         headerHeightPx={headerHeight}
         footerHeightPx={footerHeight}
-        inputHeightPx={inputHeight}
+        inputHeightPx={inputOccupiedPx}
         listContainerRef={listContainerRef}
         hasMore={hasMore}
         loadingOlder={loadingOlder}
         loadOlder={loadOlder}
+        memberCount={memberCount}
       />
 
       <ChatInput
         onSend={send}
         footerHeightPx={footerHeight}
-        onHeightChange={setInputHeight}
+        onHeightChange={setInputOccupiedPx}
         disabled={dmBlocked}
         disabledMessage="탈퇴한 사용자입니다"
       />
@@ -127,7 +160,7 @@ export default function ChatWindow({ roomId }: { roomId: number }) {
       {/* 우측 참여자 패널 */}
       <RoomMemberSheet
         open={sheetOpen}
-        onClose={() => setSheetOpen(false)}  // 닫히면 menuOpen도 false로 토글
+        onClose={() => setSheetOpen(false)}
         room={room}
         members={members}
         onLeave={handleLeave}
@@ -135,8 +168,6 @@ export default function ChatWindow({ roomId }: { roomId: number }) {
         footerHeight={footerHeight}
         currentUserId={currentUserId}
       />
-
-
     </>
   );
 }

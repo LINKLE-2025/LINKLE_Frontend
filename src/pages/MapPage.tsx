@@ -64,7 +64,7 @@ interface SearchItem {
 const STORAGE_KEY = "linkle_spots_v2";
 
 export default function MapPage(): React.ReactElement {
-  usePreventTouchScroll(true); // 터치 스크롤 방지 훅 사용
+  // usePreventTouchScroll(true); // 터치 스크롤 방지 훅 사용
 
 
   // 🔥 홈 버튼 눌렀을 때 overlay 제거 함수
@@ -1149,7 +1149,7 @@ export default function MapPage(): React.ReactElement {
       >
         <Sheet.Container className='z-[0]'>
           <Sheet.Header>
-            <div className='mx-auto my-1 h-1 w-24 rounded-full bg-gray-300' />
+            <div className='mx-auto my-2 h-1.5 w-12 rounded-full bg-gray-300' />
           </Sheet.Header>
           <Sheet.Content>
             <div className='flex flex-col h-full pb-[calc(min(4px,env(safe-area-inset-bottom))+285px)]'>

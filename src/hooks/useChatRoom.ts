@@ -67,6 +67,9 @@ export function useChatRoom(roomId: number) {
   const prevLastIdRef = useRef<number | undefined>(undefined);
   const initialAutoScrollDoneRef = useRef(false);
 
+  // [NEW] 메시지별 '읽은 유저' 집합(메모리 캐시): messageId -> Set<userId>
+  const readByMapRef = useRef<Map<number, Set<number>>>(new Map());
+
   // 공용 하단 스크롤
   function scrollToBottom(mode: "instant" | "smooth" = "instant") {
     const el = listContainerRef.current;
@@ -129,12 +132,29 @@ export function useChatRoom(roomId: number) {
       setMsgs((prev) => {
         const ids = new Set(prev.map((x) => x.messageId));
         const toPrepend = older
-          .map((x) => ({ ...x, content: x.content ?? (x as any).text ?? "" }))
+          .map((x) => {
+            const content = x.content ?? (x as any).text ?? "";
+
+            // sender를 '이미 읽은 사람'으로 씨딩
+            const set = readByMapRef.current.get(x.messageId) ?? new Set<number>();
+            if (typeof x.senderId === "number") set.add(x.senderId);
+            readByMapRef.current.set(x.messageId, set);
+
+            // 서버 readCount 없으면 set.size로 보강
+            const rc = typeof (x as any).readCount === "number" ? (x as any).readCount : set.size;
+
+            return {
+              ...x,
+              content,
+              readCount: rc,
+            } as MessageResponseDTO & { readCount?: number };
+          })
           .filter((x) => x.messageType === "TEXT" || x.messageType === "SYSTEM")
           .filter((x) => typeof x.messageId === "number")
           .filter((x) => typeof x.content === "string" && x.content.trim().length > 0)
           .filter((x) => !ids.has(x.messageId))
           .sort(byCreatedAsc);
+
         return [...toPrepend, ...prev];
       });
 
@@ -194,8 +214,25 @@ export function useChatRoom(roomId: number) {
         setPeer({ name: r.roomName ?? "그룹 톡", nick: null, id: null });
       }
 
+      // 기존 initial 생성 블록을 아래로 교체
       const initial = (m ?? [])
-        .map((x) => ({ ...x, content: x.content ?? (x as any).text ?? "" }))
+        .map((x) => {
+          const content = x.content ?? (x as any).text ?? "";
+
+          // sender를 '이미 읽은 사람'으로 씨딩
+          const set = readByMapRef.current.get(x.messageId) ?? new Set<number>();
+          if (typeof x.senderId === "number") set.add(x.senderId);
+          readByMapRef.current.set(x.messageId, set);
+
+          // 서버 readCount가 없으면 set.size로 보강
+          const rc = typeof (x as any).readCount === "number" ? (x as any).readCount : set.size;
+
+          return {
+            ...x,
+            content,
+            readCount: rc,
+          } as MessageResponseDTO & { readCount?: number };
+        })
         .filter((x) => x.messageType === "TEXT" || x.messageType === "SYSTEM")
         .filter((x) => typeof x.messageId === "number")
         .filter((x) => typeof x.content === "string" && x.content.trim().length > 0)
@@ -238,7 +275,43 @@ export function useChatRoom(roomId: number) {
     const me = Number(DEV_UID) || null;
 
     const off = stompClient.subscribe(`/sub/room.${roomId}`, (raw: any) => {
-      const type = raw?.type ?? raw?.eventType ?? null;
+      const rawType = (raw?.type ?? raw?.eventType ?? "") as string;
+      const type = rawType.toString().toUpperCase();
+
+      // [NEW] READ 이벤트 먼저 처리
+      if (type.includes("READ")) {
+        const readerId: number | undefined = raw?.readerId ?? raw?.userId ?? raw?.reader?.id;
+        const lastReadMessageId: number | undefined = raw?.lastReadMessageId ?? raw?.lastReadMsgId;
+
+        if (typeof readerId !== "number" || typeof lastReadMessageId !== "number") {
+          return;
+        }
+
+        const readByMap = readByMapRef.current;
+
+        // lastReadMessageId 이하 메시지에 대해 readerId 반영
+        setMsgs((prev) => {
+          let changed = false;
+          const next = prev.map((m) => {
+            if (m.messageId <= lastReadMessageId) {
+              const set = readByMap.get(m.messageId) ?? new Set<number>();
+              if (!set.has(readerId)) {
+                set.add(readerId);
+                readByMap.set(m.messageId, set);
+                const newCount = set.size;
+                changed = true;
+                return { ...m, readCount: newCount }; // readCount 갱신
+              }
+            }
+            return m;
+          });
+          return changed ? next : prev;
+        });
+
+        return;
+      }
+
+      // 메시지 생성 관련 이벤트만 통과
       if (type && type !== "MESSAGE_CREATED" && type !== "NEW_MESSAGE") return;
 
       const contentRaw = raw?.content ?? raw?.text ?? "";
@@ -257,7 +330,16 @@ export function useChatRoom(roomId: number) {
         senderId: raw.senderId ?? raw.userId ?? raw.sender?.userId ?? null,
         senderName: raw.senderName ?? raw.sender?.name ?? null,
         senderImage: resolveImageUrl(raw.senderImage ?? raw.sender?.image) ?? null,
+        // [NEW] 보낸 사람은 즉시 읽은 것으로 간주(원치 않으면 0으로 바꿔도 됨)
+        readCount: 1,
       };
+
+      // [NEW] 메모리 캐시에 보낸 사람을 reader로 기록
+      if (typeof evt.senderId === "number") {
+        const set = readByMapRef.current.get(evt.messageId) ?? new Set<number>();
+        set.add(evt.senderId);
+        readByMapRef.current.set(evt.messageId, set);
+      }
 
       setMsgs((prev) => {
         if (prev.some((x) => x.messageId === evt.messageId)) return prev;

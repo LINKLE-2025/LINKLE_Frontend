@@ -44,6 +44,7 @@ export interface MessageResponseDTO {
   senderName?: string | null;
   senderImage?: string | null;
   senderGender?: string | null;
+  readCount?: number;
 }
 
 export interface CreateRoomRequestDTO {

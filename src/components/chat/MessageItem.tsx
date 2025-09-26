@@ -24,11 +24,9 @@ function formatTimeAmPmKR(input: string | number | Date) {
   return `${ampm} ${h12}:${mm}`;
 }
 
-/** 동일 출처의 /api/* 인지 판단 (blob 재시도 조건) */
 function isSameOriginApi(url: string) {
   try {
     if (url.startsWith("/")) {
-      // 같은 출처 상대경로
       return url.startsWith("/api/");
     }
     const u = new URL(url, window.location.origin);
@@ -47,6 +45,9 @@ export default function MessageItem({
   withdrawn,
   isFirstOfBlock,
   compactAfterSystem,
+  /** 추가: 이 메시지에 시간을 표시할지 여부 (부모에서 계산해서 전달) */
+  showTime = true,
+  memberCount = 0,
 }: {
   m: MessageResponseDTO;
   showAvatar: boolean;
@@ -56,10 +57,15 @@ export default function MessageItem({
   withdrawn?: boolean;
   isFirstOfBlock: boolean;
   compactAfterSystem?: boolean;
+  showTime?: boolean; // 추가
+  memberCount?: number; // 추가
 }) {
   const isMine = m.senderId === DEV_UID;
 
-  // 후보: 1) 넘어온 avatar → 2) 발신자 프로필 뷰 → 3) 성별 기본 이미지
+  // [NEW] 읽지 않은 수 계산: (방 인원수 - readCount)
+  const readCount = typeof m.readCount === "number" ? m.readCount : 0;
+  const unread = Math.max(0, memberCount - readCount);
+
   const candidates = useMemo(() => {
     if (isMine || !showAvatar) return [] as string[];
     const arr: (string | undefined)[] = [];
@@ -75,7 +81,6 @@ export default function MessageItem({
   const [avatarError, setAvatarError] = useState(false);
   const currentSrc = candidates[idx];
 
-  // blob 재시도 상태
   const [blobUrl, setBlobUrl] = useState<string | undefined>(undefined);
   const [triedAuthFetch, setTriedAuthFetch] = useState(false);
 
@@ -87,7 +92,6 @@ export default function MessageItem({
   }, [candidates.length, avatar, gender, withdrawn, m.senderId]);
 
   const handleImgError = async () => {
-    // 동일 출처 /api/* 이면 1회 쿠키 포함 fetch로 blob 재시도 (모바일 쿠키 미부착 대응)
     if (!triedAuthFetch && typeof currentSrc === "string" && isSameOriginApi(currentSrc)) {
       setTriedAuthFetch(true);
       try {
@@ -99,21 +103,17 @@ export default function MessageItem({
             if (prev) URL.revokeObjectURL(prev);
             return url;
           });
-          return; // 성공 시 여기서 종료 (img가 blobUrl로 다시 그림)
+          return;
         }
-      } catch {
-        // ignore → 다음 후보로
-      }
+      } catch { /* ignore */ }
     }
 
-    // 다음 후보로 이동
     const next = idx + 1;
     if (next < candidates.length) setIdx(next);
     else setAvatarError(true);
   };
 
   useEffect(() => {
-    // unmount/변경 시 blob URL 정리
     return () => {
       if (blobUrl) URL.revokeObjectURL(blobUrl);
     };
@@ -122,7 +122,6 @@ export default function MessageItem({
   const outerMarginTop = compactAfterSystem ? "mt-1" : isFirstOfBlock ? "mt-5" : "mt-1.5";
   const outerMarginBottom = compactAfterSystem ? "mb-1.5" : "mb-2.5";
 
-  // 표시 src: blob 성공 > 현재 후보
   const displaySrc = blobUrl ?? currentSrc;
 
   const renderAvatar = () => {
@@ -158,9 +157,19 @@ export default function MessageItem({
 
           {isMine ? (
             <div className="flex items-end gap-1.5">
-              <div className="text-[11px] text-gray-500 mb-0.5 whitespace-nowrap">
-                {formatTimeAmPmKR(m.createdDate)}
-              </div>
+              {/* 내 메시지: [안읽은수] [시간] 왼쪽 정렬 */}
+              {showTime && (
+                <div className="flex flex-col items-end mb-0.5 text-[9px] xxs:text-[11px] whitespace-nowrap">
+                  {unread > 0 && (
+                    <span className="text-[9px] xxs:text-[11px] text-gray-600 mr-0.5 mb-0.5">
+                      {unread}
+                    </span>
+                  )}
+                  <span className="text-[9px] xxs:text-[11px] text-gray-500">
+                    {formatTimeAmPmKR(m.createdDate)}
+                  </span>
+                </div>
+              )}
               <div className="inline-block px-[11px] py-1.5 xxs:px-3 xxs:py-2 text-sm xxs:text-base rounded-xl xxs:rounded-2xl bg-[#f5f5f5] border border-gray-300 shadow-sm whitespace-pre-wrap break-words">
                 {m.content}
               </div>
@@ -170,9 +179,20 @@ export default function MessageItem({
               <div className="inline-block px-[11px] py-1.5 xxs:px-3 xxs:py-2 text-sm xxs:text-base rounded-xl xxs:rounded-2xl bg-white border border-gray-300 shadow-sm whitespace-pre-wrap break-words">
                 {m.content}
               </div>
-              <div className="text-[9px] xxs:text-[11px] text-gray-500 mb-0.5 whitespace-nowrap">
-                {formatTimeAmPmKR(m.createdDate)}
-              </div>
+              {/* 상대 메시지: [안읽은수] 위, [시간] 아래 */}
+              {showTime && (
+                <div className="flex flex-col items-start mb-0.5 text-[9px] xxs:text-[11px] whitespace-nowrap">
+                  {unread > 0 && (
+                    <span className="text-[9px] xxs:text-[11px] text-gray-600 ml-0.5 mb-0.5">
+                      {unread}
+                    </span>
+                  )}
+                  <span className="text-[9px] xxs:text-[11px] text-gray-500">
+                    {formatTimeAmPmKR(m.createdDate)}
+                  </span>
+                </div>
+              )}
+
             </div>
           )}
         </div>

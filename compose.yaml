@@ -5,6 +5,7 @@ services:
   frontend:
     image: linkleteam/linkle-frontend:v1.0.0 # 빌드 & 푸시한 Frontend 이미지
     container_name: linkle-frontend
+    restart: always
     ports:
       - "8081:80" # Nginx 기본 포트 80을 호스트의 8081로 매핑
     depends_on:
@@ -16,6 +17,7 @@ services:
   backend:
     image: linkleteam/linkle-backend:v1.0.0 # 빌드 & 푸시한 Backend 이미지
     container_name: linkle-backend
+    restart: always
     ports:
       - "8082:8080" # Spring Boot 기본 포트 8080을 호스트의 8082로 매핑
     environment:
@@ -24,6 +26,8 @@ services:
       REDIS_HOST: redis
       AI_HOST: python-ai
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      recommend.flask.base-url: http://python-ai:5000
+      recommend.flask.recommend-path: /recommendAI
     depends_on:
       - db
       - redis
@@ -33,7 +37,7 @@ services:
 
   # Database (MariaDB)
   db:
-    image: mariadb:10.11
+    image: mariadb:11.8
     container_name: linkle-mariadb
     restart: always
     environment:
@@ -42,7 +46,7 @@ services:
       MYSQL_USER: linkle
       MYSQL_PASSWORD: 1234
     volumes:
-      - db-data:/var/lib/mysql
+      - db-data-v11:/var/lib/mysql
       - ./init-sql:/docker-entrypoint-initdb.d # 초기화 스크립트 위치
     networks:
       - linkle-net
@@ -59,8 +63,13 @@ services:
   python-ai:
     image: linkleteam/linkle-ai:v1.0.0
     container_name: linkle-ai
+    restart: always
     ports:
       - "8083:5000" # (옵션) 외부 테스트용, 내부에서는 5000 그대로
+    env_file:
+      - ./python-ai/.env
+    depends_on:
+      - db
     networks:
       - linkle-net
 
@@ -84,7 +93,7 @@ services:
       - linkle-net
 
 volumes:
-  db-data:
+  db-data-v11:
   minio-data:
 
 networks:
