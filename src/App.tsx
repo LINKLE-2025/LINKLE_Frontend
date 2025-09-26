@@ -40,12 +40,14 @@ import { useEffect } from "react";
 import ProtectedLayout from "./layouts/ProtectedLayout";
 import BalancePage from "./pages/pay/BalancePage";
 import PayRedirectPage from "./pages/pay/PayRedirectPage";
+import useRoomUpdates from "./hooks/useRoomUpdates";
 
 export default function App() {
   const fetchUser = useAuthStore((s) => s.fetchUser);
 
   useFocusRefresh();  // 포커스 복귀 시 토큰 갱신
   useStomp();         // STOMP 연결 초기화
+  useRoomUpdates();   // 전역 room-updates 구독
 
   // 전역 사용자 상태 설정 : 앱 로드 시 한 번만 /auth/me 호출 
   useEffect(() => {
