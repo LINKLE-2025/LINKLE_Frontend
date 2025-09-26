@@ -58,6 +58,7 @@ type Toast = {
 const MAX_TOASTS = 1;
 const AUTO_HIDE_MS = 1500; // 자동 사라짐 시간
 const LEAVE_ANIM_MS = 180; // 퇴장 애니메이션 시간
+const MAX_LIFETIME_MS = 1500;
 
 export default function ChatToasts() {
     const navigate = useNavigate();
@@ -71,6 +72,7 @@ export default function ChatToasts() {
     const hideTimersRef = useRef<Map<string, number>>(new Map()); // auto-hide 타이머
     const leaveTimersRef = useRef<Map<string, number>>(new Map()); // 퇴장 애니메이션 후 제거 타이머
     const seenRef = useRef<Set<string>>(new Set()); // 중복 방지
+    const safetyTimersRef = useRef<Map<string, number>>(new Map()); // 안전망 타이머
 
     // 음소거 목록 변경 시 리렌더 유도
     const _mutedIds = useMutedRoomIds();
@@ -221,6 +223,9 @@ export default function ChatToasts() {
         setToasts((prev) => [t, ...prev].slice(0, MAX_TOASTS));
         const timer = window.setTimeout(() => startLeave(t.id), AUTO_HIDE_MS);
         hideTimersRef.current.set(t.id, timer as unknown as number);
+
+        const safety = window.setTimeout(() => startLeave(t.id), MAX_LIFETIME_MS);
+        safetyTimersRef.current.set(t.id, safety as unknown as number);
     }
 
     useEffect(() => {
