@@ -23,6 +23,7 @@ interface AddressDisplayProps {
   loggedInUserId: number | null;
   onLinkerClick?: (linkerId: number) => void;
   onOpenDetailById: (linkerId: number) => void;
+  linkerResults: any[]; // 추천결과
 }
 
 interface WeatherData {
@@ -47,7 +48,8 @@ export default function AddressDisplay({
   onClose,
   activeLinkers,
   loggedInUserId,
-  onOpenDetailById
+  onOpenDetailById,
+  linkerResults
 }: AddressDisplayProps) {
   const [address, setAddress] = useState("");
   const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -56,24 +58,24 @@ export default function AddressDisplay({
   const { footerHeight } = useOutletContext<LayoutContext>();
 
   // 링커 추천
-  const fetchLinkers = async () => {
-    try {
-      const data = await getRecommend(loggedInUserId!, address); // userId + 지도에서 뽑은 address 같이 보냄
-      console.log(loggedInUserId, address, data, "추천 결과");
-      setLinkerResults(data);
-    } catch (err) {
-      console.error("링커 조회", err);
-    }
-  };
+  // const fetchLinkers = async () => {
+  //   try {
+  //     const data = await getRecommend(loggedInUserId!, address); // userId + 지도에서 뽑은 address 같이 보냄
+  //     console.log(loggedInUserId, address, data, "추천 결과");
+  //     setLinkerResults(data);
+  //   } catch (err) {
+  //     console.error("링커 조회", err);
+  //   }
+  // };
 
-  useEffect(() => {
-    if (isOpen && loggedInUserId && address) {
-      fetchLinkers();
-    }
-  }, [isOpen, loggedInUserId, address]); // address 변경될 때마다 추천 갱신
+  // useEffect(() => {
+  //   if (isOpen && loggedInUserId && address) {
+  //     fetchLinkers();
+  //   }
+  // }, [isOpen, loggedInUserId, address]); // address 변경될 때마다 추천 갱신
 
   // AI  추천을 위한 정보 전달
-  const [linkerResults, setLinkerResults] = useState<SearchLinkerResponseDTO[]>([]);
+  //const [linkerResults, setLinkerResults] = useState<SearchLinkerResponseDTO[]>([]);
 
 
   // 🔹 시/도 이름 통일 함수 (반드시 포함)
@@ -223,7 +225,13 @@ export default function AddressDisplay({
               </div>
             </div>
 
-            <div>
+            <div className="flex rounded-sm border-b-2 m-2 py-1 text-xs items-center justify-center">
+              <LucideWand className="text-[#BA8ED4] mr-2" />
+              {linkerResults[0]?.userName ?? "사용자"}님과 친구들이 자주 찾는 카테고리를 기반으로 AI가 골라봤어요 ✨
+            </div>
+
+
+            {/* <div>
               {age !== null && gender ? (
                 <div className="flex rounded-lg border-2 border-gray-200/40 my-2 mx-3 py-1.5 text-[10px] xxs:text-xs items-center justify-center shadow-sm bg-gradient-to-r from-purple-100/35 via-pink-100/10 to-pink-100/35">
                   <LucideWand className="w-5 h-5 text-[#BA8ED4] mr-2" /> {address}에서 {age}대 {gender}이 많이 찾는 링커 목록입니다.
@@ -231,7 +239,7 @@ export default function AddressDisplay({
               ) : (
                 <div>유저 정보를 불러오는 중...</div>
               )}
-            </div>
+            </div> */}
 
             {/* 링커 리스트 */}
             <div className="flex-1 overflow-y-auto max-h-[380px]"
