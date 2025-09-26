@@ -47,6 +47,7 @@ export default function MessageItem({
   compactAfterSystem,
   /** 추가: 이 메시지에 시간을 표시할지 여부 (부모에서 계산해서 전달) */
   showTime = true,
+  memberCount = 0,
 }: {
   m: MessageResponseDTO;
   showAvatar: boolean;
@@ -57,8 +58,13 @@ export default function MessageItem({
   isFirstOfBlock: boolean;
   compactAfterSystem?: boolean;
   showTime?: boolean; // 추가
+  memberCount?: number; // 추가
 }) {
   const isMine = m.senderId === DEV_UID;
+
+  // [NEW] 읽지 않은 수 계산: (방 인원수 - readCount)
+  const readCount = typeof m.readCount === "number" ? m.readCount : 0;
+  const unread = Math.max(0, memberCount - readCount);
 
   const candidates = useMemo(() => {
     if (isMine || !showAvatar) return [] as string[];
@@ -151,10 +157,17 @@ export default function MessageItem({
 
           {isMine ? (
             <div className="flex items-end gap-1.5">
-              {/* ✅ 시간: showTime일 때만 렌더 */}
+              {/* 내 메시지: [안읽은수] [시간] 왼쪽 정렬 */}
               {showTime && (
-                <div className="text-[11px] text-gray-500 mb-0.5 whitespace-nowrap">
-                  {formatTimeAmPmKR(m.createdDate)}
+                <div className="flex flex-col items-end mb-0.5 text-[9px] xxs:text-[11px] whitespace-nowrap">
+                  {unread > 0 && (
+                    <span className="text-[9px] xxs:text-[11px] text-gray-600 mr-0.5 mb-0.5">
+                      {unread}
+                    </span>
+                  )}
+                  <span className="text-[9px] xxs:text-[11px] text-gray-500">
+                    {formatTimeAmPmKR(m.createdDate)}
+                  </span>
                 </div>
               )}
               <div className="inline-block px-[11px] py-1.5 xxs:px-3 xxs:py-2 text-sm xxs:text-base rounded-xl xxs:rounded-2xl bg-[#f5f5f5] border border-gray-300 shadow-sm whitespace-pre-wrap break-words">
@@ -166,12 +179,20 @@ export default function MessageItem({
               <div className="inline-block px-[11px] py-1.5 xxs:px-3 xxs:py-2 text-sm xxs:text-base rounded-xl xxs:rounded-2xl bg-white border border-gray-300 shadow-sm whitespace-pre-wrap break-words">
                 {m.content}
               </div>
-              {/* 시간: showTime일 때만 렌더 */}
+              {/* 상대 메시지: [안읽은수] 위, [시간] 아래 */}
               {showTime && (
-                <div className="text-[9px] xxs:text-[11px] text-gray-500 mb-0.5 whitespace-nowrap">
-                  {formatTimeAmPmKR(m.createdDate)}
+                <div className="flex flex-col items-start mb-0.5 text-[9px] xxs:text-[11px] whitespace-nowrap">
+                  {unread > 0 && (
+                    <span className="text-[9px] xxs:text-[11px] text-gray-600 ml-0.5 mb-0.5">
+                      {unread}
+                    </span>
+                  )}
+                  <span className="text-[9px] xxs:text-[11px] text-gray-500">
+                    {formatTimeAmPmKR(m.createdDate)}
+                  </span>
                 </div>
               )}
+
             </div>
           )}
         </div>
