@@ -52,6 +52,7 @@ export default function AddressDisplay({
   linkerResults
 }: AddressDisplayProps) {
   const [address, setAddress] = useState("");
+  const [addressDistrict, setAddressDistrict] = useState("");
   const [weather, setWeather] = useState<WeatherData | null>(null);
 
   type LayoutContext = { headerHeight: number; footerHeight: number };
@@ -175,6 +176,11 @@ export default function AddressDisplay({
           const district = words[1] ?? "";
           const addressDetail = `${region} ${district}`;
           setAddress(addressDetail);
+          if (region === "서울특별시") {
+            setAddressDistrict(district);
+          } else {
+            setAddressDistrict("etc");
+          }
 
           // 좌표 기반 날씨 요청
           console.log("☁️ 날씨 API 호출", center.getLat(), center.getLng());
@@ -212,7 +218,7 @@ export default function AddressDisplay({
           <div className="flex flex-col">
             {/* 링커 요약 정보 */}
             <div className="flex items-center gap-3 p-4 border-b border-t">
-              <img src="/icons/mapicon/linker.png" alt="Pin Icon" className="w-10 h-10 rounded-full" />
+              <img src={`/icons/district/${addressDistrict}.png`} alt="Pin Icon" className="w-10 h-10 rounded-full" />
               <div className="flex flex-col">
                 <span className="text-sm font-medium">{address || "주소를 불러오는 중..."}</span>
                 <span className="text-xs text-gray-500">{linkerCount}개의 링커 활성화 됨</span>
