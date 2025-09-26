@@ -153,7 +153,7 @@ export default function MessageList({
     }
   }, [msgs, loadingOlder, bottomRef, listContainerRef, detectAppendPrepend]);
 
-  // ✅ 분 단위 키(YYYY-MM-DD HH:mm) 생성 헬퍼
+  // 분 단위 키(YYYY-MM-DD HH:mm) 생성 헬퍼
   const minuteKey = (d: string | number | Date) => {
     const x = new Date(d);
     const y = x.getFullYear();
@@ -218,7 +218,7 @@ export default function MessageList({
           const withdrawn =
             !isMine && !member ? ((m.senderId ?? 0) === 0 || (name ?? "").includes("탈퇴")) : false;
 
-          // ✅ 시간 표시는 "같은 발신자가 같은 분에 이어서 보낸 다음 메시지"가 존재하면 숨김
+          // 시간 표시는 "같은 발신자가 같은 분에 이어서 보낸 다음 메시지"가 존재하면 숨김
           const next = msgs[i + 1];
           const sameSenderNext = next && next.messageType !== "SYSTEM" && next.senderId === m.senderId;
           const sameMinuteNext = next && minuteKey(next.createdDate) === minuteKey(m.createdDate);
@@ -235,7 +235,7 @@ export default function MessageList({
               gender={gender}
               withdrawn={withdrawn}
               compactAfterSystem={afterSystem}
-              /* ✅ 추가: 같은 분 묶음의 마지막 메시지에만 시간 표기 */
+              /* 추가: 같은 분 묶음의 마지막 메시지에만 시간 표기 */
               showTime={showTime}
             />
           );
