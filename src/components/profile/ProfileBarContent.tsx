@@ -129,7 +129,7 @@ function ProfileBarContent({
   };
 
   return (
-    <div className="flex justify-between items-center w-full px-3 xxs:px-4 mt-3 z-20">
+    <div className="flex justify-between items-center w-full px-3 xxs:px-4 pt-3 z-20 bg-gradient-to-t from-black/0 to-black/10">
       {/* 왼쪽 ← 버튼 또는 빈 공간 */}
       <div className="w-8 h-8 xxs:w-9 xxs:h-9 flex items-center justify-center
       hover:bg-gray-200/20 transition-colors rounded-xl">

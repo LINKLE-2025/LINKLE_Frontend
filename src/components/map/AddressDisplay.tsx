@@ -198,12 +198,12 @@ export default function AddressDisplay({
     <Sheet
       isOpen={isOpen}
       onClose={onClose}
-      snapPoints={[0.65, 0.3, 0]}
+      snapPoints={[0.65, 0.62, 0.59, 0.56, 0.53, 0.5, 0.47, 0.44, 0.41, 0.38, 0.35, 0.32, 0.29, 0.26, 0.23, 0]}
       initialSnap={0}
       style={{ bottom: footerHeight }}
       {...({ onSpringEnd: (snapIndex: number) => { if (snapIndex === 0) onClose(); } } as any)}
     >
-      <Sheet.Container>
+      <Sheet.Container style={{ boxShadow: "1px 2px 15px rgba(0, 0, 0, 0.2)" }}>
         <Sheet.Header>
           <div className="mx-auto my-2 h-1.5 w-12 rounded-full bg-gray-300" />
         </Sheet.Header>
