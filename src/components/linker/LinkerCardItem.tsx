@@ -59,13 +59,11 @@ const LinkerCardItem = ({ linker, onClick }: LinkerCardItemProps) => {
                             <p className="font-bold">
                                 {linker.name}
                             </p>
-                            <p>
-                                {linker.memo && (
-                                    <div className={`text-sm mt-1 line-clamp-2 ${isDeleted ? "text-gray-400" : "text-gray-500"}`}>
-                                        {linker.memo}
-                                    </div>
-                                )}
-                            </p>
+                            {linker.memo && (
+                                <div className={`text-sm mt-1 line-clamp-2 ${isDeleted ? "text-gray-400" : "text-gray-500"}`}>
+                                    {linker.memo}
+                                </div>
+                            )}
                         </div>
                         <div className="text-xs text-gray-500 whitespace-nowrap text-right flex flex-col gap-y-1.5 pr-2">
                             <p>채팅방 {linker.chatRoomCount}개</p>

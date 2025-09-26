@@ -52,6 +52,7 @@ export default function AddressDisplay({
   linkerResults
 }: AddressDisplayProps) {
   const [address, setAddress] = useState("");
+  const [addressDistrict, setAddressDistrict] = useState("");
   const [weather, setWeather] = useState<WeatherData | null>(null);
 
   type LayoutContext = { headerHeight: number; footerHeight: number };
@@ -175,6 +176,11 @@ export default function AddressDisplay({
           const district = words[1] ?? "";
           const addressDetail = `${region} ${district}`;
           setAddress(addressDetail);
+          if (region === "서울특별시") {
+            setAddressDistrict(district);
+          } else {
+            setAddressDistrict("etc");
+          }
 
           // 좌표 기반 날씨 요청
           console.log("☁️ 날씨 API 호출", center.getLat(), center.getLng());
@@ -195,17 +201,16 @@ export default function AddressDisplay({
   }, [map, isOpen]);
 
   const linkerCount = activeLinkers.filter((linker) => linker.addressDetail === address).length;
-  console.log(footerHeight)
   return (
     <Sheet
       isOpen={isOpen}
       onClose={onClose}
-      snapPoints={[0.65, 0.3, 0]}
+      snapPoints={[0.65, 0.62, 0.59, 0.56, 0.53, 0.5, 0.47, 0.44, 0.41, 0.38, 0.35, 0.32, 0.29, 0.26, 0.23, 0]}
       initialSnap={0}
       style={{ bottom: footerHeight }}
       {...({ onSpringEnd: (snapIndex: number) => { if (snapIndex === 0) onClose(); } } as any)}
     >
-      <Sheet.Container>
+      <Sheet.Container style={{ boxShadow: "1px 2px 15px rgba(0, 0, 0, 0.2)" }}>
         <Sheet.Header>
           <div className="mx-auto my-2 h-1.5 w-12 rounded-full bg-gray-300" />
         </Sheet.Header>
@@ -213,7 +218,7 @@ export default function AddressDisplay({
           <div className="flex flex-col">
             {/* 링커 요약 정보 */}
             <div className="flex items-center gap-3 p-4 border-b border-t">
-              <img src="/icons/mapicon/linker.png" alt="Pin Icon" className="w-10 h-10 rounded-full" />
+              <img src={`/icons/district/${addressDistrict}.png`} alt="Pin Icon" className="w-10 h-10 rounded-full" />
               <div className="flex flex-col">
                 <span className="text-sm font-medium">{address || "주소를 불러오는 중..."}</span>
                 <span className="text-xs text-gray-500">{linkerCount}개의 링커 활성화 됨</span>
@@ -225,9 +230,9 @@ export default function AddressDisplay({
               </div>
             </div>
 
-            <div className="flex rounded-sm border-b-2 m-2 py-1 text-xs items-center justify-center">
+            <div className="flex rounded-lg border-2 border-gray-200/40 my-2 mx-3 py-1.5 text-[10px] xxs:text-[11px] xs:text-[12px] items-center justify-center shadow-sm bg-gradient-to-r from-purple-100/35 via-pink-100/10 to-pink-100/35">
               <LucideWand className="text-[#BA8ED4] mr-2" />
-              {linkerResults[0]?.userName ?? "사용자"}님과 친구들이 자주 찾는 카테고리를 기반으로 AI가 골라봤어요 ✨
+              {linkerResults[0]?.userName ?? "사용자"}님과 친구들이 자주 찾는 카테고리를 기반으로 AI가 골라봤어요!
             </div>
 
 

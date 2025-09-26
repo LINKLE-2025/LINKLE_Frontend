@@ -1139,11 +1139,11 @@ export default function MapPage(): React.ReactElement {
       <Sheet
         isOpen={searchOpen}
         onClose={() => setSearchOpen(false)}
-        snapPoints={[0.65, 0.4, 0.3]}
+        snapPoints={[0.65, 0.62, 0.59, 0.56, 0.53, 0.5, 0.47, 0.44, 0.41, 0.38, 0.35, 0.32, 0.29, 0.26, 0.23, 0]}
         initialSnap={0}
         style={{ bottom: footerHeight }}
       >
-        <Sheet.Container className='z-[0]'>
+        <Sheet.Container className='z-[0]' style={{ boxShadow: "1px 2px 15px rgba(0, 0, 0, 0.2)" }}>
           <Sheet.Header>
             <div className='mx-auto my-2 h-1.5 w-12 rounded-full bg-gray-300' />
           </Sheet.Header>
