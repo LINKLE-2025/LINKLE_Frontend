@@ -195,7 +195,6 @@ export default function AddressDisplay({
   }, [map, isOpen]);
 
   const linkerCount = activeLinkers.filter((linker) => linker.addressDetail === address).length;
-  console.log(footerHeight)
   return (
     <Sheet
       isOpen={isOpen}
@@ -225,9 +224,9 @@ export default function AddressDisplay({
               </div>
             </div>
 
-            <div className="flex rounded-sm border-b-2 m-2 py-1 text-xs items-center justify-center">
+            <div className="flex rounded-lg border-2 border-gray-200/40 my-2 mx-3 py-1.5 text-[10px] xxs:text-[11px] xs:text-[12px] items-center justify-center shadow-sm bg-gradient-to-r from-purple-100/35 via-pink-100/10 to-pink-100/35">
               <LucideWand className="text-[#BA8ED4] mr-2" />
-              {linkerResults[0]?.userName ?? "사용자"}님과 친구들이 자주 찾는 카테고리를 기반으로 AI가 골라봤어요 ✨
+              {linkerResults[0]?.userName ?? "사용자"}님과 친구들이 자주 찾는 카테고리를 기반으로 AI가 골라봤어요!
             </div>
 
 
