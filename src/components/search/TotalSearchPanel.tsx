@@ -287,7 +287,7 @@ export default function TotalSearchPanel({
                     }
                     inputRef?.current?.blur();
                 }}
-                placeholder="친구 또는 링커 검색"
+                placeholder="사용자 또는 링커 검색"
             />
 
             {/* 탭 버튼 */}
@@ -302,7 +302,7 @@ export default function TotalSearchPanel({
                         }`}
                     onClick={() => setActiveTab("friend")}
                 >
-                    <p>친구 검색</p>
+                    <p>사용자 검색</p>
                 </button>
                 <button
                     className={`flex-1 px-4 py-2 border-b-2 ${activeTab === "linker" ? "border-linkleGray/15 text-black" : "border-transparent text-gray-400"

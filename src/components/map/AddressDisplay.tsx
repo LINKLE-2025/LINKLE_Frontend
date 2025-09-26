@@ -225,8 +225,8 @@ export default function AddressDisplay({
 
             <div>
               {age !== null && gender ? (
-                <div className="flex rounded-sm border-b-2 m-2 py-1 text-xs items-center justify-center">
-                  <LucideWand className="text-[#BA8ED4] mr-2" /> {address}에서 {age}대 {gender}이 많이 찾는 링커 목록입니다.
+                <div className="flex rounded-lg border-2 border-gray-200/40 my-2 mx-3 py-1.5 text-[10px] xxs:text-xs items-center justify-center shadow-sm bg-gradient-to-r from-purple-100/35 via-pink-100/10 to-pink-100/35">
+                  <LucideWand className="w-5 h-5 text-[#BA8ED4] mr-2" /> {address}에서 {age}대 {gender}이 많이 찾는 링커 목록입니다.
                 </div>
               ) : (
                 <div>유저 정보를 불러오는 중...</div>
@@ -246,7 +246,7 @@ export default function AddressDisplay({
                   />
                 ))
               ) : (
-                <div className="p-3 text-sm text-gray-400">추천된 링커가 없습니다.</div>
+                <div className="flex items-center justify-center p-3 text-sm text-gray-400">추천된 링커가 없습니다.</div>
               )}
             </div>
           </div>
