@@ -22,6 +22,25 @@ export default function ChatWindow({ roomId }: { roomId: number }) {
     isDM, hasMore, loadingOlder, loadOlder,
   } = useChatRoom(roomId);
 
+  // 방 인원수 산정 (room.memberCount 우선 → membersById 개수 폴백)
+  const memberCount = useMemo(() => {
+    if (!room) return 0;
+
+    // DM이면 항상 2명(나 + 상대)
+    if (isDM) return 2;
+
+    // 그룹: 탈퇴/비활성 제외하고 카운트
+    const active = Object.values(membersById ?? {}).filter((m: any) => {
+      const s = String(m?.state ?? "").toUpperCase();
+      return s !== "LEFT" && s !== "INACTIVE" && s !== "WITHDRAWN";
+    });
+
+    // membersById가 비어있으면 room.memberCount를 폴백으로 사용
+    const fromMap = active.length;
+    const fromRoom = Number(room?.memberCount ?? 0);
+    return fromMap > 0 ? fromMap : fromRoom;
+  }, [isDM, room, membersById]);
+
   // ChatInput이 넘겨주는 값은 "입력바 높이 + 키보드/푸터" = 하단 점유 높이
   const [inputOccupiedPx, setInputOccupiedPx] = useState(56);
 
@@ -30,6 +49,8 @@ export default function ChatWindow({ roomId }: { roomId: number }) {
 
   const peerName = useMemo(() => peer?.name ?? null, [peer]);
   const members = useMemo(() => Object.values(membersById ?? {}), [membersById]);
+
+
 
   // DM에서 상대가 탈퇴했는지 판단
   const dmBlocked = useMemo(() => {
@@ -125,6 +146,7 @@ export default function ChatWindow({ roomId }: { roomId: number }) {
         hasMore={hasMore}
         loadingOlder={loadingOlder}
         loadOlder={loadOlder}
+        memberCount={memberCount}
       />
 
       <ChatInput
