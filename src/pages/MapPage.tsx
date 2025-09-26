@@ -64,7 +64,7 @@ interface SearchItem {
 const STORAGE_KEY = "linkle_spots_v2";
 
 export default function MapPage(): React.ReactElement {
-  usePreventTouchScroll(true); // 터치 스크롤 방지 훅 사용
+  // usePreventTouchScroll(true); // 터치 스크롤 방지 훅 사용
 
 
   // 🔥 홈 버튼 눌렀을 때 overlay 제거 함수
@@ -1111,8 +1111,8 @@ export default function MapPage(): React.ReactElement {
                 {/* AI추천로직 버튼 */}
                 <ActionCircleButton
                   className="text-linkleGray"
-                  icon={<img src="/icons/mapicon/findLocation.svg" className="w-6 h-6" />}
-                  onClick={handleRecommend}
+                  icon={<img src="/icons/mapicon/recommendAi.svg" className="w-6 h-6" />}
+                  onClick={() => setShowAddress((prev) => !prev)}
                 />
                 <ActionCircleButton
                   className='text-linkleGray'
