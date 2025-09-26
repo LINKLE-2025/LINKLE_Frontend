@@ -225,6 +225,12 @@ export default function AddressDisplay({
               </div>
             </div>
 
+            <div className="flex rounded-sm border-b-2 m-2 py-1 text-xs items-center justify-center">
+              <LucideWand className="text-[#BA8ED4] mr-2" />
+              {linkerResults[0]?.userName ?? "사용자"}님과 친구들이 자주 찾는 카테고리를 기반으로 AI가 골라봤어요 ✨
+            </div>
+
+
             {/* <div>
               {age !== null && gender ? (
                 <div className="flex rounded-sm border-b-2 m-2 py-1 text-xs items-center justify-center">

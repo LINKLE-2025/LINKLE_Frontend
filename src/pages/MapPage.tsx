@@ -1112,7 +1112,7 @@ export default function MapPage(): React.ReactElement {
                 {/* AI추천로직 버튼 */}
                 <ActionCircleButton
                   className="text-linkleGray"
-                  icon={<img src="/icons/mapicon/findLocation.svg" className="w-6 h-6" />}
+                  icon={<img src="/icons/mapicon/recommendAi.svg" className="w-6 h-6" />}
                   onClick={handleRecommend}
                 />
                 <ActionCircleButton
