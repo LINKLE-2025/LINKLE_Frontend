@@ -1,3 +1,4 @@
+// src/components/chat/MessageList.tsx
 import type { MessageResponseDTO, MemberResponseDTO } from "@/types/chat";
 import React, { useEffect, useCallback, useRef, useState } from "react";
 import MessageItem from "./MessageItem";
@@ -143,15 +144,25 @@ export default function MessageList({
     if (isAppend && wasAtBottomRef.current) {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          bottomRef.current?.scrollIntoView({ block: "end", behavior: "smooth", });
+          bottomRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
           const atBottomNow =
             el.scrollTop + el.clientHeight >= el.scrollHeight - 8;
           wasAtBottomRef.current = atBottomNow;
         });
       });
     }
-
   }, [msgs, loadingOlder, bottomRef, listContainerRef, detectAppendPrepend]);
+
+  // ✅ 분 단위 키(YYYY-MM-DD HH:mm) 생성 헬퍼
+  const minuteKey = (d: string | number | Date) => {
+    const x = new Date(d);
+    const y = x.getFullYear();
+    const m = String(x.getMonth() + 1).padStart(2, "0");
+    const day = String(x.getDate()).padStart(2, "0");
+    const hh = String(x.getHours()).padStart(2, "0");
+    const mm = String(x.getMinutes()).padStart(2, "0");
+    return `${y}-${m}-${day} ${hh}:${mm}`;
+  };
 
   return (
     <div
@@ -207,6 +218,12 @@ export default function MessageList({
           const withdrawn =
             !isMine && !member ? ((m.senderId ?? 0) === 0 || (name ?? "").includes("탈퇴")) : false;
 
+          // ✅ 시간 표시는 "같은 발신자가 같은 분에 이어서 보낸 다음 메시지"가 존재하면 숨김
+          const next = msgs[i + 1];
+          const sameSenderNext = next && next.messageType !== "SYSTEM" && next.senderId === m.senderId;
+          const sameMinuteNext = next && minuteKey(next.createdDate) === minuteKey(m.createdDate);
+          const showTime = !(sameSenderNext && sameMinuteNext);
+
           return (
             <MessageItem
               key={m.messageId}
@@ -218,6 +235,8 @@ export default function MessageList({
               gender={gender}
               withdrawn={withdrawn}
               compactAfterSystem={afterSystem}
+              /* ✅ 추가: 같은 분 묶음의 마지막 메시지에만 시간 표기 */
+              showTime={showTime}
             />
           );
         })}
