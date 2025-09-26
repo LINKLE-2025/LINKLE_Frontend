@@ -7,7 +7,7 @@ export const getRecommendations = async (
     lng: number,
     userId: number,
     topK: number = 5,
-    radiusKm: number = 3
+    radiusKm: number = 1
 ) => {
     const res = await apiClient.get("/linkers/recommend", {
         params: { lat, lng, userId, radiusKm, topK },
