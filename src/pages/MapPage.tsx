@@ -992,7 +992,18 @@ export default function MapPage(): React.ReactElement {
   //   }
   // };
 
-
+  useEffect(() => {
+    if (detailOpen) {
+      resetOverlays();
+      draftMarkerRef.current?.setMap(null);
+      draftMarkerRef.current = null;
+      setSearchOpen(false);
+      setSearchQuery("");
+      setSearchResults([]);
+      searchMarkers.current.forEach((m) => m.setMap(null));
+      searchMarkers.current = [];
+    }
+  }, [detailOpen]);
   return (
 
     <MapWrapper>
@@ -1147,7 +1158,7 @@ export default function MapPage(): React.ReactElement {
             <div className='mx-auto my-2 h-1.5 w-12 rounded-full bg-gray-300' />
           </Sheet.Header>
           <Sheet.Content>
-            <div className='flex flex-col h-full pb-[calc(min(4px,env(safe-area-inset-bottom))+285px)]'>
+            <div className='flex flex-col h-full pb-[calc(min(4px,env(safe-area-inset-bottom))+227.67px)]'>
               <div className='flex-1 min-h-0 overflow-y-auto'>
                 <SearchPanel
                   searchQuery={searchQuery}

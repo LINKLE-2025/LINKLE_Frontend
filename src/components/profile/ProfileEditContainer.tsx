@@ -21,8 +21,8 @@ export default function ProfileEditContainer({ userId }: { userId: number }) {
   const location = useLocation();
   const { gender, image, background } = location.state || {};
 
-  const [profileFile, setProfileFile] = useState<File | null>(null);
-  const [backgroundFile, setBackgroundFile] = useState<File | null>(null);
+  const [profileFile, setProfileFile] = useState<File | null | undefined>(undefined);
+  const [backgroundFile, setBackgroundFile] = useState<File | null | undefined>(undefined);
 
   const { src: profileImageSrc, isDefault } = getProfileImageSrc(userId, image, gender);
   const { src: backgroundImageSrc, isDefault: isBgDefault } = getBackgroundImageSrc(userId, background);
@@ -48,10 +48,19 @@ export default function ProfileEditContainer({ userId }: { userId: number }) {
   const navigate = useNavigate();
 
   const handleSave = async () => {
-    await patchUserProfile(userId, profileData, {
-      profile: profileFile,
-      background: backgroundFile,
-    });
+    // 업데이트가 필요한 파일들을 담을 객체를 생성
+    const filesToUpdate: { profile?: File | null; background?: File | null } = {};
+
+    // 파일 상태가 변경되었을 경우 (undefined가 아닐 경우)에만 객체에 추가
+    if (profileFile !== undefined) {
+      filesToUpdate.profile = profileFile;
+    }
+    if (backgroundFile !== undefined) {
+      filesToUpdate.background = backgroundFile;
+    }
+
+    // 새로 만든 객체를 API 호출에 전달
+    await patchUserProfile(userId, profileData, filesToUpdate);
 
     alert("프로필 저장 완료");
 
