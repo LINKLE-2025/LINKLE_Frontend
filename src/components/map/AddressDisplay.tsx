@@ -128,6 +128,32 @@ export default function AddressDisplay({
       }
     };
 
+
+    // 🔹 좌표 기반 날씨 조회 (실황 API)
+    const fetchCurrentWeather = async (lat: number, lon: number) => {
+      try {
+        const res = await fetch(`/api/weather/current?lat=${lat}&lon=${lon}`);
+        const text = await res.text();
+        console.log("📦 백엔드 응답", text);
+
+        // 파싱
+        // header: "TM T1H PTY"
+        // data:   "202503051010 14.0 0"
+        const [header, line] = text.trim().split("\n");
+        const [tm, t1h, pty] = line.split(/\s+/);
+
+        setWeather({
+          temp: Number(t1h),
+          rainType:
+            pty === "0" ? "맑음" : pty === "1" ? "비" : pty === "2" ? "비/눈" : "눈",
+        });
+      } catch (err) {
+        console.error("❌ 날씨 API 호출 실패", err);
+        setWeather(null);
+      }
+    };
+
+    // 🔹 카카오맵 좌표 → 주소 변환
     // 지도 중심 → 주소 변환
     const updateAddress = () => {
       const center = map.getCenter();
@@ -140,11 +166,12 @@ export default function AddressDisplay({
           setAddress(`${region} ${district}`);
           setAddressDistrict(region === "서울특별시" ? district : "etc");
 
-          // 좌표 갱신
-          setCurrentCoords({ lat: center.getLat(), lng: center.getLng() });
 
-          // 날씨도 갱신
-          fetchWeather(center.getLat(), center.getLng());
+          // 좌표 기반 날씨 요청
+          console.log("☁️ 날씨 API 호출", center.getLat(), center.getLng());
+          fetchCurrentWeather(center.getLat(), center.getLng());
+        } else {
+          console.warn("⚠️ 주소 변환 실패", status);
         }
       });
     };
