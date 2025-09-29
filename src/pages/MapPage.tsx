@@ -992,7 +992,18 @@ export default function MapPage(): React.ReactElement {
   //   }
   // };
 
-
+  useEffect(() => {
+    if (detailOpen) {
+      resetOverlays();
+      draftMarkerRef.current?.setMap(null);
+      draftMarkerRef.current = null;
+      setSearchOpen(false);
+      setSearchQuery("");
+      setSearchResults([]);
+      searchMarkers.current.forEach((m) => m.setMap(null));
+      searchMarkers.current = [];
+    }
+  }, [detailOpen]);
   return (
 
     <MapWrapper>
