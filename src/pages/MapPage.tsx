@@ -970,27 +970,27 @@ export default function MapPage(): React.ReactElement {
     showAddress,
   ]);
 
-  // AI 추천 로직 채승
-  const [recommendations, setRecommendations] = useState<any[]>([]);
-  const [recommendModalOpen, setRecommendModalOpen] = useState(false);
+  // // AI 추천 로직 채승
+  // const [recommendations, setRecommendations] = useState<any[]>([]);
+  // const [recommendModalOpen, setRecommendModalOpen] = useState(false);
 
-  const handleRecommend = async () => {
-    try {
-      if (!kakaoMapRef.current) return;
+  // const handleRecommend = async () => {
+  //   try {
+  //     if (!kakaoMapRef.current) return;
 
-      const center = kakaoMapRef.current.getCenter();
-      const lat = center.getLat();
-      const lng = center.getLng();
+  //     const center = kakaoMapRef.current.getCenter();
+  //     const lat = center.getLat();
+  //     const lng = center.getLng();
 
-      const data = await getRecommendations(lat, lng, loggedInUserId!, 5);
-      setRecommendations(data);
-      setShowAddress(true);
+  //     const data = await getRecommendations(lat, lng, loggedInUserId!, 5);
+  //     setRecommendations(data);
+  //     setShowAddress(true);
 
-      console.log("AI 추천 응답 데이터:", data);
-    } catch (err) {
-      console.error("추천 요청 에러:", err);
-    }
-  };
+  //     console.log("AI 추천 응답 데이터:", data);
+  //   } catch (err) {
+  //     console.error("추천 요청 에러:", err);
+  //   }
+  // };
 
 
   return (
@@ -1109,7 +1109,7 @@ export default function MapPage(): React.ReactElement {
                 <ActionCircleButton
                   className="text-linkleGray"
                   icon={<img src="/icons/mapicon/recommendAi.svg" className="w-6 h-6" />}
-                  onClick={handleRecommend}
+                  onClick={() => setShowAddress(true)} // AI 추천 모달 열기
                 />
                 <ActionCircleButton
                   className='text-linkleGray'
@@ -1133,7 +1133,6 @@ export default function MapPage(): React.ReactElement {
         activeLinkers={activeLinkers}
         loggedInUserId={loggedInUserId}
         onOpenDetailById={onOpenDetailById}
-        linkerResults={recommendations}
       />
       {/* 나머지 모달들 (기존과 동일) */}
       <Sheet
@@ -1232,11 +1231,11 @@ export default function MapPage(): React.ReactElement {
           }, 250);
         }}
       />
-      <RecommendedLinkerModal
+      {/* <RecommendedLinkerModal
         open={recommendModalOpen}
         onClose={() => setRecommendModalOpen(false)}
         recommendations={recommendations}
-      />
+      /> */}
     </MapWrapper>
   );
 }
