@@ -8,6 +8,7 @@ import { getRecommend } from "@/api/pythonAPI";
 import { CATEGORY_DATA } from "@/constants/categoryData";
 import LinkerCardItem from "../linker/LinkerCardItem";
 import { LucideWand } from "lucide-react";
+import { getRecommendations } from "@/api/recommendApi";
 
 declare global {
   interface Window {
@@ -23,7 +24,6 @@ interface AddressDisplayProps {
   loggedInUserId: number | null;
   onLinkerClick?: (linkerId: number) => void;
   onOpenDetailById: (linkerId: number) => void;
-  linkerResults: any[]; // 추천결과
 }
 
 interface WeatherData {
@@ -48,8 +48,7 @@ export default function AddressDisplay({
   onClose,
   activeLinkers,
   loggedInUserId,
-  onOpenDetailById,
-  linkerResults
+  onOpenDetailById
 }: AddressDisplayProps) {
   const [address, setAddress] = useState("");
   const [addressDistrict, setAddressDistrict] = useState("");
@@ -57,6 +56,8 @@ export default function AddressDisplay({
 
   type LayoutContext = { headerHeight: number; footerHeight: number };
   const { footerHeight } = useOutletContext<LayoutContext>();
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [recommendModalOpen, setRecommendModalOpen] = useState(false);
 
   // 링커 추천
   // const fetchLinkers = async () => {
@@ -77,6 +78,29 @@ export default function AddressDisplay({
 
   // AI  추천을 위한 정보 전달
   //const [linkerResults, setLinkerResults] = useState<SearchLinkerResponseDTO[]>([]);
+
+  // AI 추천 로직
+  const handleRecommend = async () => {
+    try {
+      if (!currentCoords || !loggedInUserId) return;
+
+      const { lat, lng } = currentCoords;
+      const data = await getRecommendations(lat, lng, loggedInUserId, 5);
+      setRecommendations(data);
+
+      console.log("AI 추천 응답 데이터:", data);
+    } catch (err) {
+      console.error("추천 요청 에러:", err);
+    }
+  };
+
+  // 📌 주소 변경을 트리거로 추천 실행
+  useEffect(() => {
+    if (address && loggedInUserId) {
+      console.log("📍 주소 변경 감지됨, 추천 실행:", address);
+      handleRecommend();
+    }
+  }, [address, loggedInUserId]);
 
 
   // 🔹 시/도 이름 통일 함수 (반드시 포함)
@@ -105,7 +129,8 @@ export default function AddressDisplay({
     };
     return map[raw] || raw;
   };
-
+  // 좌표 상태 추가
+  const [currentCoords, setCurrentCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   const [age, setAge] = useState<number | null>(null);
   const [gender, setGender] = useState<string | null>(null);
@@ -182,6 +207,9 @@ export default function AddressDisplay({
             setAddressDistrict("etc");
           }
 
+          // 좌표 상태 갱신
+          setCurrentCoords({ lat: center.getLat(), lng: center.getLng() });
+
           // 좌표 기반 날씨 요청
           console.log("☁️ 날씨 API 호출", center.getLat(), center.getLng());
           fetchWeather(center.getLat(), center.getLng());
@@ -191,6 +219,8 @@ export default function AddressDisplay({
       });
     };
 
+
+
     // 지도 idle 시마다 갱신
     const idleListener = kakao.maps.event.addListener(map, "idle", updateAddress);
     updateAddress();
@@ -199,6 +229,11 @@ export default function AddressDisplay({
       (kakao as any).maps.event.removeListener(map, "idle", updateAddress);
     };
   }, [map, isOpen]);
+
+  useEffect(() => {
+    console.log("📍 주소 변경", address);
+
+  }, [address]);
 
   const linkerCount = activeLinkers.filter((linker) => linker.addressDetail === address).length;
   return (
@@ -232,7 +267,7 @@ export default function AddressDisplay({
 
             <div className="flex rounded-lg border-2 border-gray-200/40 my-2 mx-3 py-1.5 text-[10px] xxs:text-[11px] xs:text-[12px] items-center justify-center shadow-sm bg-gradient-to-r from-purple-100/35 via-pink-100/10 to-pink-100/35">
               <LucideWand className="text-[#BA8ED4] mr-2" />
-              {linkerResults[0]?.userName ?? "사용자"}님과 친구들이 자주 찾는 카테고리를 기반으로 AI가 골라봤어요!
+              {recommendations[0]?.userName ?? "사용자"}님과 친구들이 자주 찾는 카테고리를 기반으로 AI가 골라봤어요!
             </div>
 
 
@@ -250,8 +285,8 @@ export default function AddressDisplay({
             <div className="flex-1 overflow-y-auto max-h-[380px]"
               style={{ paddingBottom: footerHeight }}
             >
-              {linkerResults.length > 0 ? (
-                linkerResults.map((linker) => (
+              {recommendations.length > 0 ? (
+                recommendations.map((linker) => (
                   <LinkerCardItem
                     key={linker.linkerId}
                     linker={linker}
