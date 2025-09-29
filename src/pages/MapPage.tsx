@@ -35,6 +35,7 @@ import { RotateCw, Search } from "lucide-react";
 import { searchLinkers } from "@/api/searchApi";
 import RecommendButton from "@/components/recommend_final/RecommendButton";
 import RecommendedLinkerModal from "@/components/recommend_final/RecommendedLinkerModal";
+import { getRecommendations } from "@/api/recommendApi";
 
 interface LayoutContext {
   linkerCreateMode: boolean;
@@ -969,32 +970,27 @@ export default function MapPage(): React.ReactElement {
     showAddress,
   ]);
 
-  // AI 추천 로직 채승
-  const [recommendations, setRecommendations] = useState<any[]>([]);
-  const [recommendModalOpen, setRecommendModalOpen] = useState(false);
+  // // AI 추천 로직 채승
+  // const [recommendations, setRecommendations] = useState<any[]>([]);
+  // const [recommendModalOpen, setRecommendModalOpen] = useState(false);
 
-  const handleRecommend = async () => {
-    try {
-      if (!kakaoMapRef.current) return;
+  // const handleRecommend = async () => {
+  //   try {
+  //     if (!kakaoMapRef.current) return;
 
-      // 현재 내가 보고있는 위치 값으로 넘기기
-      const center = kakaoMapRef.current.getCenter();
-      const lat = center.getLat();
-      const lng = center.getLng();
-      const url = `https://localhost:7777/api/linkers/recommend?lat=${lat}&lng=${lng}&userId=${loggedInUserId}&radiusKm=&topK=5`;
+  //     const center = kakaoMapRef.current.getCenter();
+  //     const lat = center.getLat();
+  //     const lng = center.getLng();
 
-      console.log("AI 추천 요청 URL:", url);
+  //     const data = await getRecommendations(lat, lng, loggedInUserId!, 5);
+  //     setRecommendations(data);
+  //     setShowAddress(true);
 
-      const res = await fetch(url, { headers: { "Content-Type": "application/json" } });
-      const data = await res.json();
-      setRecommendations(data);   // API 응답을 상태에 저장
-      setShowAddress(true);       // AddressDisplay 열기
-
-      console.log("AI 추천 응답 데이터:", data);
-    } catch (err) {
-      console.error("추천 요청 에러:", err);
-    }
-  };
+  //     console.log("AI 추천 응답 데이터:", data);
+  //   } catch (err) {
+  //     console.error("추천 요청 에러:", err);
+  //   }
+  // };
 
 
   return (
@@ -1113,7 +1109,7 @@ export default function MapPage(): React.ReactElement {
                 <ActionCircleButton
                   className="text-linkleGray"
                   icon={<img src="/icons/mapicon/recommendAi.svg" className="w-6 h-6" />}
-                  onClick={handleRecommend}
+                  onClick={() => setShowAddress(true)} // AI 추천 모달 열기
                 />
                 <ActionCircleButton
                   className='text-linkleGray'
@@ -1137,17 +1133,16 @@ export default function MapPage(): React.ReactElement {
         activeLinkers={activeLinkers}
         loggedInUserId={loggedInUserId}
         onOpenDetailById={onOpenDetailById}
-        linkerResults={recommendations}
       />
       {/* 나머지 모달들 (기존과 동일) */}
       <Sheet
         isOpen={searchOpen}
         onClose={() => setSearchOpen(false)}
-        snapPoints={[0.65, 0.4, 0.3]}
+        snapPoints={[0.65, 0.62, 0.59, 0.56, 0.53, 0.5, 0.47, 0.44, 0.41, 0.38, 0.35, 0.32, 0.29, 0.26, 0.23, 0]}
         initialSnap={0}
         style={{ bottom: footerHeight }}
       >
-        <Sheet.Container className='z-[0]'>
+        <Sheet.Container className='z-[0]' style={{ boxShadow: "1px 2px 15px rgba(0, 0, 0, 0.2)" }}>
           <Sheet.Header>
             <div className='mx-auto my-2 h-1.5 w-12 rounded-full bg-gray-300' />
           </Sheet.Header>
@@ -1236,11 +1231,11 @@ export default function MapPage(): React.ReactElement {
           }, 250);
         }}
       />
-      <RecommendedLinkerModal
+      {/* <RecommendedLinkerModal
         open={recommendModalOpen}
         onClose={() => setRecommendModalOpen(false)}
         recommendations={recommendations}
-      />
+      /> */}
     </MapWrapper>
   );
 }
