@@ -100,59 +100,116 @@ export default function AddressDisplay({
     const geocoder = new kakao.maps.services.Geocoder();
 
     // 날씨 가져오기
-    const fetchWeather = async (lat: number, lon: number) => {
-      const { nx, ny } = convertToXY(lat, lon);
-      const now = new Date();
-      const baseDate = now.toISOString().slice(0, 10).replace(/-/g, "");
-      let baseTime = now.getHours() * 100 + now.getMinutes() >= 30 ? now.getHours() : now.getHours() - 1;
-      if (baseTime < 0) baseTime = 23;
-      const formattedTime = `${String(baseTime).padStart(2, "0")}30`;
+    // const fetchWeather = async (lat: number, lon: number) => {
+    //   const { nx, ny } = convertToXY(lat, lon);
+    //   const now = new Date();
+    //   const baseDate = now.toISOString().slice(0, 10).replace(/-/g, "");
+    //   let baseTime = now.getHours() * 100 + now.getMinutes() >= 30 ? now.getHours() : now.getHours() - 1;
+    //   if (baseTime < 0) baseTime = 23;
+    //   const formattedTime = `${String(baseTime).padStart(2, "0")}30`;
 
-      const serviceKey = import.meta.env.VITE_WEATHER_KEY;
-      const url = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst?serviceKey=${serviceKey}&pageNo=1&numOfRows=10&dataType=JSON&base_date=${baseDate}&base_time=${formattedTime}&nx=${nx}&ny=${ny}`;
+    //   const serviceKey = import.meta.env.VITE_WEATHER_KEY;
+    //   const url = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst?serviceKey=${serviceKey}&pageNo=1&numOfRows=10&dataType=JSON&base_date=${baseDate}&base_time=${formattedTime}&nx=${nx}&ny=${ny}`;
 
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data.response.header.resultCode === "00") {
-          const items = data.response.body.items.item;
-          const T1H = items.find((i: any) => i.category === "T1H")?.obsrValue;
-          const PTY = items.find((i: any) => i.category === "PTY")?.obsrValue;
-          setWeather({
-            temp: Number(T1H),
-            rainType: PTY === "0" ? "맑음" : PTY === "1" ? "비" : "눈/진눈깨비",
-          });
-        }
-      } catch (err) {
-        console.error("기상청 API 호출 실패", err);
-      }
-    };
+    //   try {
+    //     const res = await fetch(url);
+    //     const data = await res.json();
+    //     if (data.response.header.resultCode === "00") {
+    //       const items = data.response.body.items.item;
+    //       const T1H = items.find((i: any) => i.category === "T1H")?.obsrValue;
+    //       const PTY = items.find((i: any) => i.category === "PTY")?.obsrValue;
+    //       setWeather({
+    //         temp: Number(T1H),
+    //         rainType: PTY === "0" ? "맑음" : PTY === "1" ? "비" : "눈/진눈깨비",
+    //       });
+    //     }
+    //   } catch (err) {
+    //     console.error("기상청 API 호출 실패", err);
+    //   }
+    // };
 
 
-    // 🔹 좌표 기반 날씨 조회 (실황 API)
+    // 좌표 기반 날씨 조회 (기상청 API)
     const fetchCurrentWeather = async (lat: number, lon: number) => {
       try {
         const res = await fetch(`/api/weather/current?lat=${lat}&lon=${lon}`);
-        const text = await res.text();
-        console.log("📦 백엔드 응답", text);
+        if (!res.ok) {
+          // 백엔드에서 에러 응답을 보냈을 경우 처리
+          const errorText = await res.text();
+          throw new Error(`백엔드 API 에러: ${errorText}`);
+        }
 
-        // 파싱
-        // header: "TM T1H PTY"
-        // data:   "202503051010 14.0 0"
-        const [header, line] = text.trim().split("\n");
-        const [tm, t1h, pty] = line.split(/\s+/);
+        const data = await res.json(); // 수정됨: 응답을 JSON으로 파싱
+        console.log("📦 백엔드 응답 (JSON 파싱됨)", data);
 
-        setWeather({
-          temp: Number(t1h),
-          rainType:
-            pty === "0" ? "맑음" : pty === "1" ? "비" : pty === "2" ? "비/눈" : "눈",
-        });
+        // API 응답 구조에 따라 데이터 파싱
+        if (data.response?.header?.resultCode === "00") {
+          const items = data.response.body.items.item;
+
+          // T1H(기온), PTY(강수형태) 값 찾기
+          const tempItem = items.find((i: any) => i.category === "T1H");
+          const rainTypeItem = items.find((i: any) => i.category === "PTY");
+
+          const temp = tempItem ? Number(tempItem.obsrValue) : null;
+          const pty = rainTypeItem ? rainTypeItem.obsrValue : null;
+
+          if (temp === null || pty === null) {
+            throw new Error("필수 날씨 데이터(기온, 강수형태)가 없습니다.");
+          }
+
+          // 강수형태 코드에 따른 문자열 변환
+          let rainTypeText = "정보 없음";
+          switch (pty) {
+            case "0": rainTypeText = "맑음"; break;
+            case "1": rainTypeText = "비"; break;
+            case "2": rainTypeText = "비/눈"; break;
+            case "3": rainTypeText = "눈"; break;
+            case "5": rainTypeText = "빗방울"; break;
+            case "6": rainTypeText = "빗방울/눈날림"; break;
+            case "7": rainTypeText = "눈날림"; break;
+          }
+
+          setWeather({
+            temp: temp,
+            rainType: rainTypeText,
+          });
+        } else {
+          // 기상청 API에서 에러를 응답한 경우
+          throw new Error(`기상청 API 에러: ${data.response?.header?.resultMsg || '알 수 없는 오류'}`);
+        }
+
       } catch (err) {
-        console.error("❌ 날씨 API 호출 실패", err);
+        console.error("❌ 날씨 API 호출 또는 데이터 처리 실패", err);
         setWeather(null);
       }
     };
 
+    // 🔹 시/도 이름 통일 함수
+    const normalizeRegion = (raw: string) => {
+      const map: Record<string, string> = {
+        서울: "서울특별시",
+        부산: "부산광역시",
+        대구: "대구광역시",
+        인천: "인천광역시",
+        광주: "광주광역시",
+        대전: "대전광역시",
+        울산: "울산광역시",
+        세종: "세종특별자치시",
+        경기: "경기도",
+        강원: "강원특별자치도",
+        강원도: "강원특별자치도",
+        충북: "충청북도",
+        충남: "충청남도",
+        전북: "전북특별자치도",
+        전라북도: "전북특별자치도",
+        전남: "전라남도",
+        경북: "경상북도",
+        경남: "경상남도",
+        제주: "제주특별자치도",
+        제주도: "제주특별자치도",
+      };
+      return map[raw] || raw;
+    };
     // 🔹 카카오맵 좌표 → 주소 변환
     // 지도 중심 → 주소 변환
     const updateAddress = () => {
@@ -161,7 +218,9 @@ export default function AddressDisplay({
         if (status === kakao.maps.services.Status.OK) {
           const fullAddr = result[0].road_address?.address_name || result[0].address.address_name;
           const words = fullAddr.trim().split(/\s+/);
-          const region = words[0];
+
+          // 🔹 지역명 통일
+          const region = normalizeRegion(words[0]);
           const district = words[1] ?? "";
           setAddress(`${region} ${district}`);
           setAddressDistrict(region === "서울특별시" ? district : "etc");
