@@ -226,12 +226,12 @@ export default function AddressDisplay({
             </div>
 
             {/* 수동 추천 버튼 (디버그/테스트용) */}
-            <button
+            {/* <button
               onClick={handleManualRecommend}
               className="m-3 px-4 py-2 rounded-lg bg-purple-500 text-white text-sm"
             >
               AI 추천 새로고침
-            </button>
+            </button> */}
           </div>
         </Sheet.Content>
       </Sheet.Container>
