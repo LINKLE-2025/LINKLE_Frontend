@@ -127,7 +127,9 @@ export default function ChatPage() {
 
       <button
         onClick={() => navigate("/profile/friend")}
-        className="fixed bottom-[calc(min(env(safe-area-inset-bottom),16px)+6rem)] right-6 sm:right-[calc(50%-14rem)] w-10 h-10 xxs:w-12 xxs:h-12 rounded-full shadow-lg bg-black text-white text-xl flex items-center justify-center"
+        className="fixed bottom-[calc(min(env(safe-area-inset-bottom),16px)+6rem)] right-6 sm:right-[calc(50%-14rem)] 
+                    w-10 h-10 xxs:w-12 xxs:h-12 rounded-full shadow-md bg-black text-white text-xl 
+                    flex items-center justify-center active:scale-95 transition-transform"
         aria-label="새 대화"
       >
         <Plus className="w-5 h-5 xxs:w-6 xxs:h-6 " />

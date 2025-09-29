@@ -4,10 +4,9 @@ import { Sheet } from "react-modal-sheet";
 import { useOutletContext } from "react-router-dom";
 import { convertToXY } from "@/utils/convertToXY";
 import { getCurrentUserInfo } from "@/api/authApi";
-import { getRecommend } from "@/api/pythonAPI";
-import { CATEGORY_DATA } from "@/constants/categoryData";
 import LinkerCardItem from "../linker/LinkerCardItem";
 import { LucideWand } from "lucide-react";
+import { getRecommendations } from "@/api/recommendApi";
 
 declare global {
   interface Window {
@@ -21,25 +20,12 @@ interface AddressDisplayProps {
   onClose: () => void;
   activeLinkers: any[];
   loggedInUserId: number | null;
-  onLinkerClick?: (linkerId: number) => void;
   onOpenDetailById: (linkerId: number) => void;
-  linkerResults: any[]; // 추천결과
 }
 
 interface WeatherData {
   temp: number;
   rainType: string;
-}
-
-interface SearchLinkerResponseDTO {
-  linkerId: number;
-  name: string;
-  categoryId: number;
-  memo: string;
-  chatRoomCount: number;
-  postCount: number;
-  state: string;
-  address: string;
 }
 
 export default function AddressDisplay({
@@ -48,108 +34,86 @@ export default function AddressDisplay({
   onClose,
   activeLinkers,
   loggedInUserId,
-  onOpenDetailById,
-  linkerResults
+  onOpenDetailById
 }: AddressDisplayProps) {
   const [address, setAddress] = useState("");
+  const [addressDistrict, setAddressDistrict] = useState("");
   const [weather, setWeather] = useState<WeatherData | null>(null);
+  const { footerHeight } = useOutletContext<{ headerHeight: number; footerHeight: number }>();
 
-  type LayoutContext = { headerHeight: number; footerHeight: number };
-  const { footerHeight } = useOutletContext<LayoutContext>();
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [loadingRecommend, setLoadingRecommend] = useState(false);
 
-  // 링커 추천
-  // const fetchLinkers = async () => {
-  //   try {
-  //     const data = await getRecommend(loggedInUserId!, address); // userId + 지도에서 뽑은 address 같이 보냄
-  //     console.log(loggedInUserId, address, data, "추천 결과");
-  //     setLinkerResults(data);
-  //   } catch (err) {
-  //     console.error("링커 조회", err);
-  //   }
-  // };
+  // 좌표 상태
+  const [currentCoords, setCurrentCoords] = useState<{ lat: number; lng: number } | null>(null);
 
-  // useEffect(() => {
-  //   if (isOpen && loggedInUserId && address) {
-  //     fetchLinkers();
-  //   }
-  // }, [isOpen, loggedInUserId, address]); // address 변경될 때마다 추천 갱신
-
-  // AI  추천을 위한 정보 전달
-  //const [linkerResults, setLinkerResults] = useState<SearchLinkerResponseDTO[]>([]);
-
-
-  // 🔹 시/도 이름 통일 함수 (반드시 포함)
-  const normalizeRegion = (raw: string) => {
-    const map: Record<string, string> = {
-      서울: "서울특별시",
-      부산: "부산광역시",
-      대구: "대구광역시",
-      인천: "인천광역시",
-      광주: "광주광역시",
-      대전: "대전광역시",
-      울산: "울산광역시",
-      세종: "세종특별자치시",
-      경기: "경기도",
-      강원: "강원특별자치도",
-      강원도: "강원특별자치도",
-      충북: "충청북도",
-      충남: "충청남도",
-      전북: "전북특별자치도",
-      전라북도: "전북특별자치도",
-      전남: "전라남도",
-      경북: "경상북도",
-      경남: "경상남도",
-      제주: "제주특별자치도",
-      제주도: "제주특별자치도",
-    };
-    return map[raw] || raw;
-  };
-
-
-  const [age, setAge] = useState<number | null>(null);
-  const [gender, setGender] = useState<string | null>(null);
-
+  // 유저 정보 (추가로 쓰려면 state 활용)
   useEffect(() => {
     if (!map || !isOpen) return;
-
     const fetchUserAndInit = async () => {
       try {
-        const { age, gender } = await getCurrentUserInfo();
-        setAge(age);
-        setGender(gender);
+        await getCurrentUserInfo();
       } catch (err) {
         console.error("유저 정보 불러오기 실패", err);
       }
     };
-
     fetchUserAndInit();
   }, [map, isOpen]);
 
+  // 추천 실행
+  const handleRecommend = async () => {
+    try {
+      if (!currentCoords || !loggedInUserId) return;
+      setLoadingRecommend(true);
 
+      const { lat, lng } = currentCoords;
+      const data = await getRecommendations(lat, lng, loggedInUserId, 5);
+      setRecommendations(data);
+
+      console.log("AI 추천 응답 데이터:", data);
+    } catch (err) {
+      console.error("추천 요청 에러:", err);
+    } finally {
+      setLoadingRecommend(false);
+    }
+  };
+
+  // 버튼으로 추천 실행 (항상 최신 좌표 반영)
+  const handleManualRecommend = async () => {
+    if (!map || !loggedInUserId) return;
+    const center = map.getCenter();
+    setCurrentCoords({ lat: center.getLat(), lng: center.getLng() });
+    await handleRecommend();
+  };
+
+  // 📌 좌표 변경 시 자동 추천
+  useEffect(() => {
+    if (currentCoords && loggedInUserId) {
+      handleRecommend();
+    }
+  }, [currentCoords, loggedInUserId]);
+
+  // 카카오맵 idle 이벤트로 주소/좌표 갱신
   useEffect(() => {
     if (!map || !isOpen) return;
-
     const { kakao } = window;
     const geocoder = new kakao.maps.services.Geocoder();
 
-    // 🔹 좌표 기반 날씨 조회
+    // 날씨 가져오기
     const fetchWeather = async (lat: number, lon: number) => {
       const { nx, ny } = convertToXY(lat, lon);
       const now = new Date();
-      const baseDate = now.toISOString().slice(0, 10).replace(/-/g, ""); // yyyyMMdd
+      const baseDate = now.toISOString().slice(0, 10).replace(/-/g, "");
       let baseTime = now.getHours() * 100 + now.getMinutes() >= 30 ? now.getHours() : now.getHours() - 1;
       if (baseTime < 0) baseTime = 23;
       const formattedTime = `${String(baseTime).padStart(2, "0")}30`;
 
       const serviceKey = import.meta.env.VITE_WEATHER_KEY;
-
       const url = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst?serviceKey=${serviceKey}&pageNo=1&numOfRows=10&dataType=JSON&base_date=${baseDate}&base_time=${formattedTime}&nx=${nx}&ny=${ny}`;
 
       try {
         const res = await fetch(url);
-        console.log("✅ 날씨 API 응답 상태", res.status);
         const data = await res.json();
-        console.log("📦 날씨 API 데이터", data);
         if (data.response.header.resultCode === "00") {
           const items = data.response.body.items.item;
           const T1H = items.find((i: any) => i.category === "T1H")?.obsrValue;
@@ -190,16 +154,18 @@ export default function AddressDisplay({
     };
 
     // 🔹 카카오맵 좌표 → 주소 변환
+    // 지도 중심 → 주소 변환
     const updateAddress = () => {
       const center = map.getCenter();
       geocoder.coord2Address(center.getLng(), center.getLat(), (result: any, status: any) => {
         if (status === kakao.maps.services.Status.OK) {
           const fullAddr = result[0].road_address?.address_name || result[0].address.address_name;
           const words = fullAddr.trim().split(/\s+/);
-          const region = normalizeRegion(words[0]);
+          const region = words[0];
           const district = words[1] ?? "";
-          const addressDetail = `${region} ${district}`;
-          setAddress(addressDetail);
+          setAddress(`${region} ${district}`);
+          setAddressDistrict(region === "서울특별시" ? district : "etc");
+
 
           // 좌표 기반 날씨 요청
           console.log("☁️ 날씨 API 호출", center.getLat(), center.getLng());
@@ -210,8 +176,7 @@ export default function AddressDisplay({
       });
     };
 
-    // 지도 idle 시마다 갱신
-    const idleListener = kakao.maps.event.addListener(map, "idle", updateAddress);
+    kakao.maps.event.addListener(map, "idle", updateAddress);
     updateAddress();
 
     return () => {
@@ -220,25 +185,25 @@ export default function AddressDisplay({
   }, [map, isOpen]);
 
   const linkerCount = activeLinkers.filter((linker) => linker.addressDetail === address).length;
-  console.log(footerHeight)
+
   return (
     <Sheet
       isOpen={isOpen}
       onClose={onClose}
-      snapPoints={[0.65, 0.3, 0]}
+      snapPoints={[0.65, 0.5, 0]}
       initialSnap={0}
       style={{ bottom: footerHeight }}
       {...({ onSpringEnd: (snapIndex: number) => { if (snapIndex === 0) onClose(); } } as any)}
     >
-      <Sheet.Container>
+      <Sheet.Container style={{ boxShadow: "1px 2px 15px rgba(0, 0, 0, 0.2)" }}>
         <Sheet.Header>
           <div className="mx-auto my-2 h-1.5 w-12 rounded-full bg-gray-300" />
         </Sheet.Header>
         <Sheet.Content>
           <div className="flex flex-col">
-            {/* 링커 요약 정보 */}
+            {/* 주소 / 날씨 */}
             <div className="flex items-center gap-3 p-4 border-b border-t">
-              <img src="/icons/mapicon/linker.png" alt="Pin Icon" className="w-10 h-10 rounded-full" />
+              <img src={`/icons/district/${addressDistrict}.png`} alt="Pin Icon" className="w-10 h-10 rounded-full" />
               <div className="flex flex-col">
                 <span className="text-sm font-medium">{address || "주소를 불러오는 중..."}</span>
                 <span className="text-xs text-gray-500">{linkerCount}개의 링커 활성화 됨</span>
@@ -250,28 +215,28 @@ export default function AddressDisplay({
               </div>
             </div>
 
-            <div className="flex rounded-sm border-b-2 m-2 py-1 text-xs items-center justify-center">
+            {/* AI 추천 안내 */}
+            <div className="flex rounded-lg border-2 border-gray-200/40 my-2 mx-3 py-1.5 text-xs items-center justify-center shadow-sm bg-gradient-to-r from-purple-100/35 via-pink-100/10 to-pink-100/35">
               <LucideWand className="text-[#BA8ED4] mr-2" />
-              {linkerResults[0]?.userName ?? "사용자"}님과 친구들이 자주 찾는 카테고리를 기반으로 AI가 골라봤어요 ✨
+              {loadingRecommend ? (
+                <span>
+                  {recommendations[0]?.userName
+                    ? `${recommendations[0].userName}님을 위한 AI 추천을 준비중이에요...`
+                    : "AI가 추천을 준비중이에요..."}
+                </span>
+              ) : (
+                <span>
+                  {recommendations[0]?.userName
+                    ? `${recommendations[0].userName}님과 친구들이 자주 찾는 링커를 찾아왔어요!`
+                    : "AI가 이 지역에서 자주 찾는 링커를 추천했어요!"}
+                </span>
+              )}
             </div>
 
-
-            {/* <div>
-              {age !== null && gender ? (
-                <div className="flex rounded-lg border-2 border-gray-200/40 my-2 mx-3 py-1.5 text-[10px] xxs:text-xs items-center justify-center shadow-sm bg-gradient-to-r from-purple-100/35 via-pink-100/10 to-pink-100/35">
-                  <LucideWand className="w-5 h-5 text-[#BA8ED4] mr-2" /> {address}에서 {age}대 {gender}이 많이 찾는 링커 목록입니다.
-                </div>
-              ) : (
-                <div>유저 정보를 불러오는 중...</div>
-              )}
-            </div> */}
-
-            {/* 링커 리스트 */}
-            <div className="flex-1 overflow-y-auto max-h-[380px]"
-              style={{ paddingBottom: footerHeight }}
-            >
-              {linkerResults.length > 0 ? (
-                linkerResults.map((linker) => (
+            {/* 추천 결과 */}
+            <div className="flex-1 overflow-y-auto max-h-[380px]" style={{ paddingBottom: footerHeight }}>
+              {recommendations.length > 0 ? (
+                recommendations.map((linker) => (
                   <LinkerCardItem
                     key={linker.linkerId}
                     linker={linker}
@@ -279,13 +244,24 @@ export default function AddressDisplay({
                   />
                 ))
               ) : (
-                <div className="flex items-center justify-center p-3 text-sm text-gray-400">추천된 링커가 없습니다.</div>
+                !loadingRecommend && (
+                  <div className="flex items-center justify-center p-3 text-sm text-gray-400">
+                    추천된 링커가 없습니다.
+                  </div>
+                )
               )}
             </div>
+
+            {/* 수동 추천 버튼 (디버그/테스트용) */}
+            {/* <button
+              onClick={handleManualRecommend}
+              className="m-3 px-4 py-2 rounded-lg bg-purple-500 text-white text-sm"
+            >
+              AI 추천 새로고침
+            </button> */}
           </div>
         </Sheet.Content>
       </Sheet.Container>
     </Sheet>
   );
-
 }
