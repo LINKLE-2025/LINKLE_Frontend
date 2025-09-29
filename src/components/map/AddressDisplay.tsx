@@ -229,6 +229,9 @@ export default function AddressDisplay({
           // 좌표 기반 날씨 요청
           console.log("☁️ 날씨 API 호출", center.getLat(), center.getLng());
           fetchCurrentWeather(center.getLat(), center.getLng());
+
+          // 좌표 갱신 다시 넣어주기 (ai 추천용)
+          setCurrentCoords({ lat: center.getLat(), lng: center.getLng() });
         } else {
           console.warn("⚠️ 주소 변환 실패", status);
         }
