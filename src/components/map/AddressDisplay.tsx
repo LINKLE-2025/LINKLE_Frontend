@@ -287,7 +287,7 @@ export default function AddressDisplay({
                 <span>
                   {recommendations[0]?.userName
                     ? `${recommendations[0].userName}님과 친구들이 자주 찾는 링커를 찾아왔어요!`
-                    : "AI가 이 지역에서 자주 찾는 링커를 추천했어요!"}
+                    : "AI가 참여 카테고리를 기반으로 링커를 추천했어요!"}
                 </span>
               )}
             </div>
