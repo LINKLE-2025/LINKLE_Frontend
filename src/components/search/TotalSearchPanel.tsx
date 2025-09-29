@@ -281,7 +281,7 @@ export default function TotalSearchPanel({
                 setSearchQuery={setSearchQuery}
                 onSearch={() => {
                     if (activeTab === "friend") {
-                        handleSearch(1); // 친구 검색 첫 페이지
+                        handleSearch(0); // 친구 검색 첫 페이지
                     } else {
                         fetchLinkers(searchQuery, 0); // 링커 검색 첫 페이지
                     }
