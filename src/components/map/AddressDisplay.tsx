@@ -136,6 +136,36 @@ export default function AddressDisplay({
     //     console.error("기상청 API 호출 실패", err);
     //   }
     // };
+
+    // 🔹 시/도 이름 통일 함수
+    const normalizeRegion = (raw: string) => {
+      const map: Record<string, string> = {
+        서울: "서울특별시",
+        부산: "부산광역시",
+        대구: "대구광역시",
+        인천: "인천광역시",
+        광주: "광주광역시",
+        대전: "대전광역시",
+        울산: "울산광역시",
+        세종: "세종특별자치시",
+        경기: "경기도",
+        강원: "강원특별자치도",
+        강원도: "강원특별자치도",
+        충북: "충청북도",
+        충남: "충청남도",
+        전북: "전북특별자치도",
+        전라북도: "전북특별자치도",
+        전남: "전라남도",
+        경북: "경상북도",
+        경남: "경상남도",
+        제주: "제주특별자치도",
+        제주도: "제주특별자치도",
+      };
+      return map[raw] || raw;
+    };
+
+
+
     // 좌표 기반 날씨 조회 (기상청 API)
     const fetchCurrentWeather = async (lat: number, lon: number) => {
       try {
@@ -190,7 +220,9 @@ export default function AddressDisplay({
         if (status === kakao.maps.services.Status.OK) {
           const fullAddr = result[0].road_address?.address_name || result[0].address.address_name;
           const words = fullAddr.trim().split(/\s+/);
-          const region = words[0];
+
+          // 🔹 지역명 통일
+          const region = normalizeRegion(words[0]);
           const district = words[1] ?? "";
           setAddress(`${region} ${district}`);
           setAddressDistrict(region === "서울특별시" ? district : "etc");
