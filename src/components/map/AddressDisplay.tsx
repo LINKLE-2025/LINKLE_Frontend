@@ -288,7 +288,7 @@ export default function AddressDisplay({
             </div>
 
             {/* AI 추천 안내 */}
-            <div className="flex rounded-lg border-2 border-gray-200/40 my-2 mx-3 py-1.5 text-xs items-center justify-center shadow-sm bg-gradient-to-r from-purple-100/35 via-pink-100/10 to-pink-100/35">
+            <div className="flex rounded-lg border-2 border-gray-200/40 my-2 mx-3 py-1.5 text-[12px] xxs:text-[13px] items-center justify-center shadow-sm bg-gradient-to-r from-purple-100/35 via-pink-100/10 to-pink-100/35">
               <LucideWand className="text-[#BA8ED4] mr-2" />
               {loadingRecommend ? (
                 <div className="flex items-center">
@@ -304,7 +304,7 @@ export default function AddressDisplay({
                   </button> */}
                 </div>
               ) : (
-                <span>
+                <span className="text-linkleGray">
                   {recommendations[0]?.userName
                     ? `${recommendations[0].userName}님과 친구들이 자주 찾는 링커를 찾아왔어요!`
                     : "추천할말한 링커가 없어요... 더 많은 링커와 친구를 만들어보세요!"}
