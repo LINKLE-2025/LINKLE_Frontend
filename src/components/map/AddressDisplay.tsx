@@ -99,7 +99,7 @@ export default function AddressDisplay({
     const { kakao } = window;
     const geocoder = new kakao.maps.services.Geocoder();
 
-    // 날씨 가져오기
+    // // 날씨 가져오기
     // const fetchWeather = async (lat: number, lon: number) => {
     //   const { nx, ny } = convertToXY(lat, lon);
     //   const now = new Date();
@@ -127,8 +127,6 @@ export default function AddressDisplay({
     //     console.error("기상청 API 호출 실패", err);
     //   }
     // };
-
-
     // 좌표 기반 날씨 조회 (기상청 API)
     const fetchCurrentWeather = async (lat: number, lon: number) => {
       try {
@@ -138,25 +136,19 @@ export default function AddressDisplay({
           const errorText = await res.text();
           throw new Error(`백엔드 API 에러: ${errorText}`);
         }
-
         const data = await res.json(); // 수정됨: 응답을 JSON으로 파싱
-        console.log("📦 백엔드 응답 (JSON 파싱됨)", data);
-
+        console.log(":포장: 백엔드 응답 (JSON 파싱됨)", data);
         // API 응답 구조에 따라 데이터 파싱
         if (data.response?.header?.resultCode === "00") {
           const items = data.response.body.items.item;
-
           // T1H(기온), PTY(강수형태) 값 찾기
           const tempItem = items.find((i: any) => i.category === "T1H");
           const rainTypeItem = items.find((i: any) => i.category === "PTY");
-
           const temp = tempItem ? Number(tempItem.obsrValue) : null;
           const pty = rainTypeItem ? rainTypeItem.obsrValue : null;
-
           if (temp === null || pty === null) {
             throw new Error("필수 날씨 데이터(기온, 강수형태)가 없습니다.");
           }
-
           // 강수형태 코드에 따른 문자열 변환
           let rainTypeText = "정보 없음";
           switch (pty) {
@@ -168,7 +160,6 @@ export default function AddressDisplay({
             case "6": rainTypeText = "빗방울/눈날림"; break;
             case "7": rainTypeText = "눈날림"; break;
           }
-
           setWeather({
             temp: temp,
             rainType: rainTypeText,
@@ -177,40 +168,12 @@ export default function AddressDisplay({
           // 기상청 API에서 에러를 응답한 경우
           throw new Error(`기상청 API 에러: ${data.response?.header?.resultMsg || '알 수 없는 오류'}`);
         }
-
       } catch (err) {
-        console.error("❌ 날씨 API 호출 또는 데이터 처리 실패", err);
+        console.error(":x: 날씨 API 호출 또는 데이터 처리 실패", err);
         setWeather(null);
       }
     };
 
-    // 🔹 시/도 이름 통일 함수
-    const normalizeRegion = (raw: string) => {
-      const map: Record<string, string> = {
-        서울: "서울특별시",
-        부산: "부산광역시",
-        대구: "대구광역시",
-        인천: "인천광역시",
-        광주: "광주광역시",
-        대전: "대전광역시",
-        울산: "울산광역시",
-        세종: "세종특별자치시",
-        경기: "경기도",
-        강원: "강원특별자치도",
-        강원도: "강원특별자치도",
-        충북: "충청북도",
-        충남: "충청남도",
-        전북: "전북특별자치도",
-        전라북도: "전북특별자치도",
-        전남: "전라남도",
-        경북: "경상북도",
-        경남: "경상남도",
-        제주: "제주특별자치도",
-        제주도: "제주특별자치도",
-      };
-      return map[raw] || raw;
-    };
-    // 🔹 카카오맵 좌표 → 주소 변환
     // 지도 중심 → 주소 변환
     const updateAddress = () => {
       const center = map.getCenter();
@@ -218,22 +181,16 @@ export default function AddressDisplay({
         if (status === kakao.maps.services.Status.OK) {
           const fullAddr = result[0].road_address?.address_name || result[0].address.address_name;
           const words = fullAddr.trim().split(/\s+/);
-
-          // 🔹 지역명 통일
-          const region = normalizeRegion(words[0]);
+          const region = words[0];
           const district = words[1] ?? "";
           setAddress(`${region} ${district}`);
           setAddressDistrict(region === "서울특별시" ? district : "etc");
 
-
-          // 좌표 기반 날씨 요청
-          console.log("☁️ 날씨 API 호출", center.getLat(), center.getLng());
-          fetchCurrentWeather(center.getLat(), center.getLng());
-
-          // 좌표 갱신 다시 넣어주기 (ai 추천용)
+          // 좌표 갱신
           setCurrentCoords({ lat: center.getLat(), lng: center.getLng() });
-        } else {
-          console.warn("⚠️ 주소 변환 실패", status);
+
+          // 날씨도 갱신
+          fetchCurrentWeather(center.getLat(), center.getLng());
         }
       });
     };
@@ -290,7 +247,7 @@ export default function AddressDisplay({
                 <span>
                   {recommendations[0]?.userName
                     ? `${recommendations[0].userName}님과 친구들이 자주 찾는 링커를 찾아왔어요!`
-                    : "추천할말한 링커가 없어요 더 많은 링커와 친구를 만들어보세요!"}
+                    : "추천할 링커가 없어요 더 많은 링커와 친구를 만들어보세요!"}
                 </span>
               )}
             </div>
