@@ -66,8 +66,6 @@ services:
     restart: always
     ports:
       - "8083:5000" # (옵션) 외부 테스트용, 내부에서는 5000 그대로
-    env_file:
-      - ./python-ai/.env
     depends_on:
       - db
     networks:
