@@ -60,8 +60,17 @@ export default function AddressDisplay({
     fetchUserAndInit();
   }, [map, isOpen]);
 
-  // 추천 실행
+  const [lastRequestTime, setLastRequestTime] = useState<number>(0);
+
+  // 추천 실행 (쿨타임 적용)
   const handleRecommend = async () => {
+    const now = Date.now();
+    if (now - lastRequestTime < 5000) {
+      console.log("⏳ 추천 요청 무시: 5초 쿨타임 미만");
+      return;
+    }
+    setLastRequestTime(now);
+
     try {
       if (!currentCoords || !loggedInUserId) return;
       setLoadingRecommend(true);
