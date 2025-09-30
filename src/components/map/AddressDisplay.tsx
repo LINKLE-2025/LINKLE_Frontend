@@ -60,17 +60,8 @@ export default function AddressDisplay({
     fetchUserAndInit();
   }, [map, isOpen]);
 
-  const [lastRequestTime, setLastRequestTime] = useState<number>(0);
-
-  // 추천 실행 (쿨타임 적용)
+  // 추천 실행
   const handleRecommend = async () => {
-    const now = Date.now();
-    if (now - lastRequestTime < 5000) {
-      console.log("⏳ 추천 요청 무시: 5초 쿨타임 미만");
-      return;
-    }
-    setLastRequestTime(now);
-
     try {
       if (!currentCoords || !loggedInUserId) return;
       setLoadingRecommend(true);
@@ -241,7 +232,6 @@ export default function AddressDisplay({
 
           // 좌표 갱신 다시 넣어주기 (ai 추천용)
           setCurrentCoords({ lat: center.getLat(), lng: center.getLng() });
-          console.log("📍 좌표 갱신", { lat: center.getLat(), lng: center.getLng() });
         } else {
           console.warn("⚠️ 주소 변환 실패", status);
         }
@@ -288,26 +278,19 @@ export default function AddressDisplay({
             </div>
 
             {/* AI 추천 안내 */}
-            <div className="flex rounded-lg border-2 border-gray-200/40 my-2 mx-3 py-1.5 text-[12px] xxs:text-[13px] items-center justify-center shadow-sm bg-gradient-to-r from-purple-100/35 via-pink-100/10 to-pink-100/35">
+            <div className="flex rounded-lg border-2 border-gray-200/40 my-2 mx-3 py-1.5 text-xs items-center justify-center shadow-sm bg-gradient-to-r from-purple-100/35 via-pink-100/10 to-pink-100/35">
               <LucideWand className="text-[#BA8ED4] mr-2" />
               {loadingRecommend ? (
-                <div className="flex items-center">
-                  <span>
-                    {recommendations[0]?.userName
-                      ? `${recommendations[0].userName}님을 위한 AI 추천을 준비중이에요...`
-                      : "AI가 추천을 준비중이에요..."}
-                  </span>
-                  {/* <button
-                    onClick={handleManualRecommend}
-                    className="m-3 px-4 py-2 rounded-lg bg-purple-500 text-white text-sm"
-                  >
-                  </button> */}
-                </div>
+                <span>
+                  {recommendations[0]?.userName
+                    ? `${recommendations[0].userName}님을 위한 AI 추천을 준비중이에요...`
+                    : "AI가 추천을 준비중이에요..."}
+                </span>
               ) : (
-                <span className="text-linkleGray">
+                <span>
                   {recommendations[0]?.userName
                     ? `${recommendations[0].userName}님과 친구들이 자주 찾는 링커를 찾아왔어요!`
-                    : "추천할말한 링커가 없어요... 더 많은 링커와 친구를 만들어보세요!"}
+                    : "추천할말한 링커가 없어요 더 많은 링커와 친구를 만들어보세요!"}
                 </span>
               )}
             </div>
