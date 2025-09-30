@@ -75,6 +75,11 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
   const [localDetail, setLocalDetail] = useState<LinkerDetail | null>(detail);
   const [insufficientBalance, setInsufficientBalance] = useState(false);
 
+  const isClassExpired = (r: any) => {
+    if (r?.roomType !== "CLASS") return false;
+    if (!r?.startDate) return false; // 시작일 없으면 만료 아님
+    return dayjs(r.startDate).isBefore(dayjs(), "minute"); // startDate < now ⇒ 만료
+  };
 
 
 
@@ -426,19 +431,31 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
             {filteredRooms.filter((r) => r.roomType === "CLASS").length > 0 ? (
               filteredRooms
                 .filter((r) => r.roomType === "CLASS")
-                .map((r) => (
-                  <ChatListItem2
-                    key={r.roomId}
-                    title={r.roomName ?? "클래스 채팅"}
-                    memo={r.memo ?? r.description ?? ""}
-                    memberCount={r.memberCount ?? undefined}
-                    roomType={r.roomType}
-                    startDate={r.startDate ?? undefined}
-                    avatarUrl={`/api/chat/view/background/${r.roomId}`}
-                    themeColor={r.themeColor as any}
-                    onClick={() => openPreview(r)}
-                  />
-                ))
+                .map((r) => {
+                  const expired = isClassExpired(r);
+                  return (
+                    <div key={r.roomId} className="relative">
+                      <div className={expired ? "pointer-events-none opacity-50 cursor-not-allowed" : ""}>
+                        <ChatListItem2
+                          title={r.roomName ?? "클래스 채팅"}
+                          memo={r.memo ?? r.description ?? ""}
+                          memberCount={r.memberCount ?? undefined}
+                          roomType={r.roomType}
+                          startDate={r.startDate ?? undefined}
+                          avatarUrl={`/api/chat/view/background/${r.roomId}`}
+                          themeColor={r.themeColor as any}
+                          onClick={!expired ? () => openPreview(r) : undefined}
+                        />
+                      </div>
+
+                      {expired && (
+                        <div className="absolute inset-0 rounded-2xl bg-white/20 backdrop-blur-[0.4px] flex items-center justify-center">
+                          <span className="text-sm text-gray-600">기한이 만료된 채팅방입니다.</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
             ) : (
               !isLocked && (
                 <div className="mt-4 flex justify-center opacity-50">
@@ -450,6 +467,7 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
                 </div>
               )
             )}
+
             {isLocked && (
               <div className="mt-4 flex justify-center">
                 <div className="max-w-[90%] rounded-2xl border border-gray-300 bg-white px-5 py-4 text-center text-[15px] text-sm xxs:text-base font-medium text-black shadow-md">
@@ -461,6 +479,7 @@ export default function LinkerDetailModal({ open, onClose, detail, loading, erro
             )}
           </div>
         );
+
       default:
         return null;
     }

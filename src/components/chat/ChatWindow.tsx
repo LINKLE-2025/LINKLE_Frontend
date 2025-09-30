@@ -122,42 +122,11 @@ export default function ChatWindow({ roomId }: { roomId: number }) {
 
   const handleLeave = async () => {
     try {
-      // 1) 서버 퇴장
       await leaveRoom(roomId);
-
-      // 2) 방 목록 캐시에서 즉시 제거 (배열/무한스크롤 모두 대응)
-      queryClient.setQueryData(["chat", "rooms"], (old: unknown) => {
-        // 배열 구조: Room[]
-        if (Array.isArray(old)) {
-          return old.filter((r: any) => r?.id !== roomId);
-        }
-        // 무한스크롤 구조: { pages: [{ items: Room[] }, ...], pageParams: [...] }
-        if (old && typeof old === "object" && Array.isArray((old as any).pages)) {
-          const inf = old as { pages: Array<{ items: any[] }>; pageParams: any[] };
-          return {
-            ...inf,
-            pages: inf.pages.map((p) => ({
-              ...p,
-              items: (p.items ?? []).filter((r: any) => r?.id !== roomId),
-            })),
-          };
-        }
-        return old;
-      });
-
-      // 3) 해당 방 관련 캐시 정리
-      queryClient.removeQueries({ queryKey: ["chat", "room", roomId] });
-      queryClient.removeQueries({ queryKey: ["chat", "messages", roomId] });
-      queryClient.removeQueries({ queryKey: ["chat", "members", roomId] });
-
-      // 4) 리스트 재조회 트리거 (활성 뷰에서 즉시 refetch)
-      await queryClient.invalidateQueries({
-        queryKey: ["chat", "rooms"],
-        refetchType: "active",
-      });
-
-      // 5) 리스트로 이동
       navigate("/chat", { replace: true });
+      setTimeout(() => {
+        window.location.replace("/chat");
+      }, 0);
     } catch (e) {
       console.error(e);
       alert("채팅방 나가기에 실패했어요.");
