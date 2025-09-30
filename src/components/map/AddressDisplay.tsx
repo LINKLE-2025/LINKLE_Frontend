@@ -60,8 +60,17 @@ export default function AddressDisplay({
     fetchUserAndInit();
   }, [map, isOpen]);
 
-  // 추천 실행
+  const [lastRequestTime, setLastRequestTime] = useState<number>(0);
+
+  // 추천 실행 (쿨타임 적용)
   const handleRecommend = async () => {
+    const now = Date.now();
+    if (now - lastRequestTime < 5000) {
+      console.log("⏳ 추천 요청 무시: 5초 쿨타임 미만");
+      return;
+    }
+    setLastRequestTime(now);
+
     try {
       if (!currentCoords || !loggedInUserId) return;
       setLoadingRecommend(true);
@@ -282,11 +291,18 @@ export default function AddressDisplay({
             <div className="flex rounded-lg border-2 border-gray-200/40 my-2 mx-3 py-1.5 text-xs items-center justify-center shadow-sm bg-gradient-to-r from-purple-100/35 via-pink-100/10 to-pink-100/35">
               <LucideWand className="text-[#BA8ED4] mr-2" />
               {loadingRecommend ? (
-                <span>
-                  {recommendations[0]?.userName
-                    ? `${recommendations[0].userName}님을 위한 AI 추천을 준비중이에요...`
-                    : "AI가 추천을 준비중이에요..."}
-                </span>
+                <div className="flex items-center">
+                  <span>
+                    {recommendations[0]?.userName
+                      ? `${recommendations[0].userName}님을 위한 AI 추천을 준비중이에요...`
+                      : "AI가 추천을 준비중이에요..."}
+                  </span>
+                  {/* <button
+                    onClick={handleManualRecommend}
+                    className="m-3 px-4 py-2 rounded-lg bg-purple-500 text-white text-sm"
+                  >
+                  </button> */}
+                </div>
               ) : (
                 <span>
                   {recommendations[0]?.userName
