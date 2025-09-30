@@ -232,6 +232,7 @@ export default function AddressDisplay({
 
           // 좌표 갱신 다시 넣어주기 (ai 추천용)
           setCurrentCoords({ lat: center.getLat(), lng: center.getLng() });
+          console.log("📍 좌표 갱신", { lat: center.getLat(), lng: center.getLng() });
         } else {
           console.warn("⚠️ 주소 변환 실패", status);
         }
@@ -290,7 +291,7 @@ export default function AddressDisplay({
                 <span className="text-linkleGray">
                   {recommendations[0]?.userName
                     ? `${recommendations[0].userName}님과 친구들이 자주 찾는 링커를 찾아왔어요!`
-                    : "AI가 참여 카테고리를 기반으로 링커를 추천했어요!"}
+                    : "추천할말한 링커가 없어요... 더 많은 링커와 친구를 만들어보세요!"}
                 </span>
               )}
             </div>
